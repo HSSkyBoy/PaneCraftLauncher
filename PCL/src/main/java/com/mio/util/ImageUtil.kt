@@ -32,7 +32,11 @@ class ImageUtil {
         }
 
         @JvmStatic
-        fun loadInto(view: View, drawable: Drawable) {
+        fun loadInto(view: View, drawable: Drawable?) {
+            if (drawable == null) {
+                view.background = null
+                return
+            }
             // 派生独立实例：多个视图共享同一 Drawable 实例时 setBounds 会互相覆盖
             // （共享的底层 bitmap 数据只读，不受影响）
             val source = drawable.constantState?.newDrawable() ?: drawable

@@ -845,7 +845,12 @@ public class GameMenu implements MenuCallback, FCLBridgeCallback {
         if (!isSimulated()) {
             inputMagnifier.setup(activity.findViewById(R.id.texture_view), touchCharInput, menuSetting);
             if (menuSetting.isShowLaunchProgress()) {
-                ImageUtil.loadInto(baseLayout, ThemeEngine.getInstance().getTheme().getBackground(activity));
+                android.graphics.drawable.BitmapDrawable bg = ThemeEngine.getInstance().getTheme().getBackground(activity);
+                if (bg != null) {
+                    ImageUtil.loadInto(baseLayout, bg);
+                } else {
+                    baseLayout.setBackgroundColor(ThemeEngine.isNightMode(activity) ? 0xFF121417 : 0xFFF4F6FA);
+                }
                 launchProgress.setVisibility(View.VISIBLE);
             }
             assert getBridge() != null;

@@ -11,10 +11,8 @@ import android.view.View
 import android.view.Window
 import android.view.WindowManager
 import com.mio.util.ImageUtil
-import com.tungsten.fcl.R
 import com.tungsten.fclauncher.utils.FCLPath
 import com.tungsten.fcllibrary.component.theme.ThemeEngine.registerEvent
-import com.tungsten.fcllibrary.util.ConvertUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -170,24 +168,27 @@ object ThemeEngine {
 
     private fun applyBackground(context: Context, view: View?, ltPath: String?, dkPath: String?) {
         runCatching {
-            if (ltPath != null && File(ltPath).exists()) {
-                File(ltPath).copyTo(File(FCLPath.LT_BACKGROUND_PATH), overwrite = true)
-            }
-            if (dkPath != null && File(dkPath).exists()) {
-                File(dkPath).copyTo(File(FCLPath.DK_BACKGROUND_PATH), overwrite = true)
+            if (ltPath == null && dkPath == null) {
+                File(FCLPath.LT_BACKGROUND_PATH).delete()
+                File(FCLPath.DK_BACKGROUND_PATH).delete()
+            } else {
+                if (ltPath != null && File(ltPath).exists()) {
+                    File(ltPath).copyTo(File(FCLPath.LT_BACKGROUND_PATH), overwrite = true)
+                }
+                if (dkPath != null && File(dkPath).exists()) {
+                    File(dkPath).copyTo(File(FCLPath.DK_BACKGROUND_PATH), overwrite = true)
+                }
             }
         }
-        val ltBitmap = ImageUtil.load(FCLPath.LT_BACKGROUND_PATH)
-            .orElse(ConvertUtils.getBitmapFromRes(context, R.drawable.background_light))
-        val dkBitmap = ImageUtil.load(FCLPath.DK_BACKGROUND_PATH)
-            .orElse(ConvertUtils.getBitmapFromRes(context, R.drawable.background_dark))
-        val lt = BitmapDrawable(context.resources, ltBitmap)
-        val dk = BitmapDrawable(context.resources, dkBitmap)
+        val lt = ImageUtil.load(FCLPath.LT_BACKGROUND_PATH)
+            .map { BitmapDrawable(context.resources, it) }
+            .orElse(null)
+        val dk = ImageUtil.load(FCLPath.DK_BACKGROUND_PATH)
+            .map { BitmapDrawable(context.resources, it) }
+            .orElse(null)
         updateTheme { it.copy(backgroundLt = lt, backgroundDk = dk) }
         if (view != null) {
-            val isNight =
-                (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-            ImageUtil.loadInto(view, if (isNight) dk else lt)
+            ImageUtil.loadInto(view, if (isNightMode(context)) dk else lt)
         }
     }
 

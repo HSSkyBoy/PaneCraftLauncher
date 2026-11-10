@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -109,9 +110,9 @@ class ThemeDataTest {
         assertTrue(loaded.fullscreen)
         assertTrue(loaded.closeSkinModel)
         assertEquals(5, loaded.animationSpeed)
-        // 背景非空（无自定义背景时回退内置默认图）
-        assertTrue(loaded.backgroundLt.intrinsicWidth > 0)
-        assertTrue(loaded.backgroundDk.intrinsicWidth > 0)
+        // 默认无自定义背景（需用户手动设置或自定义图片）
+        assertNull(loaded.backgroundLt)
+        assertNull(loaded.backgroundDk)
     }
 
     @Test

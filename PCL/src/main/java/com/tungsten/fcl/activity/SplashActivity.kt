@@ -66,9 +66,14 @@ class SplashActivity : FCLActivity() {
         binding = ActivitySplashBinding.inflate(layoutInflater)
         sharedPreferences = getSharedPreferences("launcher", MODE_PRIVATE)
         setContentView(binding.root)
-        ImageUtil.loadInto(
-            binding.background, ThemeEngine.getInstance().getTheme().getBackground(this)
-        )
+        val bg = ThemeEngine.getInstance().getTheme().getBackground(this)
+        if (bg != null) {
+            ImageUtil.loadInto(binding.background, bg)
+        } else {
+            binding.background.setBackgroundColor(
+                if (ThemeEngine.isNightMode(this)) 0xFF121417.toInt() else 0xFFF4F6FA.toInt()
+            )
+        }
         // 启动流程第一步：确认用户协议与隐私政策。同意前不申请权限、不联网
         if (LegalAgreement.isAccepted(this)) {
             showStorageNotice()

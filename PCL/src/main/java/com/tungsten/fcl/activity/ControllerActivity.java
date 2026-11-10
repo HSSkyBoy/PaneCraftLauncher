@@ -24,7 +24,12 @@ public class ControllerActivity extends FCLActivity {
         super.onCreate(savedInstanceState);
 
         FCLImageView contentView = new FCLImageView(this);
-        contentView.setBackground(ThemeEngine.getInstance().getTheme().getBackground(this));
+        android.graphics.drawable.BitmapDrawable bg = ThemeEngine.getInstance().getTheme().getBackground(this);
+        if (bg != null) {
+            contentView.setBackground(bg);
+        } else {
+            contentView.setBackgroundColor(ThemeEngine.isNightMode(this) ? 0xFF121417 : 0xFFF4F6FA);
+        }
         setContentView(contentView);
 
         menu = new GameMenu();

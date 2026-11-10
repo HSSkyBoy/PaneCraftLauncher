@@ -6,8 +6,6 @@ import android.graphics.drawable.BitmapDrawable
 import androidx.core.graphics.ColorUtils
 import com.mio.util.ImageUtil
 import com.tungsten.fcl.FCLApp
-import com.tungsten.fcl.R
-import com.tungsten.fcllibrary.util.ConvertUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -39,8 +37,8 @@ data class ThemeData(
     val animationSpeed: Int,
     /** 派生色（ltColor/dkColor）透明度，独立于主色 alpha */
     val colorAlpha: Int,
-    val backgroundLt: BitmapDrawable,
-    val backgroundDk: BitmapDrawable
+    val backgroundLt: BitmapDrawable?,
+    val backgroundDk: BitmapDrawable?
 ) {
     /** 主色的亮色变体（HSV 提亮，浅色背景/按压态用，随当前模式主色动态变化） */
     val ltColor: Int
@@ -82,8 +80,8 @@ data class ThemeData(
         return if (activity != null && ThemeEngine.isNightMode(activity)) color2Dark else color2
     }
 
-    /** 按当前亮暗模式取背景 */
-    fun getBackground(context: Context): BitmapDrawable {
+    /** 按当前亮暗模式取背景（未设置自定义背景时返回 null，由界面展示纯色基底） */
+    fun getBackground(context: Context): BitmapDrawable? {
         val dark = ThemeEngine.isNightMode(context)
         return if (dark) backgroundDk else backgroundLt
     }
@@ -112,15 +110,17 @@ data class ThemeData(
                         .contains("theme_color")
             val effective = if (migrated) migrateFromSharedPreferences(context) else pref
             val lt = ImageUtil.load(context.filesDir.absolutePath + "/background/lt.png")
-                .orElse(ConvertUtils.getBitmapFromRes(context, R.drawable.background_light))
+                .map { BitmapDrawable(context.resources, it) }
+                .orElse(null)
             val dk = ImageUtil.load(context.filesDir.absolutePath + "/background/dk.png")
-                .orElse(ConvertUtils.getBitmapFromRes(context, R.drawable.background_dark))
+                .map { BitmapDrawable(context.resources, it) }
+                .orElse(null)
             return ThemeData(
                 effective.color, effective.colorDark, effective.color2, effective.color2Dark,
                 effective.fullscreen, effective.closeSkinModel, effective.animationSpeed,
                 effective.colorAlpha,
-                BitmapDrawable(context.resources, lt),
-                BitmapDrawable(context.resources, dk)
+                lt,
+                dk
             )
         }
 
