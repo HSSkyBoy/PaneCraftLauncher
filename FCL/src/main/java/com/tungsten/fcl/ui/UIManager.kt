@@ -12,7 +12,6 @@ import com.tungsten.fcl.ui.download.DownloadUI
 import com.tungsten.fcl.ui.main.MainUI
 import com.tungsten.fcl.ui.manage.ManageUI
 import com.tungsten.fcl.ui.multiplayer.MultiplayerUI
-import com.tungsten.fcl.ui.setting.SettingUI
 import com.tungsten.fcl.ui.version.VersionUI
 import com.tungsten.fcllibrary.component.ui.FCLBaseUI
 import com.tungsten.fcllibrary.component.ui.FCLCommonUI
@@ -31,7 +30,7 @@ class UIManager(val context: Context, val pager: ViewPager2? = null) {
     }
 
     /** 页面位置 → UI 实例注册表，页面被回收时销毁并清空对应位 */
-    private val uiRegistry = arrayOfNulls<FCLCommonUI>(7)
+    private val uiRegistry = arrayOfNulls<FCLCommonUI>(6)
 
     /** 页面位置 → UI 工厂 */
     private val factories: List<() -> FCLCommonUI> = listOf(
@@ -40,7 +39,6 @@ class UIManager(val context: Context, val pager: ViewPager2? = null) {
         { DownloadUI(context, R.layout.ui_download) },
         { ControllerUI(context, R.layout.ui_controller) },
         { MultiplayerUI(context, R.layout.ui_multiplayer) },
-        { SettingUI(context, R.layout.ui_setting) },
         { VersionUI(context, R.layout.ui_version) }
     )
 
@@ -81,8 +79,11 @@ class UIManager(val context: Context, val pager: ViewPager2? = null) {
     val downloadUI: DownloadUI get() = getUI(2) as DownloadUI
     val controllerUI: ControllerUI get() = getUI(3) as ControllerUI
     val multiplayerUI: MultiplayerUI get() = getUI(4) as MultiplayerUI
-    val settingUI: SettingUI get() = getUI(5) as SettingUI
-    val versionUI: VersionUI get() = getUI(6) as VersionUI
+    val versionUI: VersionUI get() = getUI(5) as VersionUI
+
+    fun switchToSettingPage() {
+        onComposeSwitchUI?.invoke(-2)
+    }
 
     fun switchToAccountPage() {
         onComposeSwitchUI?.invoke(-1)

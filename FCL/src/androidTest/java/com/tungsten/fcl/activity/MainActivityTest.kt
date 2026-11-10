@@ -121,7 +121,6 @@ class MainActivityTest {
                 assertNotNull(ui.downloadUI)
                 assertNotNull(ui.controllerUI)
                 assertNotNull(ui.multiplayerUI)
-                assertNotNull(ui.settingUI)
                 assertNotNull(ui.versionUI)
                 // 初始页为主界面
                 assertEquals(ui.mainUI, ui.currentUI)
@@ -137,9 +136,9 @@ class MainActivityTest {
             val ui = activity.uiManager
             onMain {
                 assertEquals(ui.mainUI, ui.currentUI)
-                ui.switchUI(ui.settingUI)
+                ui.switchUI(ui.versionUI)
             }
-            waitForCondition { ui.currentUI === ui.settingUI }
+            waitForCondition { ui.currentUI === ui.versionUI }
             onMain { ui.switchUI(ui.mainUI) }
             waitForCondition { ui.currentUI === ui.mainUI }
         }

@@ -467,6 +467,10 @@ class MainActivity : FCLActivity() {
 
     private fun syncComposeRouteFromUiPosition(position: Int) {
         when (position) {
+            -2 -> {
+                activeSubpage = null
+                selectedTab = MainTab.SETUP
+            }
             -1 -> openAccountWithSection(AccountSection.SAVED)
             0 -> navigateToHome()
             1 -> activeSubpage = AppSubpage.MANAGE
@@ -479,11 +483,7 @@ class MainActivity : FCLActivity() {
                 activeSubpage = null
                 selectedTab = MainTab.LINK
             }
-            5 -> {
-                activeSubpage = null
-                selectedTab = MainTab.SETUP
-            }
-            6 -> activeSubpage = AppSubpage.VERSION
+            5 -> activeSubpage = AppSubpage.VERSION
         }
     }
 
