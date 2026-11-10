@@ -1,14 +1,14 @@
 package com.tungsten.fcl.pclf.ui.components
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -26,13 +26,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -40,41 +38,35 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.tungsten.fcl.R
 import com.tungsten.fcl.pclf.theme.PclfTheme
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.LinearProgressIndicator
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.basic.ArrowRight
 
-enum class PclMainTab(val label: String) {
-    LAUNCH("启动"),
-    DOWNLOAD("下载"),
-    LINK("联机"),
-    SETUP("设置"),
-    MORE("更多")
+enum class PclMainTab(@StringRes val labelRes: Int) {
+    LAUNCH(R.string.pclf_tab_launch),
+    DOWNLOAD(R.string.pclf_tab_download),
+    LINK(R.string.pclf_tab_link),
+    SETUP(R.string.pclf_tab_setup),
+    MORE(R.string.pclf_tab_more)
 }
 
 /**
  * Authentic PCL2 Top Title Bar (`PanTitle`):
- * - Left: Stylized `PCL` logo (or back arrow when inside a subpage)
- * - Center: 27dp white pill radio tabs (`启动`, `下载`, `联机`, `设置`, `更多`)
- * - Right: Active download progress pill & utility actions
+ * - Left: Crisp `PCLF` title (or back arrow when inside a subpage)
+ * - Center: 27dp white pill radio tabs
+ * - Right: Active download progress pill
  */
 @Composable
 fun PclTopBar(
@@ -90,6 +82,7 @@ fun PclTopBar(
     val colors = PclfTheme.colors
     val topBarInsets = WindowInsets.statusBars.union(WindowInsets.displayCutout)
         .only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -99,7 +92,7 @@ fun PclTopBar(
                 )
             )
             .windowInsetsPadding(topBarInsets)
-            .height(48.dp)
+            .height(46.dp)
             .padding(horizontal = 14.dp)
     ) {
         Row(
@@ -107,7 +100,6 @@ fun PclTopBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Left: Subpage Back or PCL Brand Mark
             if (subpageTitle != null) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -133,29 +125,16 @@ fun PclTopBar(
                     )
                 }
             } else {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
+                Text(
+                    text = "PCLF",
+                    color = Color.White,
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.8.sp,
                     modifier = Modifier.padding(start = 4.dp)
-                ) {
-                    Text(
-                        text = "PCL",
-                        color = Color.White,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Black,
-                        fontStyle = FontStyle.Italic,
-                        letterSpacing = 1.sp
-                    )
-                    Spacer(Modifier.width(4.dp))
-                    Text(
-                        text = "Fold",
-                        color = Color.White.copy(alpha = 0.8f),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
+                )
             }
 
-            // Center: PCL White Pill Radio Buttons (27.dp height, 13.5.dp radius)
             if (subpageTitle == null) {
                 Row(
                     modifier = Modifier
@@ -167,7 +146,7 @@ fun PclTopBar(
                 ) {
                     PclMainTab.entries.forEach { tab ->
                         PclTitleTabPill(
-                            label = tab.label,
+                            label = stringResource(tab.labelRes),
                             selected = selectedTab == tab,
                             accentColor = colors.titleBarStart,
                             onClick = { onSelectTab(tab) }
@@ -178,7 +157,6 @@ fun PclTopBar(
                 Spacer(Modifier.weight(1f))
             }
 
-            // Right: Download Wave/Progress Pill when tasks exist
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -244,7 +222,7 @@ private fun PclTitleTabPill(
                 indication = null,
                 onClick = onClick
             )
-            .padding(horizontal = 12.dp)
+            .padding(horizontal = 13.dp)
     ) {
         Text(
             text = label,
@@ -258,7 +236,7 @@ private fun PclTitleTabPill(
 
 /**
  * Authentic PCL2 `MyButton`:
- * Crisp 4.dp corners, 1.dp accent border, translucent fill, and Miuix-style spring press feedback.
+ * Crisp 3.dp corners, 1.dp neutral border, translucent white fill, spring press feedback.
  */
 @Composable
 fun PclButton(
@@ -267,7 +245,7 @@ fun PclButton(
     modifier: Modifier = Modifier,
     onLongClick: (() -> Unit)? = null,
     enabled: Boolean = true,
-    height: Dp = 36.dp
+    height: Dp = 34.dp
 ) {
     val colors = PclfTheme.colors
     val interactionSource = remember { MutableInteractionSource() }
@@ -288,9 +266,9 @@ fun PclButton(
                 scaleX = scale
                 scaleY = scale
             }
-            .clip(RoundedCornerShape(4.dp))
+            .clip(RoundedCornerShape(3.dp))
             .background(colors.buttonBg)
-            .border(1.dp, colors.buttonBorder, RoundedCornerShape(4.dp))
+            .border(1.dp, colors.buttonBorderNeutral, RoundedCornerShape(3.dp))
             .combinedClickable(
                 enabled = enabled,
                 interactionSource = interactionSource,
@@ -302,9 +280,9 @@ fun PclButton(
     ) {
         Text(
             text = text,
-            color = if (enabled) colors.accent else colors.textSecondary,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Medium,
+            color = if (enabled) colors.textPrimary else colors.textSecondary,
+            fontSize = 12.5.sp,
+            fontWeight = FontWeight.Normal,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -313,7 +291,8 @@ fun PclButton(
 
 /**
  * Authentic PCL2 `BtnLaunch`:
- * 54.dp height, 4.dp corners, bold "启动游戏" title + version subtitle nestled inside the bottom.
+ * - Idle: White/translucent background with 1.dp accent border, accent title, grey subtitle below.
+ * - Pressed or Launching (`isActive`): Smoothly transitions to solid accent fill with white text.
  */
 @Composable
 fun PclLaunchButton(
@@ -322,43 +301,49 @@ fun PclLaunchButton(
     isLoadingVersion: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isActive: Boolean = false
 ) {
     val colors = PclfTheme.colors
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
+    val filled = pressed || isActive
     val scale by animateFloatAsState(
-        targetValue = if (pressed) 0.96f else 1f,
+        targetValue = if (pressed) 0.965f else 1f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessMedium
         )
+    )
+    val bg by animateColorAsState(
+        targetValue = if (filled) colors.accent else colors.buttonBg
+    )
+    val titleColor by animateColorAsState(
+        targetValue = if (filled) Color.White else colors.accent
+    )
+    val subColor by animateColorAsState(
+        targetValue = if (filled) Color.White.copy(alpha = 0.85f) else colors.textSecondary
     )
 
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
             .fillMaxWidth()
-            .height(54.dp)
+            .height(52.dp)
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
             }
-            .shadow(4.dp, RoundedCornerShape(4.dp), clip = false)
-            .clip(RoundedCornerShape(4.dp))
-            .background(
-                Brush.horizontalGradient(
-                    listOf(colors.launchFillStart, colors.launchFillEnd)
-                )
-            )
-            .border(1.dp, Color.White.copy(alpha = 0.35f), RoundedCornerShape(4.dp))
+            .clip(RoundedCornerShape(3.dp))
+            .background(bg)
+            .border(1.dp, colors.buttonBorderAccent, RoundedCornerShape(3.dp))
             .combinedClickable(
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick,
                 onLongClick = onLongClick
             )
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 14.dp)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -366,15 +351,14 @@ fun PclLaunchButton(
         ) {
             Text(
                 text = title,
-                color = Color.White,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 0.5.sp
+                color = titleColor,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium
             )
             Spacer(Modifier.height(1.dp))
             Text(
-                text = if (isLoadingVersion) "正在加载版本..." else versionSubtitle,
-                color = Color.White.copy(alpha = 0.88f),
+                text = if (isLoadingVersion) stringResource(R.string.pclf_loading_version) else versionSubtitle,
+                color = subColor,
                 fontSize = 11.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -384,7 +368,7 @@ fun PclLaunchButton(
 }
 
 /**
- * PCL2 `MyCard` powered by Miuix [Card] with PCL's characteristic left accent bar in the header.
+ * PCL2 `MyCard` powered by Miuix [Card] with crisp borders.
  */
 @Composable
 fun PclCard(
@@ -410,73 +394,17 @@ fun PclCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .width(3.dp)
-                        .height(14.dp)
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(colors.accent)
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = title,
-                    color = colors.textPrimary,
-                    fontSize = 13.5.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+            Text(
+                text = title,
+                color = colors.textPrimary,
+                fontSize = 13.5.sp,
+                fontWeight = FontWeight.Bold
+            )
             trailingAction?.invoke()
         }
         Spacer(Modifier.height(8.dp))
         HorizontalDivider(color = colors.cardBorder)
         Spacer(Modifier.height(10.dp))
         content()
-    }
-}
-
-/**
- * Authentic PCL2 `MyHint` banner.
- */
-@Composable
-fun PclHintBanner(
-    text: String,
-    onDismiss: (() -> Unit)? = null,
-    modifier: Modifier = Modifier
-) {
-    val colors = PclfTheme.colors
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(6.dp))
-            .background(colors.accent.copy(alpha = if (colors.isDark) 0.18f else 0.10f))
-            .border(1.dp, colors.accent.copy(alpha = 0.28f), RoundedCornerShape(6.dp))
-    ) {
-        Box(
-            modifier = Modifier
-                .width(4.dp)
-                .height(42.dp)
-                .background(colors.accent)
-        )
-        Text(
-            text = text,
-            color = colors.textPrimary,
-            fontSize = 12.sp,
-            lineHeight = 17.sp,
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 12.dp, vertical = 10.dp)
-        )
-        if (onDismiss != null) {
-            Text(
-                text = "✕",
-                color = colors.textSecondary,
-                fontSize = 12.sp,
-                modifier = Modifier
-                    .clickable(onClick = onDismiss)
-                    .padding(horizontal = 12.dp, vertical = 10.dp)
-            )
-        }
     }
 }

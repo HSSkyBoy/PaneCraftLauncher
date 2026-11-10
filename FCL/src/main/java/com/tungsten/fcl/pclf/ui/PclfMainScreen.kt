@@ -4,6 +4,7 @@ import android.graphics.drawable.BitmapDrawable
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -36,20 +37,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.mio.download.DownloadTaskInfo
+import com.tungsten.fcl.R
 import com.tungsten.fcl.pclf.theme.PclfTheme
 import com.tungsten.fcl.pclf.ui.components.PclButton
 import com.tungsten.fcl.pclf.ui.components.PclMainTab
 import com.tungsten.fcl.pclf.ui.components.PclTopBar
+import com.tungsten.fclcore.auth.Account
 import com.tungsten.fcllibrary.component.ui.FCLCommonUI
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
@@ -57,20 +60,13 @@ import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import top.yukonga.miuix.kmp.basic.LinearProgressIndicator
 import top.yukonga.miuix.kmp.basic.Text
 
-enum class PclSubpage(val title: String, val uiIndex: Int) {
-    MANAGE("版本管理", 1),
-    CONTROLLER("虚拟按键与控制器", 3),
-    ACCOUNT("账号管理", 6),
-    VERSION("版本选择", 7)
+enum class PclSubpage(@StringRes val titleRes: Int, val uiIndex: Int) {
+    MANAGE(R.string.manage, 1),
+    CONTROLLER(R.string.pclf_more_controller, 3),
+    ACCOUNT(R.string.pclf_more_account, 6),
+    VERSION(R.string.pclf_btn_version_select, 7)
 }
 
-/**
- * Root PCLF Screen hosting:
- * - Launcher Wallpaper + PCL tint overlay
- * - Authentic PCL Top Bar (`PclTopBar`)
- * - Animated page content (`启动` / `下载` / `联机` / `设置` / `更多` + subpages)
- * - Download Task overlay sheet
- */
 @Composable
 fun PclfMainScreen(
     selectedTab: PclMainTab,
@@ -83,12 +79,14 @@ fun PclfMainScreen(
     onSelectTab: (PclMainTab) -> Unit,
     onOpenSubpage: (PclSubpage) -> Unit,
     onBackFromSubpage: () -> Unit,
-    onAccountClick: () -> Unit,
+    onSelectAccountTab: (PclAccountTab) -> Unit,
+    onSelectAccount: (Account) -> Unit,
+    onAddAccountForTab: (PclAccountTab) -> Unit,
+    onManageAllAccounts: () -> Unit,
     onLaunchClick: () -> Unit,
     onLaunchLongClick: () -> Unit,
     onVersionLongClick: () -> Unit,
     onVersionSettingClick: () -> Unit,
-    onOpenModManage: () -> Unit,
     onToggleDownloadPanel: () -> Unit,
     onCancelTask: (DownloadTaskInfo) -> Unit,
     onShareLatestLog: () -> Unit,
@@ -99,7 +97,6 @@ fun PclfMainScreen(
     val colors = PclfTheme.colors
 
     Box(modifier = modifier.fillMaxSize()) {
-        // 1. Wallpaper / Theme Background
         val bgBitmap = remember(backgroundDrawable) {
             backgroundDrawable?.bitmap?.asImageBitmap()
         }
@@ -113,32 +110,20 @@ fun PclfMainScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(
-                        if (colors.isDark) Color(0x9910141B)
-                        else Color(0x66EEF4FB)
-                    )
+                    .background(colors.canvasTint.copy(alpha = if (colors.isDark) 0.55f else 0.72f))
             )
         } else {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            if (colors.isDark) {
-                                listOf(Color(0xFF131720), Color(0xFF0E1117))
-                            } else {
-                                listOf(Color(0xFFEAF2FC), Color(0xFFF6F9FD))
-                            }
-                        )
-                    )
+                    .background(colors.canvasTint)
             )
         }
 
-        // 2. Main Vertical Scaffold (PCL TitleBar + Content)
         Column(modifier = Modifier.fillMaxSize().navigationBarsPadding()) {
             PclTopBar(
                 selectedTab = selectedTab,
-                subpageTitle = activeSubpage?.title,
+                subpageTitle = activeSubpage?.let { stringResource(it.titleRes) },
                 hasDownloadTasks = launchState.downloadTasks.isNotEmpty(),
                 downloadProgress = launchState.downloadProgress,
                 onSelectTab = onSelectTab,
@@ -159,14 +144,15 @@ fun PclfMainScreen(
                     when (target) {
                         PclMainTab.LAUNCH -> PclfLaunchPage(
                             state = launchState,
-                            onAccountClick = onAccountClick,
+                            onSelectAccountTab = onSelectAccountTab,
+                            onSelectAccount = onSelectAccount,
+                            onAddAccountForTab = onAddAccountForTab,
+                            onManageAllAccounts = onManageAllAccounts,
                             onLaunchClick = onLaunchClick,
                             onLaunchLongClick = onLaunchLongClick,
                             onVersionSelectClick = { onOpenSubpage(PclSubpage.VERSION) },
                             onVersionLongClick = onVersionLongClick,
                             onVersionSettingClick = onVersionSettingClick,
-                            onOpenModManage = onOpenModManage,
-                            onOpenController = { onOpenSubpage(PclSubpage.CONTROLLER) },
                             onOpenDownloadPanel = onToggleDownloadPanel
                         )
 
@@ -200,20 +186,19 @@ fun PclfMainScreen(
             }
         }
 
-        // 3. Miuix Floating Download Panel Overlay
         AnimatedVisibility(
             visible = showDownloadPanel && launchState.downloadTasks.isNotEmpty(),
             enter = fadeIn(tween(180)) + slideInVertically(tween(220)) { -it / 6 },
             exit = fadeOut(tween(150)) + slideOutVertically(tween(180)) { -it / 6 },
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(top = 60.dp, end = 12.dp, start = 12.dp)
+                .padding(top = 56.dp, end = 12.dp, start = 12.dp)
         ) {
             Card(
                 modifier = Modifier
                     .width(340.dp)
-                    .border(1.dp, colors.cardBorder, RoundedCornerShape(14.dp)),
-                cornerRadius = 14.dp,
+                    .border(1.dp, colors.cardBorder, RoundedCornerShape(10.dp)),
+                cornerRadius = 10.dp,
                 insideMargin = PaddingValues(14.dp),
                 colors = CardDefaults.defaultColors(
                     color = colors.cardBg,
@@ -226,13 +211,13 @@ fun PclfMainScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "下载任务 (${launchState.downloadTasks.size})",
+                        text = stringResource(R.string.pclf_download_tasks, launchState.downloadTasks.size),
                         color = colors.textPrimary,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "收起 ✕",
+                        text = stringResource(R.string.pclf_collapse),
                         color = colors.accent,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
@@ -253,7 +238,7 @@ fun PclfMainScreen(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(8.dp))
+                                .clip(RoundedCornerShape(6.dp))
                                 .background(colors.accent.copy(alpha = 0.08f))
                                 .padding(10.dp)
                         ) {
@@ -274,13 +259,13 @@ fun PclfMainScreen(
                                 Spacer(Modifier.width(8.dp))
                                 if (info.ready && info.installAction != null) {
                                     PclButton(
-                                        text = "安装",
+                                        text = stringResource(R.string.pclf_install),
                                         onClick = { info.installAction.run() },
                                         height = 26.dp
                                     )
                                 } else {
                                     Text(
-                                        text = "取消",
+                                        text = stringResource(R.string.pclf_cancel),
                                         color = colors.accent,
                                         fontSize = 11.5.sp,
                                         modifier = Modifier
@@ -302,10 +287,6 @@ fun PclfMainScreen(
     }
 }
 
-/**
- * Safely embeds existing battle-tested FCL XML-based [FCLCommonUI] modules
- * inside the PCLF Compose shell until each subpage is rewritten in Miuix.
- */
 @Composable
 private fun LegacyFclUiHost(
     ui: FCLCommonUI,

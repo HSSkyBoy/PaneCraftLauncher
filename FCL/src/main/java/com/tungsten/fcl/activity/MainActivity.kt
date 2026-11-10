@@ -50,6 +50,7 @@ import com.tungsten.fcl.R
 import com.tungsten.fcl.game.TexturesLoader
 import com.tungsten.fcl.pclf.theme.PclfTheme
 import com.tungsten.fcl.pclf.ui.LaunchUiState
+import com.tungsten.fcl.pclf.ui.PclAccountTab
 import com.tungsten.fcl.pclf.ui.PclSubpage
 import com.tungsten.fcl.pclf.ui.PclfMainScreen
 import com.tungsten.fcl.pclf.ui.components.PclMainTab
@@ -59,6 +60,7 @@ import com.tungsten.fcl.setting.Controllers
 import com.tungsten.fcl.setting.Profile
 import com.tungsten.fcl.setting.Profiles
 import com.tungsten.fcl.ui.UIManager
+import com.tungsten.fcl.ui.account.CreateAccountDialog
 import com.tungsten.fcl.ui.download.modpack.LocalModpackPage
 import com.tungsten.fcl.ui.version.VersionListViewModel
 import com.tungsten.fcl.ui.version.Versions
@@ -67,9 +69,9 @@ import com.tungsten.fcl.util.LegalAgreement
 import com.tungsten.fclauncher.utils.FCLPath
 import com.tungsten.fclcore.auth.Account
 import com.tungsten.fclcore.auth.authlibinjector.AuthlibInjectorAccount
+import com.tungsten.fclcore.auth.microsoft.MicrosoftAccount
+import com.tungsten.fclcore.auth.offline.OfflineAccount
 import com.tungsten.fclcore.auth.yggdrasil.TextureModel
-import com.tungsten.fclcore.download.LibraryAnalyzer
-import com.tungsten.fclcore.download.LibraryAnalyzer.LibraryType
 import com.tungsten.fclcore.fakefx.beans.InvalidationListener
 import com.tungsten.fclcore.fakefx.beans.binding.ObjectBinding
 import com.tungsten.fclcore.mod.RemoteMod
@@ -214,7 +216,16 @@ class MainActivity : FCLActivity() {
                     onBackFromSubpage = {
                         handleBackNavigation()
                     },
-                    onAccountClick = {
+                    onSelectAccountTab = { tab ->
+                        selectAccountTab(tab)
+                    },
+                    onSelectAccount = { acc ->
+                        Accounts.setSelectedAccount(acc)
+                    },
+                    onAddAccountForTab = { tab ->
+                        addAccountForTab(tab)
+                    },
+                    onManageAllAccounts = {
                         openSubpage(PclSubpage.ACCOUNT)
                     },
                     onLaunchClick = {
@@ -228,9 +239,6 @@ class MainActivity : FCLActivity() {
                     },
                     onVersionSettingClick = {
                         openVersionOrGlobalSetting()
-                    },
-                    onOpenModManage = {
-                        navigateToManage(1)
                     },
                     onToggleDownloadPanel = {
                         showDownloadPanel = !showDownloadPanel
@@ -274,6 +282,7 @@ class MainActivity : FCLActivity() {
     override fun onResume() {
         super.onResume()
         if (::uiManager.isInitialized) uiManager.onResume()
+        launchState = launchState.copy(isLaunching = false)
         refreshVersionDisplay(Profiles.getSelectedVersion())
         mediaPlayer?.start()
     }
@@ -289,6 +298,7 @@ class MainActivity : FCLActivity() {
         super.onDestroy()
         ThemeEngine.getInstance().removeRefreshListener(themeRefreshListener)
         Accounts.selectedAccountProperty().removeListener(accountListener)
+        Accounts.getAccounts().removeListener(accountListener)
         mediaPlayer?.release()
         mediaPlayer = null
     }
@@ -542,11 +552,47 @@ class MainActivity : FCLActivity() {
 
     private fun setupAccountObserver() {
         Accounts.selectedAccountProperty().addListener(accountListener)
+        Accounts.getAccounts().addListener(accountListener)
         refreshAccountState()
     }
 
+    private fun selectAccountTab(tab: PclAccountTab) {
+        val current = Accounts.getSelectedAccount()
+        val matching = when (tab) {
+            PclAccountTab.MICROSOFT -> Accounts.getAccounts().filterIsInstance<MicrosoftAccount>()
+            PclAccountTab.OFFLINE -> Accounts.getAccounts().filterIsInstance<OfflineAccount>()
+            PclAccountTab.EXTERNAL -> Accounts.getAccounts().filterIsInstance<AuthlibInjectorAccount>()
+        }
+        val target = matching.firstOrNull { it == current } ?: matching.firstOrNull()
+        if (target != null && target != current) {
+            Accounts.setSelectedAccount(target)
+        } else {
+            launchState = launchState.copy(activeAccountTab = tab)
+        }
+    }
+
+    private fun addAccountForTab(tab: PclAccountTab) {
+        when (tab) {
+            PclAccountTab.MICROSOFT -> CreateAccountDialog(this, Accounts.FACTORY_MICROSOFT).show()
+            PclAccountTab.OFFLINE -> CreateAccountDialog(this, Accounts.FACTORY_OFFLINE).show()
+            PclAccountTab.EXTERNAL -> openSubpage(PclSubpage.ACCOUNT)
+        }
+    }
+
     private fun refreshAccountState() {
+        val allAccounts = Accounts.getAccounts().toList()
+        val msList = allAccounts.filterIsInstance<MicrosoftAccount>()
+        val offlineList = allAccounts.filterIsInstance<OfflineAccount>()
+        val extList = allAccounts.filterIsInstance<AuthlibInjectorAccount>()
         val account = Accounts.getSelectedAccount()
+
+        val resolvedTab = when (account) {
+            is MicrosoftAccount -> PclAccountTab.MICROSOFT
+            is OfflineAccount -> PclAccountTab.OFFLINE
+            is AuthlibInjectorAccount -> PclAccountTab.EXTERNAL
+            else -> launchState.activeAccountTab
+        }
+
         if (account == null) {
             avatarBinding = null
             val defaultAvatar = TexturesLoader.toAvatar(
@@ -554,17 +600,14 @@ class MainActivity : FCLActivity() {
                 ConvertUtils.dip2px(this, 64f)
             ).asImageBitmap()
             launchState = launchState.copy(
-                accountName = getString(R.string.account_state_no_account),
-                accountTypeBadge = "未登录",
-                accountHint = getString(R.string.account_state_add),
+                activeAccountTab = resolvedTab,
+                selectedAccount = null,
+                microsoftAccounts = msList,
+                offlineAccounts = offlineList,
+                externalAccounts = extList,
                 accountAvatar = defaultAvatar
             )
         } else {
-            val typeLabel = if (account is AuthlibInjectorAccount) {
-                account.server.name
-            } else {
-                Accounts.getLocalizedLoginTypeName(this, Accounts.getAccountFactory(account))
-            }
             val binding = TexturesLoader.avatarBinding(account, ConvertUtils.dip2px(this, 64f))
             avatarBinding = binding
             val currentBmp = binding.get()?.bitmap?.asImageBitmap()
@@ -573,9 +616,11 @@ class MainActivity : FCLActivity() {
                 launchState = launchState.copy(accountAvatar = img)
             }
             launchState = launchState.copy(
-                accountName = account.character,
-                accountTypeBadge = typeLabel,
-                accountHint = "点击管理或切换账号",
+                activeAccountTab = resolvedTab,
+                selectedAccount = account,
+                microsoftAccounts = msList,
+                offlineAccounts = offlineList,
+                externalAccounts = extList,
                 accountAvatar = currentBmp
             )
         }
@@ -591,79 +636,19 @@ class MainActivity : FCLActivity() {
     }
 
     private fun refreshVersionDisplay(version: String?) {
-        isVersionLoading = true
-        launchState = launchState.copy(isVersionLoading = true)
         val profile = Profiles.getSelectedProfile()
-
         if (version != null && profile.repository.hasVersion(version)) {
-            lifecycleScope.launch(Dispatchers.IO) {
-                val game = runCatching {
-                    profile.repository.getGameVersion(version).orElse(getString(R.string.message_unknown))
-                }.getOrNull() ?: return@launch
-
-                val tags = mutableListOf<String>()
-                tags.add("MC $game")
-                val libraries = StringBuilder(game)
-                val analyzer = LibraryAnalyzer.analyze(
-                    profile.repository.getResolvedPreservingPatchesVersion(version),
-                    profile.repository.getGameVersion(version).orElse(null)
-                )
-                for (mark in analyzer) {
-                    val libraryId = mark.libraryId
-                    val libraryVersion = mark.libraryVersion
-                    if (libraryId == LibraryType.MINECRAFT.patchId) continue
-                    if (hasStringId(this@MainActivity, "install_installer_" + libraryId.replace("-", "_"))) {
-                        val libName = getLocalizedText(this@MainActivity, "install_installer_" + libraryId.replace("-", "_"))
-                        val cleanVer = libraryVersion?.replace("(?i)$libraryId".toRegex(), "")?.trim()
-                        val tagText = if (!cleanVer.isNullOrEmpty()) "$libName $cleanVer" else libName
-                        tags.add(tagText)
-                        libraries.append(", ").append(libName)
-                        if (libraryVersion != null) {
-                            libraries.append(": ").append(libraryVersion.replace("(?i)$libraryId".toRegex(), ""))
-                        }
-                    }
-                }
-
-                val iconDrawable = profile.repository.getVersionIconImage(version)
-                val iconBitmap: ImageBitmap? = runCatching {
-                    iconDrawable.toBitmap(96, 96).asImageBitmap()
-                }.getOrNull()
-
-                val setting = profile.getVersionSetting(version)
-                val rendererDes = runCatching {
-                    RendererManager.getRenderer(setting.renderer).des
-                }.getOrDefault(setting.renderer)
-                val driverDes = if (setting.isVKDriverSystem) "系统驱动" else setting.driver.ifBlank { "自定义" }
-                val javaLabel = if (setting.java == "Auto") "自动" else setting.java
-                val memLabel = if (setting.isAutoMemory) "自动" else "${setting.maxMemory} MB"
-
-                withContext(Dispatchers.Main) {
-                    isVersionLoading = false
-                    launchState = launchState.copy(
-                        selectedVersionName = version,
-                        versionDetail = libraries.toString(),
-                        versionTags = tags,
-                        hasSelectedVersion = true,
-                        versionIcon = iconBitmap,
-                        isVersionLoading = false,
-                        rendererName = rendererDes,
-                        driverName = driverDes,
-                        javaVersion = javaLabel,
-                        memorySummary = memLabel
-                    )
-                }
-            }
+            isVersionLoading = false
+            launchState = launchState.copy(
+                selectedVersionName = version,
+                hasSelectedVersion = true,
+                isVersionLoading = false
+            )
         } else {
             isVersionLoading = false
-            val defaultIcon = runCatching {
-                pixelAwareIcon(this, R.drawable.img_grass).toBitmap(96, 96).asImageBitmap()
-            }.getOrNull()
             launchState = launchState.copy(
-                selectedVersionName = getString(R.string.version_no_version),
-                versionDetail = "请前往「下载」安装或导入整合包",
-                versionTags = emptyList(),
+                selectedVersionName = "",
                 hasSelectedVersion = false,
-                versionIcon = defaultIcon,
                 isVersionLoading = false
             )
         }
@@ -803,6 +788,7 @@ class MainActivity : FCLActivity() {
     }
 
     private fun doLaunchVersion(profile: Profile, versionId: String?) {
+        launchState = launchState.copy(isLaunching = true)
         Versions.launch(this, profile, versionId)
     }
 

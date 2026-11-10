@@ -126,15 +126,14 @@ class LauncherSettingAdapter(
             context.getString(R.string.settings_launcher_language_system),
             context.getString(R.string.settings_launcher_language_english),
             context.getString(R.string.settings_launcher_language_simplified_chinese),
+            context.getString(R.string.settings_launcher_language_traditional_chinese_tw),
+            context.getString(R.string.settings_launcher_language_traditional_chinese_hk),
+            context.getString(R.string.settings_launcher_language_vietnamese),
             context.getString(R.string.settings_launcher_language_russian),
-            context.getString(R.string.settings_launcher_language_brazilian_portuguese),
-            context.getString(R.string.settings_launcher_language_persian),
             context.getString(R.string.settings_launcher_language_ukrainian),
             context.getString(R.string.settings_launcher_language_german),
-            context.getString(R.string.settings_launcher_language_traditional_chinese_hk),
-            context.getString(R.string.settings_launcher_language_japanese),
-            context.getString(R.string.settings_launcher_language_turkish),
-            context.getString(R.string.settings_launcher_language_traditional_chinese_tw)
+            context.getString(R.string.settings_launcher_language_brazilian_portuguese),
+            context.getString(R.string.settings_launcher_language_persian)
         )
         val themeModeList = listOf(
             context.getString(R.string.settings_launcher_theme_mode_follow),
@@ -144,7 +143,7 @@ class LauncherSettingAdapter(
         return listOf(
             Row.SpinnerRow(
                 R.string.settings_launcher_language, languageList,
-                LocaleUtils.getLanguage(context), LauncherSettingTag.SPINNER_LANGUAGE,
+                LocaleUtils.getLanguageSpinnerIndex(context), LauncherSettingTag.SPINNER_LANGUAGE,
                 R.string.settings_launcher_language_desc,
             ),
             Row.ButtonRow(

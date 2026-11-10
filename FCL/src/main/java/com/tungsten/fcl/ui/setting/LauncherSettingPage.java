@@ -439,10 +439,9 @@ public class LauncherSettingPage extends FCLPage implements LauncherSettingAdapt
     public void onSpinnerSelect(LauncherSettingTag tag, int position) {
         switch (tag) {
             case SPINNER_LANGUAGE:
-                // 初始化/复用 bind 的回调与当前值相同，忽略；实际切换才生效
-                if (position == LocaleUtils.getLanguage(getContext())) return;
-                LocaleUtils.changeLanguage(getContext(), position);
-                // 立即生效：重建 Activity 重新走 attachBaseContext 应用新语言
+                int targetLang = LocaleUtils.SUPPORTED_LANG_IDS[position];
+                if (targetLang == LocaleUtils.getLanguage(getContext())) return;
+                LocaleUtils.changeLanguage(getContext(), targetLang);
                 getActivity().recreate();
                 break;
             case SPINNER_THEME_MODE:
