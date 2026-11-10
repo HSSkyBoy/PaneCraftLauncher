@@ -72,6 +72,8 @@ import com.tungsten.fclcore.auth.authlibinjector.AuthlibInjectorAccount
 import com.tungsten.fclcore.auth.microsoft.MicrosoftAccount
 import com.tungsten.fclcore.auth.offline.OfflineAccount
 import com.tungsten.fclcore.auth.yggdrasil.TextureModel
+import com.tungsten.fclcore.download.LibraryAnalyzer
+import com.tungsten.fclcore.download.LibraryAnalyzer.LibraryType
 import com.tungsten.fclcore.fakefx.beans.InvalidationListener
 import com.tungsten.fclcore.fakefx.beans.binding.ObjectBinding
 import com.tungsten.fclcore.mod.RemoteMod
@@ -254,7 +256,10 @@ class MainActivity : FCLActivity() {
                     },
                     onCheckUpdate = {
                         UpdateChecker.getInstance().checkAuto(this).start()
-                        Toast.makeText(this, "正在检查更新...", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Checking updates...", Toast.LENGTH_SHORT).show()
+                    },
+                    onPickBackground = { isDarkBg ->
+                        pickBackgroundImage(isDarkBg)
                     }
                 )
             }
@@ -635,21 +640,83 @@ class MainActivity : FCLActivity() {
         ViewModelProvider(this).get(VersionListViewModel::class.java)
     }
 
+    private fun pickBackgroundImage(isDarkBg: Boolean) {
+        val suffix = arrayListOf(".png", ".jpg", ".jpeg")
+        fileLauncher.launchSingleSelection(null, suffix) { files ->
+            if (files == null || files.isEmpty()) return@launchSingleSelection
+            val path = files[0].toFile(this, File(FCLPath.CACHE_DIR)).absolutePath
+            ThemeEngine.getInstance().applyAndSave(this, null, if (isDarkBg) null else path, if (isDarkBg) path else null)
+        }
+    }
+
     private fun refreshVersionDisplay(version: String?) {
         val profile = Profiles.getSelectedProfile()
         if (version != null && profile.repository.hasVersion(version)) {
-            isVersionLoading = false
-            launchState = launchState.copy(
-                selectedVersionName = version,
-                hasSelectedVersion = true,
-                isVersionLoading = false
-            )
+            isVersionLoading = true
+            launchState = launchState.copy(isVersionLoading = true)
+            lifecycleScope.launch(Dispatchers.IO) {
+                val game = runCatching {
+                    profile.repository.getGameVersion(version).orElse(getString(R.string.message_unknown))
+                }.getOrNull() ?: return@launch
+
+                val tags = mutableListOf("MC $game")
+                val analyzer = LibraryAnalyzer.analyze(
+                    profile.repository.getResolvedPreservingPatchesVersion(version),
+                    profile.repository.getGameVersion(version).orElse(null)
+                )
+                for (mark in analyzer) {
+                    val libraryId = mark.libraryId
+                    val libraryVersion = mark.libraryVersion
+                    if (libraryId == LibraryType.MINECRAFT.patchId) continue
+                    if (hasStringId(this@MainActivity, "install_installer_" + libraryId.replace("-", "_"))) {
+                        val libName = getLocalizedText(this@MainActivity, "install_installer_" + libraryId.replace("-", "_"))
+                        val cleanVer = libraryVersion?.replace("(?i)$libraryId".toRegex(), "")?.trim()
+                        tags.add(if (!cleanVer.isNullOrEmpty()) "$libName $cleanVer" else libName)
+                    }
+                }
+
+                val iconBitmap: ImageBitmap? = runCatching {
+                    profile.repository.getVersionIconImage(version).toBitmap(96, 96).asImageBitmap()
+                }.getOrNull()
+
+                val setting = profile.getVersionSetting(version)
+                val rendererDes = runCatching {
+                    RendererManager.getRenderer(setting.renderer).des
+                }.getOrDefault(setting.renderer)
+                val driverDes = if (setting.isVKDriverSystem) "" else setting.driver
+                val javaLabel = if (setting.java == "Auto") "" else setting.java
+                val memLabel = if (setting.isAutoMemory) "" else "${setting.maxMemory} MB"
+
+                withContext(Dispatchers.Main) {
+                    isVersionLoading = false
+                    launchState = launchState.copy(
+                        selectedVersionName = version,
+                        versionTags = tags,
+                        versionIcon = iconBitmap,
+                        hasSelectedVersion = true,
+                        isVersionLoading = false,
+                        rendererName = rendererDes,
+                        driverName = driverDes,
+                        javaVersion = javaLabel,
+                        memorySummary = memLabel
+                    )
+                }
+            }
         } else {
             isVersionLoading = false
+            val defaultIcon = runCatching {
+                pixelAwareIcon(this, R.drawable.img_grass).toBitmap(96, 96).asImageBitmap()
+            }.getOrNull()
             launchState = launchState.copy(
                 selectedVersionName = "",
+                versionTags = emptyList(),
+                versionIcon = defaultIcon,
                 hasSelectedVersion = false,
-                isVersionLoading = false
+                isVersionLoading = false,
+                rendererName = "",
+                driverName = "",
+                javaVersion = "",
+                memorySummary = ""
             )
         }
     }

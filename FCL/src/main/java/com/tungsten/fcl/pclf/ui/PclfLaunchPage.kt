@@ -1,5 +1,9 @@
 package com.tungsten.fcl.pclf.ui
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -8,6 +12,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -29,6 +35,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -74,15 +81,21 @@ data class LaunchUiState(
     val externalAccounts: List<Account> = emptyList(),
     val accountAvatar: ImageBitmap? = null,
     val selectedVersionName: String = "",
+    val versionTags: List<String> = emptyList(),
+    val versionIcon: ImageBitmap? = null,
     val hasSelectedVersion: Boolean = false,
     val isVersionLoading: Boolean = false,
     val isLaunching: Boolean = false,
+    val rendererName: String = "",
+    val driverName: String = "",
+    val javaVersion: String = "",
+    val memorySummary: String = "",
     val downloadTasks: List<DownloadTaskInfo> = emptyList(),
     val downloadProgress: Float = 0f
 )
 
 /**
- * 1:1 PCL2 `PageLaunchLeft` (with inline PCL account switcher/creator) + clean open `PageLaunchRight`.
+ * 1:1 PCL2 `PageLaunchLeft` (with inline PCL account switcher/creator) + balanced `PageLaunchRight`.
  */
 @Composable
 fun PclfLaunchPage(
@@ -101,6 +114,7 @@ fun PclfLaunchPage(
 ) {
     val colors = PclfTheme.colors
     val displayVersionName = state.selectedVersionName.ifBlank { stringResource(R.string.version_no_version) }
+    var tipIndex by remember { mutableIntStateOf(0) }
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val isExpanded = maxWidth >= 560.dp
@@ -154,69 +168,291 @@ fun PclfLaunchPage(
                         )
                 )
 
-                // 2. 右侧开放式干净背景留白 (`PageLaunchRight`)
-                Box(
+                // 2. 右侧卡片区：保持 max = 460.dp 舒适阅读宽度，不铺满 20:9 超宽屏幕
+                Column(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
                         .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Right))
-                        .padding(20.dp)
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 24.dp, vertical = 18.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    if (state.downloadTasks.isNotEmpty()) {
-                        PclCard(
-                            title = stringResource(R.string.pclf_download_tasks, state.downloadTasks.size),
-                            modifier = Modifier.widthIn(max = 420.dp),
-                            trailingAction = {
-                                Text(
-                                    text = "→",
-                                    color = colors.accent,
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.clickable(onClick = onOpenDownloadPanel)
-                                )
-                            }
-                        ) {
-                            LinearProgressIndicator(
-                                progress = state.downloadProgress.coerceIn(0f, 1f),
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            Spacer(Modifier.height(6.dp))
-                            Text(
-                                text = "${(state.downloadProgress * 100).toInt()}%",
-                                color = colors.textSecondary,
-                                fontSize = 12.sp
-                            )
-                        }
-                    }
+                    PclRightCardsColumn(
+                        state = state,
+                        displayVersionName = displayVersionName,
+                        tipIndex = tipIndex,
+                        onNextTip = { tipIndex = (tipIndex + 1) % 5 },
+                        onChangeRenderer = onLaunchLongClick,
+                        onOpenDownloadPanel = onOpenDownloadPanel,
+                        modifier = Modifier.widthIn(max = 460.dp)
+                    )
                 }
             }
         } else {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(colors.sidebarBg)
                     .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal))
                     .verticalScroll(rememberScrollState())
-                    .padding(18.dp),
-                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                PclLeftLaunchPanel(
-                    state = state,
-                    displayVersionName = displayVersionName,
-                    compactHeight = false,
-                    onSelectAccountTab = onSelectAccountTab,
-                    onSelectAccount = onSelectAccount,
-                    onAddAccountForTab = onAddAccountForTab,
-                    onManageAllAccounts = onManageAllAccounts,
-                    onLaunchClick = onLaunchClick,
-                    onLaunchLongClick = onLaunchLongClick,
-                    onVersionSelectClick = onVersionSelectClick,
-                    onVersionLongClick = onVersionLongClick,
-                    onVersionSettingClick = onVersionSettingClick,
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(colors.sidebarBg)
+                        .border(0.5.dp, colors.sidebarBorder)
+                ) {
+                    PclLeftLaunchPanel(
+                        state = state,
+                        displayVersionName = displayVersionName,
+                        compactHeight = false,
+                        onSelectAccountTab = onSelectAccountTab,
+                        onSelectAccount = onSelectAccount,
+                        onAddAccountForTab = onAddAccountForTab,
+                        onManageAllAccounts = onManageAllAccounts,
+                        onLaunchClick = onLaunchClick,
+                        onLaunchLongClick = onLaunchLongClick,
+                        onVersionSelectClick = onVersionSelectClick,
+                        onVersionLongClick = onVersionLongClick,
+                        onVersionSettingClick = onVersionSettingClick,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(18.dp)
+                    )
+                }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    PclRightCardsColumn(
+                        state = state,
+                        displayVersionName = displayVersionName,
+                        tipIndex = tipIndex,
+                        onNextTip = { tipIndex = (tipIndex + 1) % 5 },
+                        onChangeRenderer = onLaunchLongClick,
+                        onOpenDownloadPanel = onOpenDownloadPanel,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun PclRightCardsColumn(
+    state: LaunchUiState,
+    displayVersionName: String,
+    tipIndex: Int,
+    onNextTip: () -> Unit,
+    onChangeRenderer: () -> Unit,
+    onOpenDownloadPanel: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = PclfTheme.colors
+    val tips = listOf(
+        stringResource(R.string.pclf_tip_1),
+        stringResource(R.string.pclf_tip_2),
+        stringResource(R.string.pclf_tip_3),
+        stringResource(R.string.pclf_tip_4),
+        stringResource(R.string.pclf_tip_5)
+    )
+
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        if (state.downloadTasks.isNotEmpty()) {
+            PclCard(
+                title = stringResource(R.string.pclf_download_tasks, state.downloadTasks.size),
+                trailingAction = {
+                    Text(
+                        text = "→",
+                        color = colors.accent,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable(onClick = onOpenDownloadPanel)
+                    )
+                }
+            ) {
+                LinearProgressIndicator(
+                    progress = state.downloadProgress.coerceIn(0f, 1f),
                     modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    text = "${(state.downloadProgress * 100).toInt()}%",
+                    color = colors.textSecondary,
+                    fontSize = 12.sp
                 )
             }
         }
+
+        // 当前游戏环境卡片 (约束在 460.dp 宽度内，精致比例)
+        PclCard(
+            title = stringResource(R.string.pclf_env_title),
+            trailingAction = {
+                Text(
+                    text = stringResource(R.string.pclf_switch_renderer),
+                    color = colors.accent,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(4.dp))
+                        .clickable(onClick = onChangeRenderer)
+                        .padding(horizontal = 4.dp, vertical = 2.dp)
+                )
+            }
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (state.versionIcon != null) {
+                    Image(
+                        bitmap = state.versionIcon,
+                        contentDescription = displayVersionName,
+                        filterQuality = FilterQuality.None,
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                    )
+                    Spacer(Modifier.width(10.dp))
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = displayVersionName,
+                        color = colors.textPrimary,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    if (state.versionTags.isNotEmpty()) {
+                        Spacer(Modifier.height(4.dp))
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            state.versionTags.forEach { tag ->
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .background(colors.accent.copy(alpha = 0.11f))
+                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                                ) {
+                                    Text(
+                                        text = tag,
+                                        color = colors.accent,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        }
+                    } else if (!state.hasSelectedVersion) {
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            text = stringResource(R.string.pclf_env_no_version_hint),
+                            color = colors.textSecondary,
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+            }
+            Spacer(Modifier.height(10.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                EnvTag(
+                    label = stringResource(R.string.pclf_env_renderer),
+                    value = state.rendererName.ifBlank { stringResource(R.string.pclf_env_auto) },
+                    onClick = onChangeRenderer,
+                    modifier = Modifier.weight(1.2f)
+                )
+                EnvTag(
+                    label = stringResource(R.string.pclf_env_driver),
+                    value = state.driverName.ifBlank { stringResource(R.string.pclf_env_system_driver) },
+                    modifier = Modifier.weight(1f)
+                )
+                EnvTag(
+                    label = stringResource(R.string.pclf_env_java),
+                    value = state.javaVersion.ifBlank { stringResource(R.string.pclf_env_auto) },
+                    modifier = Modifier.weight(0.8f)
+                )
+                EnvTag(
+                    label = stringResource(R.string.pclf_env_memory),
+                    value = state.memorySummary.ifBlank { stringResource(R.string.pclf_env_auto) },
+                    modifier = Modifier.weight(0.9f)
+                )
+            }
+        }
+
+        // 你知道吗 (小贴士轮播卡片)
+        PclCard(
+            title = stringResource(R.string.pclf_tips_title),
+            trailingAction = {
+                Text(
+                    text = stringResource(R.string.pclf_tips_next),
+                    color = colors.accent,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(4.dp))
+                        .clickable(onClick = onNextTip)
+                        .padding(horizontal = 4.dp, vertical = 2.dp)
+                )
+            }
+        ) {
+            AnimatedContent(
+                targetState = tips[tipIndex % tips.size],
+                transitionSpec = { fadeIn() togetherWith fadeOut() },
+                label = "PclfTipAnim"
+            ) { tip ->
+                Text(
+                    text = tip,
+                    color = colors.textSecondary,
+                    fontSize = 12.sp,
+                    lineHeight = 18.sp
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun EnvTag(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null
+) {
+    val colors = PclfTheme.colors
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(4.dp))
+            .background(colors.accent.copy(alpha = if (colors.isDark) 0.14f else 0.07f))
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(horizontal = 7.dp, vertical = 5.dp)
+    ) {
+        Text(
+            text = label,
+            color = colors.textSecondary,
+            fontSize = 10.sp
+        )
+        Spacer(Modifier.height(1.dp))
+        Text(
+            text = value,
+            color = colors.textPrimary,
+            fontSize = 11.5.sp,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 
@@ -280,7 +516,7 @@ private fun PclLeftLaunchPanel(
             }
         }
 
-        // 中间：PCL 内联账号区（已登录显示像素头像+名字+切换弹窗；未登录当前类型显示登录按钮）
+        // 中间：PCL 内联账号区
         val activeForTab = state.selectedAccount?.takeIf { it in tabAccounts } ?: tabAccounts.firstOrNull()
         if (activeForTab != null) {
             Box(contentAlignment = Alignment.Center) {
@@ -333,7 +569,6 @@ private fun PclLeftLaunchPanel(
                     }
                 }
 
-                // PCL 风格原位账号切换 / 添加下拉菜单 (Miuix WindowListPopup)
                 val addLabelText = "+ " + when (state.activeAccountTab) {
                     PclAccountTab.MICROSOFT -> stringResource(R.string.pclf_add_microsoft)
                     PclAccountTab.OFFLINE -> stringResource(R.string.pclf_add_offline)
@@ -382,7 +617,6 @@ private fun PclLeftLaunchPanel(
                 }
             }
         } else {
-            // 当前账号类型尚无账号：直接原位显示 PCL 登录 / 创建按钮
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.dp),

@@ -52,6 +52,7 @@ import com.tungsten.fcl.pclf.theme.PclfTheme
 import com.tungsten.fcl.pclf.ui.components.PclButton
 import com.tungsten.fcl.pclf.ui.components.PclMainTab
 import com.tungsten.fcl.pclf.ui.components.PclTopBar
+import com.tungsten.fcl.ui.setting.SettingUI
 import com.tungsten.fclcore.auth.Account
 import com.tungsten.fcllibrary.component.ui.FCLCommonUI
 import top.yukonga.miuix.kmp.basic.Card
@@ -63,6 +64,7 @@ import top.yukonga.miuix.kmp.basic.Text
 enum class PclSubpage(@StringRes val titleRes: Int, val uiIndex: Int) {
     MANAGE(R.string.manage, 1),
     CONTROLLER(R.string.pclf_more_controller, 3),
+    LEGACY_SETUP(R.string.pclf_setup_legacy_more, 5),
     ACCOUNT(R.string.pclf_more_account, 6),
     VERSION(R.string.pclf_btn_version_select, 7)
 }
@@ -92,6 +94,7 @@ fun PclfMainScreen(
     onShareLatestLog: () -> Unit,
     onOpenShell: () -> Unit,
     onCheckUpdate: () -> Unit,
+    onPickBackground: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val colors = PclfTheme.colors
@@ -164,8 +167,12 @@ fun PclfMainScreen(
                             ui = remember(legacyUiProvider) { legacyUiProvider(4) }
                         )
 
-                        PclMainTab.SETUP -> LegacyFclUiHost(
-                            ui = remember(legacyUiProvider) { legacyUiProvider(5) }
+                        PclMainTab.SETUP -> PclfSetupPage(
+                            legacySettingUiProvider = { legacyUiProvider(5) as SettingUI },
+                            onPickBackground = onPickBackground,
+                            onShareLatestLog = onShareLatestLog,
+                            onCheckUpdate = onCheckUpdate,
+                            onOpenFullLegacyGameSetting = { onOpenSubpage(PclSubpage.LEGACY_SETUP) }
                         )
 
                         PclMainTab.MORE -> PclfMorePage(
