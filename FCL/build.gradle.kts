@@ -6,10 +6,12 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.HexFormat
 import java.util.Properties
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
+import java.util.zip.ZipOutputStream
 
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
@@ -294,9 +296,48 @@ ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
 }
 
+// AGP 9.4.1 禁止兩個 AAR 共用同一 namespace；為 lwjgl-3.4.1 產生僅改寫 manifest package 的本地副本，不動 libs/ 原檔
+fun patchedLwjgl341Aar(): File {
+    val srcAar = file("libs/lwjgl-3.4.1-natives-release.aar")
+    val outAar = layout.buildDirectory.file("patched-libs/lwjgl-3.4.1-natives-release.aar").get().asFile
+    if (!outAar.exists() || outAar.lastModified() < srcAar.lastModified()) {
+        outAar.parentFile.mkdirs()
+        ZipFile(srcAar).use { zin ->
+            ZipOutputStream(outAar.outputStream().buffered()).use { zout ->
+                val entries = zin.entries()
+                while (entries.hasMoreElements()) {
+                    val entry = entries.nextElement()
+                    val newEntry = ZipEntry(entry.name)
+                    zout.putNextEntry(newEntry)
+                    if (!entry.isDirectory) {
+                        if (entry.name == "AndroidManifest.xml") {
+                            val xml = zin.getInputStream(entry).bufferedReader().readText()
+                                .replace("org.angelauramc.lwjgl3x", "org.angelauramc.lwjgl341")
+                            zout.write(xml.toByteArray(Charsets.UTF_8))
+                        } else {
+                            zin.getInputStream(entry).use { it.copyTo(zout) }
+                        }
+                    }
+                    zout.closeEntry()
+                }
+            }
+        }
+    }
+    return outAar
+}
+
 dependencies {
     coreLibraryDesugaring(libs.desugar.jdk.libs)
-    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar", "*.aar"))))
+    implementation(
+        fileTree(
+            mapOf(
+                "dir" to "libs",
+                "include" to listOf("*.jar", "*.aar"),
+                "exclude" to listOf("lwjgl-3.4.1-natives-release.aar")
+            )
+        )
+    )
+    implementation(files(patchedLwjgl341Aar()))
     implementation(project(":ZipFileSystem"))
     implementation(project(":Terracotta"))
     implementation(libs.commons.io)
@@ -337,6 +378,7 @@ dependencies {
     implementation(libs.miuix.ui)
     implementation(libs.miuix.preference)
     implementation(libs.miuix.icons)
+    implementation(libs.miuix.squircle)
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation(libs.androidx.test.runner)
