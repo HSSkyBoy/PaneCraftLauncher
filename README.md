@@ -16,7 +16,10 @@
 简体中文 | [English](./README_EN.md) | [Русский язык](./README_RU.md)
 
 > ✨ **项目简介**  
-> **Pane Craft Launcher (PCL)** 是专为 Android 横屏手机、平板与折叠屏打造的 *Minecraft: Java Edition* 启动器。基于 **[Fold Craft Launcher](https://github.com/FCL-Team/FoldCraftLauncher)** 核心、**[HMCL](https://github.com/HMCL-dev/HMCL)**（`fclcore`）与 **[Amethyst-Android](https://github.com/AngelAuraMC/Amethyst-Android)** JVM 后端，采用 **Jetpack Compose + Miuix** 重构为参考 **Plain Craft Launcher 2 (PCL2)** 的双栏卡片交互体验。
+> **你说得对，但是「Pane Craft Launcher (PCL)」不是官方的 [Plain Craft Launcher (PCL / PCL2)](https://github.com/Meloong-Git/PCL)，这只是一个纯正的玩梗向社区二改分支！**  
+> 故事发生在名为「Android 横屏」的移动端开源世界——在这里，被选中的手机、平板与折叠屏玩家将被授予「Jetpack Compose + Miuix」的双栏卡片之力，引导模组加载与渲染插件。基于 **[Fold Craft Launcher](https://github.com/FCL-Team/FoldCraftLauncher)** 骨架、**[HMCL](https://github.com/HMCL-dev/HMCL)**（`fclcore`）的核心功能，并使用 **[Amethyst-Android](https://github.com/AngelAuraMC/Amethyst-Android)** 后端，让您能在移动设备上畅玩 Java 版 MC，支持模组加载与全版本运行。
+>
+> > ⚠️ **声明**：本项目与官方 Plain Craft Launcher 系列（[Meloong-Git/PCL](https://github.com/Meloong-Git/PCL)）**没有任何隶属、合作或官方授权关系**，「PCL」与「Pane Craft Launcher」命名纯属社区致敬兼玩梗；遇到任何问题请只在本仓库反馈，**切勿打扰原 PCL 官方作者与团队**。
 >
 > - 纯 64 位现代化构建（`minSdk 28` / `arm64-v8a` & `x86_64`）
 > - 原生 Compose + Miuix 重做启动页、账户管理、PCL 分栏设置与百宝箱页面
