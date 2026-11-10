@@ -97,56 +97,81 @@ public class OfflineAccount extends Account {
         invalidate();
     }
 
-    protected boolean loadAuthlibInjector(Skin skin) {
-        return skin != null && skin.type() != Skin.Type.DEFAULT;
+    protected boolean hasLocalOverride(Skin skin) {
+        return skin != null
+                && skin.type() == Skin.Type.LOCAL_FILE
+                && (!StringUtils.isBlank(skin.localSkinPath()) || !StringUtils.isBlank(skin.localCapePath()));
     }
 
     @Override
     public AuthInfo logIn() throws AuthenticationException {
-        // Using "legacy" user type here because "mojang" user type may cause "invalid session token" or "disconnected" when connecting to a game server.
+        // Using "msa" user type here because "mojang" user type may cause "invalid session token" or "disconnected" when connecting to a game server.
         AuthInfo authInfo = new AuthInfo(username, uuid, UUIDTypeAdapter.fromUUID(UUID.randomUUID()), AuthInfo.USER_TYPE_MSA, "{}");
 
-        if (loadAuthlibInjector(skin)) {
-            CompletableFuture<AuthlibInjectorArtifactInfo> artifactTask = CompletableFuture.supplyAsync(() -> {
-                try {
-                    return downloader.getArtifactInfo();
-                } catch (IOException e) {
-                    throw new CompletionException(new AuthlibInjectorDownloadException(e));
-                }
-            });
+        Skin effectiveSkin = skin != null ? skin : Skin.createDefault();
+        boolean requireInjector = hasLocalOverride(effectiveSkin);
 
-            AuthlibInjectorArtifactInfo artifact;
-            try {
-                artifact = artifactTask.get();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new AuthenticationException(e);
-            } catch (ExecutionException e) {
-                if (e.getCause() instanceof AuthenticationException) {
-                    throw (AuthenticationException) e.getCause();
-                } else {
-                    throw new AuthenticationException(e.getCause());
-                }
-            }
-
-            try {
-                return new OfflineAuthInfo(authInfo, artifact);
-            } catch (Exception e) {
+        Skin.LoadedSkin resolvedSkin;
+        try {
+            resolvedSkin = effectiveSkin.load(username, uuid).run();
+        } catch (Exception e) {
+            if (requireInjector) {
                 throw new AuthenticationException(e);
             }
-        } else {
+            resolvedSkin = null;
+        }
+
+        boolean hasAnyTexture = resolvedSkin != null && (resolvedSkin.skin() != null || resolvedSkin.cape() != null);
+        if (!hasAnyTexture) {
             return authInfo;
+        }
+
+        CompletableFuture<AuthlibInjectorArtifactInfo> artifactTask = CompletableFuture.supplyAsync(() -> {
+            try {
+                return downloader.getArtifactInfo();
+            } catch (IOException e) {
+                throw new CompletionException(new AuthlibInjectorDownloadException(e));
+            }
+        });
+
+        AuthlibInjectorArtifactInfo artifact;
+        try {
+            artifact = artifactTask.get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new AuthenticationException(e);
+        } catch (ExecutionException e) {
+            if (!requireInjector) {
+                // Keep offline play working even when authlib-injector cannot be downloaded offline
+                return authInfo;
+            }
+            if (e.getCause() instanceof AuthenticationException) {
+                throw (AuthenticationException) e.getCause();
+            } else {
+                throw new AuthenticationException(e.getCause());
+            }
+        }
+
+        try {
+            return new OfflineAuthInfo(authInfo, artifact, resolvedSkin);
+        } catch (Exception e) {
+            if (!requireInjector) {
+                return authInfo;
+            }
+            throw new AuthenticationException(e);
         }
     }
 
     private class OfflineAuthInfo extends AuthInfo {
         private final AuthlibInjectorArtifactInfo artifact;
+        private final Skin.LoadedSkin resolvedSkin;
         private YggdrasilServer server;
 
-        public OfflineAuthInfo(AuthInfo authInfo, AuthlibInjectorArtifactInfo artifact) {
+        public OfflineAuthInfo(AuthInfo authInfo, AuthlibInjectorArtifactInfo artifact, Skin.LoadedSkin resolvedSkin) {
             super(authInfo.getUsername(), authInfo.getUUID(), authInfo.getAccessToken(), USER_TYPE_MSA, authInfo.getUserProperties());
 
             this.artifact = artifact;
+            this.resolvedSkin = resolvedSkin;
         }
 
         @Override
@@ -156,8 +181,12 @@ public class OfflineAccount extends Account {
             server.start();
 
             try {
-                server.addCharacter(new YggdrasilServer.Character(uuid, username,
-                        skin != null ? skin.load().run() : null));
+                Skin.LoadedSkin toServe = resolvedSkin;
+                if (toServe == null) {
+                    Skin effectiveSkin = skin != null ? skin : Skin.createDefault();
+                    toServe = effectiveSkin.load(username, uuid).run();
+                }
+                server.addCharacter(new YggdrasilServer.Character(uuid, username, toServe));
             } catch (IOException e) {
                 // ignore
             } catch (Exception e) {

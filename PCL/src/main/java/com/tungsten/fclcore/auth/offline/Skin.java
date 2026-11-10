@@ -31,6 +31,7 @@ import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Function;
 
 public record Skin(Type type, TextureModel textureModel, String localSkinPath,
@@ -69,31 +70,54 @@ public record Skin(Type type, TextureModel textureModel, String localSkinPath,
         return textureModel == null ? TextureModel.STEVE : textureModel;
     }
 
+    public static Skin createDefault() {
+        return new Skin(Type.DEFAULT, TextureModel.STEVE, null, null);
+    }
+
     public Task<LoadedSkin> load() {
-        switch (type) {
-            case DEFAULT:
-                return Task.supplyAsync(() -> null);
-            case ALEX:
-            case STEVE:
-                if (defaultSkinLoader == null) {
-                    return Task.supplyAsync(() -> null);
+        return load(null, null);
+    }
+
+    /**
+     * Loads the offline skin & cape for the given player.
+     * Local custom files override their corresponding slot; any non-overridden slot
+     * automatically resolves to the official Mojang account with the same username.
+     */
+    public Task<LoadedSkin> load(String username, UUID fallbackUuid) {
+        return Task.supplyAsync(() -> {
+            Texture localSkin = null;
+            Texture localCape = null;
+            if (type == Type.LOCAL_FILE) {
+                Optional<Path> skinPath = FileUtils.tryGetPath(localSkinPath).filter(Files::isRegularFile);
+                Optional<Path> capePath = FileUtils.tryGetPath(localCapePath).filter(Files::isRegularFile);
+                if (skinPath.isPresent()) {
+                    localSkin = Texture.loadTexture(Files.newInputStream(skinPath.get()));
                 }
-                TextureModel model = type == Type.ALEX ? TextureModel.ALEX : TextureModel.STEVE;
-                return Task.supplyAsync(() -> new LoadedSkin(model, Texture.loadTexture(defaultSkinLoader.apply(type)), null));
-            case LOCAL_FILE:
-                return Task.supplyAsync(() -> {
-                    Texture skin = null, cape = null;
-                    Optional<Path> skinPath = FileUtils.tryGetPath(localSkinPath);
-                    Optional<Path> capePath = FileUtils.tryGetPath(localCapePath);
-                    if (skinPath.isPresent())
-                        skin = Texture.loadTexture(Files.newInputStream(skinPath.get()));
-                    if (capePath.isPresent())
-                        cape = Texture.loadTexture(Files.newInputStream(capePath.get()));
-                    return new LoadedSkin(textureModel(), skin, cape);
-                });
-            default:
-                throw new UnsupportedOperationException();
-        }
+                if (capePath.isPresent()) {
+                    localCape = Texture.loadTexture(Files.newInputStream(capePath.get()));
+                }
+            }
+
+            Optional<LoadedSkin> official = (localSkin == null || localCape == null)
+                    ? MojangSkinResolver.resolve(username)
+                    : Optional.empty();
+
+            Texture finalSkin = localSkin != null ? localSkin : official.map(LoadedSkin::skin).orElse(null);
+            Texture finalCape = localCape != null ? localCape : official.map(LoadedSkin::cape).orElse(null);
+
+            TextureModel finalModel;
+            if (localSkin != null) {
+                finalModel = textureModel();
+            } else if (official.isPresent() && official.get().model() != null) {
+                finalModel = official.get().model();
+            } else if (fallbackUuid != null) {
+                finalModel = TextureModel.detectUUID(fallbackUuid);
+            } else {
+                finalModel = TextureModel.STEVE;
+            }
+
+            return new LoadedSkin(finalModel, finalSkin, finalCape);
+        });
     }
 
     public Map<?, ?> toStorage() {

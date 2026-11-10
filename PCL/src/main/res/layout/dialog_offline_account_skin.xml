@@ -44,8 +44,18 @@
             android:gravity="center_vertical"
             android:orientation="vertical">
 
-            <!-- Skin Model Selection -->
+            <!-- Official same-name skin/cape notice (always active by default) -->
             <com.tungsten.fcllibrary.component.view.FCLTextView
+                android:id="@+id/official_skin_hint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="8dp"
+                android:textSize="12sp" />
+
+            <!-- Skin Model Selection (only shown when importing a custom local skin) -->
+            <com.tungsten.fcllibrary.component.view.FCLTextView
+                android:id="@+id/model_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"

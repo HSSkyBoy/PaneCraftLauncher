@@ -36,6 +36,7 @@ import com.tungsten.fclauncher.utils.FCLPath;
 import com.tungsten.fclcore.auth.Account;
 import com.tungsten.fclcore.auth.ServerResponseMalformedException;
 import com.tungsten.fclcore.auth.microsoft.MicrosoftAccount;
+import com.tungsten.fclcore.auth.offline.MojangSkinResolver;
 import com.tungsten.fclcore.auth.offline.OfflineAccount;
 import com.tungsten.fclcore.auth.offline.Skin;
 import com.tungsten.fclcore.auth.yggdrasil.Texture;
@@ -80,6 +81,12 @@ public final class TexturesLoader {
     private static final ThreadPoolExecutor POOL = threadPool("TexturesDownload", true, 2, 10, TimeUnit.SECONDS);
     private static final Path TEXTURES_DIR = new File(FCLPath.FILES_DIR).toPath().resolve("assets").resolve("skins");
 
+    static {
+        if (FCLPath.CACHE_DIR != null) {
+            MojangSkinResolver.setCacheDir(new File(FCLPath.CACHE_DIR, "mojang_skins").toPath());
+        }
+    }
+
     private static Path getTexturePath(Texture texture) {
         String url = texture.getUrl();
         int slash = url.lastIndexOf('/');
@@ -104,16 +111,17 @@ public final class TexturesLoader {
 
         if (texture.getUrl().equals("offline") && accounts.length == 1) {
             OfflineAccount account = accounts[0];
-            Skin skin = account.getSkin();
-            if (skin != null) {
-                Skin.LoadedSkin loadedSkin = skin.load().run();
-                if (loadedSkin != null) {
-                    Bitmap img = loadedSkin.skin() == null ? null : loadedSkin.skin().getImage();
-                    if (img == null) {
-                        img = getDefaultSkin(TextureModel.detectUUID(account.getUUID())).image();
-                    }
-                    return new LoadedTexture(img, metadata);
+            Skin effectiveSkin = account.getSkin() != null ? account.getSkin() : Skin.createDefault();
+            Skin.LoadedSkin loadedSkin = effectiveSkin.load(account.getUsername(), account.getUUID()).run();
+            if (loadedSkin != null) {
+                TextureModel resolvedModel = loadedSkin.model() != null
+                        ? loadedSkin.model()
+                        : TextureModel.detectUUID(account.getUUID());
+                Bitmap img = loadedSkin.skin() == null ? null : loadedSkin.skin().getImage();
+                if (img == null) {
+                    img = getDefaultSkin(resolvedModel).image();
                 }
+                return new LoadedTexture(img, singletonMap("model", resolvedModel.modelName));
             }
             return getDefaultSkin(TextureModel.detectUUID(account.getUUID()));
         }
@@ -151,13 +159,10 @@ public final class TexturesLoader {
 
         if (texture.getUrl().equals("offline") && accounts.length == 1) {
             OfflineAccount account = accounts[0];
-            Skin skin = account.getSkin();
-            if (skin != null) {
-                Skin.LoadedSkin loadedSkin = skin.load().run();
-                // 离线皮肤可能没有 cape（ALEX/STEVE 默认皮肤、未配置本地披风时 cape 为 null）
-                if (loadedSkin != null && loadedSkin.cape() != null) {
-                    return loadedSkin.cape().getImage();
-                }
+            Skin effectiveSkin = account.getSkin() != null ? account.getSkin() : Skin.createDefault();
+            Skin.LoadedSkin loadedSkin = effectiveSkin.load(account.getUsername(), account.getUUID()).run();
+            if (loadedSkin != null && loadedSkin.cape() != null) {
+                return loadedSkin.cape().getImage();
             }
             return null;
         }
@@ -297,6 +302,25 @@ public final class TexturesLoader {
      * 供 SkinTextureLoader 的回调式加载使用，兜底行为与 textureBinding 一致：加载失败返回默认皮肤。
      */
     public static SkinAndCape loadSkinAndCape(Account account) {
+        if (account instanceof OfflineAccount offline) {
+            TextureModel fallbackModel = TextureModel.detectUUID(offline.getUUID());
+            Bitmap finalSkin = getDefaultSkin(fallbackModel).image();
+            Bitmap finalCape = null;
+            TextureModel model = fallbackModel;
+            try {
+                Skin effectiveSkin = offline.getSkin() != null ? offline.getSkin() : Skin.createDefault();
+                Skin.LoadedSkin loaded = effectiveSkin.load(offline.getUsername(), offline.getUUID()).run();
+                if (loaded != null) {
+                    model = loaded.model() != null ? loaded.model() : fallbackModel;
+                    finalSkin = loaded.skin() != null ? loaded.skin().getImage() : getDefaultSkin(model).image();
+                    finalCape = loaded.cape() != null ? loaded.cape().getImage() : null;
+                }
+            } catch (Exception e) {
+                LOG.log(Level.WARNING, "Failed to load offline texture, using default", e);
+            }
+            return new SkinAndCape(finalSkin, finalCape, model);
+        }
+
         Bitmap defaultSkin = getDefaultSkin(TextureModel.detectUUID(account.getUUID())).image();
         Bitmap finalSkin = defaultSkin;
         Bitmap finalCape = null;
@@ -308,12 +332,7 @@ public final class TexturesLoader {
                 Texture skin = textures.get().get(TextureType.SKIN);
                 Texture cape = textures.get().get(TextureType.CAPE);
                 if (skin != null && StringUtils.isNotBlank(skin.getUrl())) {
-                    if (account instanceof OfflineAccount) {
-                        finalSkin = loadTexture(skin, (OfflineAccount) account).image();
-                        finalCape = loadCape(skin, (OfflineAccount) account);
-                    } else {
-                        finalSkin = loadTexture(skin).image();
-                    }
+                    finalSkin = loadTexture(skin).image();
                 }
                 if (cape != null && StringUtils.isNotBlank(cape.getUrl())) {
                     finalCape = loadCape(cape);
@@ -329,6 +348,12 @@ public final class TexturesLoader {
         Bitmap[] fallback = new Bitmap[]{getDefaultSkin(TextureModel.detectUUID(account.getUUID())).image(), null};
         return BindingMapping.of(account.getTextures())
                 .asyncMap(it -> {
+                    if (account instanceof OfflineAccount) {
+                        return CompletableFuture.supplyAsync(() -> {
+                            SkinAndCape result = loadSkinAndCape(account);
+                            return new Bitmap[]{result.skin(), result.cape()};
+                        }, POOL);
+                    }
                     if (it.isPresent()) {
                         Texture skin = it.get().get(TextureType.SKIN);
                         Texture cape = it.get().get(TextureType.CAPE);
@@ -339,12 +364,7 @@ public final class TexturesLoader {
                             Bitmap finalCape = null;
                             try {
                                 if (loadSkin) {
-                                    if (account instanceof OfflineAccount) {
-                                        finalSkin = loadTexture(skin, (OfflineAccount) account).image();
-                                        finalCape = loadCape(skin, (OfflineAccount) account);
-                                    } else {
-                                        finalSkin = loadTexture(skin).image();
-                                    }
+                                    finalSkin = loadTexture(skin).image();
                                 }
                                 if (loadCape) {
                                     finalCape = loadCape(cape);

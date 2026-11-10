@@ -1,6 +1,7 @@
 package com.tungsten.fcl.ui.account
 
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.view.View
 import android.view.WindowManager
 import android.widget.Toast
@@ -20,6 +21,7 @@ import com.tungsten.fclcore.auth.yggdrasil.TextureModel
 import com.tungsten.fclcore.task.Schedulers
 import com.tungsten.fclcore.util.Logging
 import com.tungsten.fclcore.util.StringUtils
+import com.tungsten.fclcore.util.skin.NormalizedSkin
 import com.tungsten.fcllibrary.component.dialog.FCLDialog
 import com.tungsten.fcllibrary.component.view.FCLTextView
 import java.io.File
@@ -54,15 +56,17 @@ class OfflineAccountSkinDialog(
         binding.positive.setOnClickListener(this)
         binding.negative.setOnClickListener(this)
 
-        // Restore state from existing skin
-        val skin = account.skin
-        if (skin == null) {
-            model = TextureModel.detectUUID(account.uuid)
+        binding.officialSkinHint.text =
+            context.getString(R.string.account_offline_official_skin_hint, account.username)
+
+        // Restore state from existing skin; non-local slots always fall back to same-name official account
+        val existingSkin = account.skin
+        if (existingSkin != null && existingSkin.type() == Skin.Type.LOCAL_FILE) {
+            model = existingSkin.textureModel()
+            binding.skinPathText.string = existingSkin.localSkinPath()
+            binding.capePathText.string = existingSkin.localCapePath()
         } else {
-            // Restore model: legacy ALEX -> slim, otherwise from stored texture model
-            model = if (skin.type() == Skin.Type.ALEX) TextureModel.ALEX else skin.textureModel()
-            binding.skinPathText.string = skin.localSkinPath()
-            binding.capePathText.string = skin.localCapePath()
+            model = TextureModel.detectUUID(account.uuid)
         }
         refreshModelRadio()
     }
@@ -87,7 +91,8 @@ class OfflineAccountSkinDialog(
     }
 
     private fun refreshSkin() {
-        this.skin.load()
+        val hasCustomSkin = StringUtils.isNotBlank(binding.skinPathText.string)
+        this.skin.load(account.username, account.uuid)
             .whenComplete(
                 Schedulers.androidUIThread()
             ) { result: LoadedSkin?, exception: Exception? ->
@@ -99,23 +104,15 @@ class OfflineAccountSkinDialog(
                         Toast.LENGTH_SHORT
                     ).show()
                 } else {
-                    // Model is controlled by the user's classic/slim selection
-                    val slim = model == TextureModel.ALEX
-                    if (result == null || result.skin() == null && result.cape() == null) {
-                        // No custom skin selected: fall back to the default skin of the chosen model
-                        renderer.updateTexture(
-                            TexturesLoader.getDefaultSkin(model).image(),
-                            null,
-                            slim
-                        )
-                        return@whenComplete
+                    val effectiveModel = if (hasCustomSkin) {
+                        model
+                    } else {
+                        result?.model() ?: TextureModel.detectUUID(account.uuid)
                     }
+                    val slim = effectiveModel == TextureModel.ALEX
                     renderer.updateTexture(
-                        if (result.skin() != null) result.skin()
-                            .image else TexturesLoader.getDefaultSkin(
-                            model
-                        ).image(),
-                        if (result.cape() != null) result.cape().image else null,
+                        result?.skin()?.image ?: TexturesLoader.getDefaultSkin(effectiveModel).image(),
+                        result?.cape()?.image,
                         slim
                     )
                 }
@@ -123,6 +120,10 @@ class OfflineAccountSkinDialog(
     }
 
     private fun refreshModelRadio() {
+        val hasCustomSkin = StringUtils.isNotBlank(binding.skinPathText.string)
+        val visibility = if (hasCustomSkin) View.VISIBLE else View.GONE
+        binding.modelTitle.visibility = visibility
+        binding.modelGroup.visibility = visibility
         binding.modelClassic.setChecked(model == TextureModel.STEVE)
         binding.modelSlim.setChecked(model == TextureModel.ALEX)
     }
@@ -141,7 +142,7 @@ class OfflineAccountSkinDialog(
                     if (hasCape) capePath else null
                 )
             } else {
-                Skin(Skin.Type.DEFAULT, model, null, null)
+                Skin.createDefault()
             }
         }
 
@@ -164,14 +165,22 @@ class OfflineAccountSkinDialog(
                 null,
                 listOf(".png")
             ) {
-                binding.skinPathText.string =
-                    it?.get(0)?.toFile(context, File(FCLPath.CACHE_DIR))?.absolutePath
-                        ?: return@launchSingleSelection
+                val path = it?.get(0)?.toFile(context, File(FCLPath.CACHE_DIR))?.absolutePath
+                    ?: return@launchSingleSelection
+                binding.skinPathText.string = path
+                runCatching {
+                    val bmp = BitmapFactory.decodeFile(path)
+                    if (bmp != null) {
+                        model = if (NormalizedSkin(bmp).isSlim) TextureModel.ALEX else TextureModel.STEVE
+                    }
+                }
+                refreshModelRadio()
                 refreshSkin()
             }
 
             binding.skinPathReset -> {
                 binding.skinPathText.string = null
+                refreshModelRadio()
                 refreshSkin()
             }
 
@@ -203,11 +212,15 @@ class OfflineAccountSkinDialog(
         }
     }
 
-    /** 把临时选中的皮肤/披风文件落位到 SKIN_DIR 固定名，并更新为最终路径 */
+    /** 把临时选中的皮肤/披风文件落位到 SKIN_DIR 固定名，或清除已重置的文件 */
     private fun commitSkinFile(text: FCLTextView, fileName: String) {
-        val srcPath = text.string ?: return
-        val src = File(srcPath)
         val dest = File(FCLPath.SKIN_DIR, fileName)
+        val srcPath = text.string
+        if (srcPath.isNullOrBlank()) {
+            dest.delete()
+            return
+        }
+        val src = File(srcPath)
         if (src.canonicalPath != dest.canonicalPath) {
             runCatching { src.copyTo(dest, overwrite = true) }
                 .onSuccess { text.string = dest.absolutePath }
