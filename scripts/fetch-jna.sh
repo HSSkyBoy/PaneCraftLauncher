@@ -6,7 +6,7 @@ set -e
 MAVEN_URL="https://repo1.maven.org/maven2/net/java/dev/jna/jna"
 VERSIONS="5.13.0 5.14.0 5.15.0 5.16.0 5.17.0 5.18.0 5.19.1"
 ABIS="arm64-v8a armeabi-v7a x86 x86_64"
-ASSETS_DIR="$(cd "$(dirname "$0")/.." && pwd)/FCL/src/main/assets/app_runtime/jna"
+ASSETS_DIR="$(cd "$(dirname "$0")/.." && pwd)/PCL/src/main/assets/app_runtime/jna"
 
 rm -rf "$ASSETS_DIR"
 mkdir -p "$ASSETS_DIR"
