@@ -1,28 +1,26 @@
 <div align="center">
-    <img width="75" src="/FCL/src/main/res/drawable/img_app.png"></img>
+    <img width="75" src="/PCL/src/main/res/drawable/img_app.png"></img>
 </div>
 
-<h1 align="center">Fold Craft Launcher</h1>
+<h1 align="center">Pane Craft Launcher (PCL)</h1>
 
 <div align="center">
 
-[![Android CI](https://github.com/FCL-Team/FoldCraftLauncher/actions/workflows/build.yml/badge.svg)](https://github.com/FCL-Team/FoldCraftLauncher/actions/workflows/build.yml)
-![Downloads](https://img.shields.io/github/downloads/FCL-Team/FoldCraftLauncher/total?style=flat-square&color=f18cb9)
-![Release](https://img.shields.io/github/v/release/FCL-Team/FoldCraftLauncher?style=flat-square&color=f18cb9)
-
-[![Discord](https://img.shields.io/badge/Discord-red?logo=discord&logoColor=white)](https://discord.gg/ffhvuXTwyV)
-[![QQ](https://img.shields.io/badge/QQ-green)](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=LwxydGEvBZJnn09sXOjkQo9tuuLcYwx5&authKey=seyY5pPUCIHMWS5FqVryq926T0G2GarSXetpxxV9DJxBVt%2FPcg1vxN%2F%2FXpsCowyk&noverify=0&group_code=762054349)
-[![Sponsor](https://img.shields.io/badge/sponsor-blue?logo=GitHub-Sponsors)](https://afdian.com/@tungs)
+[![Android CI](https://github.com/HSSkyBoy/ProCraftLauncherFold/actions/workflows/build.yml/badge.svg)](https://github.com/HSSkyBoy/ProCraftLauncherFold/actions/workflows/build.yml)
+![Downloads](https://img.shields.io/github/downloads/HSSkyBoy/ProCraftLauncherFold/total?style=flat-square&color=1576d8)
+![Release](https://img.shields.io/github/v/release/HSSkyBoy/ProCraftLauncherFold?style=flat-square&color=1576d8)
 
 </div>
 
 🌍 **语言**  
 简体中文 | [English](./README_EN.md) | [Русский язык](./README_RU.md)
 
-> 你说得对，但是[「FoldCraft Launcher」](https://github.com/FCL-Team/FoldCraftLauncher)是由[FCL-Team](https://github.com/FCL-Team)基于[HMCL](https://github.com/HMCL-dev/HMCL)的核心功能，使用[PojavLauncher](https://github.com/PojavLauncherTeam/PojavLauncher)后端开发的[Minecraft](https://www.minecraft.net/) [Java](https://baike.baidu.com/item/Java%E5%B9%B3%E5%8F%B0/3793459)版启动器。启动器运行在一个被称作[「安卓」](https://baike.baidu.com/item/android/60243)的系统，在这里，被系统选中的人将被授予「JVM」，导引[Java](https://baike.baidu.com/item/Java%E5%B9%B3%E5%8F%B0/3793459)之力。你将扮演一位名为「小白」的神秘用户，在自由的使用中安装不同版本、各有千秋独特的[模组](https://baike.baidu.com/item/%E6%A8%A1%E7%BB%84/58377440)，和它们一起运行，找出崩溃闪退的原因，同时逐步发掘「xxException:」的真相。
-
 > ✨ **项目简介**  
-> 「Fold Craft Launcher」是由FCL团队开发的Android平台Minecraft: Java Edition启动器。基于[HMCL](https://github.com/HMCL-dev/HMCL)的核心功能，使用[Amethyst-Android](https://github.com/AngelAuraMC/Amethyst-Android)后端，让您能在移动设备上畅玩Java版MC，支持模组加载与全版本运行。
+> **Pane Craft Launcher (PCL)** 是专为 Android 横屏手机、平板与折叠屏打造的 *Minecraft: Java Edition* 启动器。基于 **[Fold Craft Launcher](https://github.com/FCL-Team/FoldCraftLauncher)** 核心、**[HMCL](https://github.com/HMCL-dev/HMCL)**（`fclcore`）与 **[Amethyst-Android](https://github.com/AngelAuraMC/Amethyst-Android)** JVM 后端，采用 **Jetpack Compose + Miuix** 重构为参考 **Plain Craft Launcher 2 (PCL2)** 的双栏卡片交互体验。
+>
+> - 纯 64 位现代化构建（`minSdk 28` / `arm64-v8a` & `x86_64`）
+> - 原生 Compose + Miuix 重做启动页、账户管理、PCL 分栏设置与百宝箱页面
+> - 兼容 `/sdcard/FCL/` 游戏目录及 `FCLRendererPlugin` / `FCLDriverPlugin` 插件生态
 
 ---
 
@@ -67,11 +65,14 @@
 
 ## 🤝 贡献与致谢
 ### 贡献者墙
-<a href="https://github.com/FCL-Team/FoldCraftLauncher/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=FCL-Team/FoldCraftLauncher" />
+<a href="https://github.com/HSSkyBoy/ProCraftLauncherFold/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=HSSkyBoy/ProCraftLauncherFold" />
 </a>
 
 ### 相关项目
+- [Fold Craft Launcher (FCL)](https://github.com/FCL-Team/FoldCraftLauncher)：上游核心引擎与 Android 启动基座
+- [Plain Craft Launcher 2 (PCL2)](https://github.com/Meloong-Git/PCL)：UI 与双栏分屏交互灵感来源
+- [Miuix](https://github.com/compose-miuix-ui/miuix)：Compose 多平台质感 UI 组件库
 - [HMCL](https://github.com/HMCL-dev/HMCL)：核心功能来源（fclcore 移植自 `org.jackhuang.hmcl`）
 - [Boat 及其相关项目](https://github.com/AOF-Dev/Boat)
 - [Amethyst-Android](https://github.com/AngelAuraMC/Amethyst-Android)（PojavLauncher Android fork）：JVM 启动与渲染后端

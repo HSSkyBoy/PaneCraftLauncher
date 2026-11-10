@@ -1,25 +1,22 @@
 <div align="center">
-    <img width="75" src="/FCL/src/main/res/drawable/img_app.png"></img>
+    <img width="75" src="/PCL/src/main/res/drawable/img_app.png"></img>
 </div>
 
-<h1 align="center">Fold Craft Launcher</h1>
+<h1 align="center">Pane Craft Launcher (PCL)</h1>
 
 <div align="center">
 
-[![Android CI](https://github.com/FCL-Team/FoldCraftLauncher/actions/workflows/build.yml/badge.svg)](https://github.com/FCL-Team/FoldCraftLauncher/actions/workflows/build.yml)
-![Загрузки](https://img.shields.io/github/downloads/FCL-Team/FoldCraftLauncher/total?style=flat-square&color=f18cb9)
-![Релиз](https://img.shields.io/github/v/release/FCL-Team/FoldCraftLauncher?style=flat-square&color=f18cb9)
-
-[![Discord](https://img.shields.io/badge/Discord-red?logo=discord&logoColor=white)](https://discord.gg/ffhvuXTwyV)
-[![QQ](https://img.shields.io/badge/QQ-green)](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=LwxydGEvBZJnn09sXOjkQo9tuuLcYwx5&authKey=seyY5pPUCIHMWS5FqVryq926T0G2GarSXetpxxV9DJxBVt%2FPcg1vxN%2F%2FXpsCowyk&noverify=0&group_code=762054349)
-[![Поддержать](https://img.shields.io/badge/sponsor-blue?logo=GitHub-Sponsors)](https://afdian.com/@tungs)
+[![Android CI](https://github.com/HSSkyBoy/ProCraftLauncherFold/actions/workflows/build.yml/badge.svg)](https://github.com/HSSkyBoy/ProCraftLauncherFold/actions/workflows/build.yml)
+![Загрузки](https://img.shields.io/github/downloads/HSSkyBoy/ProCraftLauncherFold/total?style=flat-square&color=1576d8)
+![Релиз](https://img.shields.io/github/v/release/HSSkyBoy/ProCraftLauncherFold?style=flat-square&color=1576d8)
 
 </div>
 
 🌍 **Язык**
 [简体中文](./README.md) | [English](./README_EN.md) | Русский
 
-> 「Fold Craft Launcher」 — это лаунчер Minecraft: Java Edition для платформы Android, разрабатываемый командой FCL Team. Созданный на базе ключевых функций [HMCL](https://github.com/HMCL-dev/HMCL) и с интеграцией бэкенда [PojavLauncher](https://github.com/PojavLauncherTeam/PojavLauncher), он позволяет запускать Minecraft: Java Edition на мобильных устройствах, поддерживая загрузку и работу модов для всех версий игры.
+> ✨ **О проекте**  
+> **Pane Craft Launcher (PCL)** — лаунчер *Minecraft: Java Edition* для Android-планшетов, складных устройств и горизонтальных экранов. Основан на ядре **[Fold Craft Launcher](https://github.com/FCL-Team/FoldCraftLauncher)**, **[HMCL](https://github.com/HMCL-dev/HMCL)** (`fclcore`) и **[Amethyst-Android](https://github.com/AngelAuraMC/Amethyst-Android)** с двухпанельным интерфейсом на **Jetpack Compose + Miuix**, вдохновлённым **Plain Craft Launcher 2 (PCL2)**.
 
 ---
 
@@ -64,11 +61,14 @@
 
 ## 🤝 Участие и благодарности
 ### Стена участников
-<a href="https://github.com/FCL-Team/FoldCraftLauncher/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=FCL-Team/FoldCraftLauncher" />
+<a href="https://github.com/HSSkyBoy/ProCraftLauncherFold/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=HSSkyBoy/ProCraftLauncherFold" />
 </a>
 
 ### Связанные проекты
+- [Fold Craft Launcher (FCL)](https://github.com/FCL-Team/FoldCraftLauncher): базовая платформа и Android JVM-мост
+- [Plain Craft Launcher 2 (PCL2)](https://github.com/Meloong-Git/PCL): вдохновение двухпанельного интерфейса
+- [Miuix](https://github.com/compose-miuix-ui/miuix): библиотека компонентов Compose UI
 - [HMCL](https://github.com/HMCL-dev/HMCL)
 - [Boat и связанные проекты](https://github.com/AOF-Dev/Boat)
 - [PojavLauncher и связанные проекты](https://github.com/PojavLauncherTeam/PojavLauncher)
