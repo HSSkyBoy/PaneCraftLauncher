@@ -1086,6 +1086,5 @@
     <string name="slide_selection">幻燈片選擇</string>
     <string name="swap_hands">按兩下交換手</string>
     <string name="jar_executor_warn">注意！ 此功能不適用於安裝模組。如果您正在安裝模組，請使用啟動器的下載功能或將其添加到管理模組中。</string>
-    <string name="account_offline_official_skin_hint">默認：自動使用同名正版帳戶「%s」嘅皮膚同披風（不可關閉）。只可導入本地文件進行替換。</string>
     <string name="version_list_refreshing">正在獲取遠程版本列表…</string>
 </resources>

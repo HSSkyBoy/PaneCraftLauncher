@@ -1844,6 +1844,5 @@
     <string name="more_faq_4_q">How does Terracotta LAN multiplayer work?</string>
     <string name="more_faq_4_a">Open your singleplayer world to LAN in Minecraft, then open the Link tab to host or join a P2P room with your friends.</string>
     <string name="more_about_credits_title">Credits &amp; Open Source</string>
-    <string name="account_offline_official_skin_hint">Default: Automatically uses the official skin &amp; cape of &quot;%s&quot; (cannot be disabled). Import local files below to override.</string>
     <string name="more_about_credits_body">Built on Fold Craft Launcher (FCL), HMCLCore, PojavLauncher / Amethyst JVM bridges, Terracotta P2P multiplayer, and Compose Miuix UI — UI inspired by Plain Craft Launcher 2 (PCL2).</string>
 </resources>

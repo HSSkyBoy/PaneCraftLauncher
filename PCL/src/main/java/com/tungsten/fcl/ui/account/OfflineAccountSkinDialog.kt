@@ -56,9 +56,6 @@ class OfflineAccountSkinDialog(
         binding.positive.setOnClickListener(this)
         binding.negative.setOnClickListener(this)
 
-        binding.officialSkinHint.text =
-            context.getString(R.string.account_offline_official_skin_hint, account.username)
-
         // Restore state from existing skin; non-local slots always fall back to same-name official account
         val existingSkin = account.skin
         if (existingSkin != null && existingSkin.type() == Skin.Type.LOCAL_FILE) {
