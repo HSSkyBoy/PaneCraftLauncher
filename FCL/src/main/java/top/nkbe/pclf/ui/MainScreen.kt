@@ -48,7 +48,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.mio.download.DownloadTaskInfo
 import com.tungsten.fcl.R
-import com.tungsten.fcl.ui.setting.SettingUI
 import com.tungsten.fclcore.auth.Account
 import com.tungsten.fcllibrary.component.ui.FCLCommonUI
 import top.nkbe.pclf.theme.LauncherTheme
@@ -64,7 +63,6 @@ import top.yukonga.miuix.kmp.basic.Text
 enum class AppSubpage(@StringRes val titleRes: Int, val uiIndex: Int) {
     MANAGE(R.string.manage, 1),
     CONTROLLER(R.string.pclf_more_controller, 3),
-    LEGACY_SETUP(R.string.pclf_setup_legacy_more, 5),
     ACCOUNT(R.string.pclf_more_account, -1),
     VERSION(R.string.pclf_btn_version_select, 6)
 }
@@ -171,11 +169,9 @@ fun LauncherMainScreen(
                         )
 
                         MainTab.SETUP -> SetupPage(
-                            legacySettingUiProvider = { legacyUiProvider(5) as SettingUI },
                             onPickBackground = onPickBackground,
                             onShareLatestLog = onShareLatestLog,
-                            onCheckUpdate = onCheckUpdate,
-                            onOpenFullLegacyGameSetting = { onOpenSubpage(AppSubpage.LEGACY_SETUP) }
+                            onCheckUpdate = onCheckUpdate
                         )
 
                         MainTab.MORE -> MorePage(

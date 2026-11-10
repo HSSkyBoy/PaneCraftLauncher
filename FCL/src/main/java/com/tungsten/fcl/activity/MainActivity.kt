@@ -461,7 +461,6 @@ class MainActivity : FCLActivity() {
         when (tab) {
             MainTab.DOWNLOAD -> uiManager.currentUI = uiManager.downloadUI
             MainTab.LINK -> uiManager.currentUI = uiManager.multiplayerUI
-            MainTab.SETUP -> uiManager.currentUI = uiManager.settingUI
             else -> {}
         }
     }
@@ -510,10 +509,6 @@ class MainActivity : FCLActivity() {
         if (profile.versionSetting.isUsesGlobal) {
             activeSubpage = null
             selectedTab = MainTab.SETUP
-            val settingUI = uiManager.settingUI
-            uiManager.currentUI = settingUI
-            val tab = settingUI.tabLayout.getTabAt(0)
-            settingUI.tabLayout.selectTab(tab)
         } else {
             navigateToManage(0)
         }

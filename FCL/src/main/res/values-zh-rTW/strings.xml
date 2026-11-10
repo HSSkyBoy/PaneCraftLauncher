@@ -1648,4 +1648,12 @@
     <string name="acct_external_resolve">識別伺服器</string>
     <string name="acct_external_confirm_add">確認新增</string>
     <string name="acct_relogin_required">憑證已過期，請透過對應的登入頁面重新驗證。</string>
+    <string name="setup_cat_launch">啟動</string>
+    <string name="setup_cat_personal">個性化</string>
+    <string name="setup_cat_launcher">啟動器</string>
+    <string name="setup_cat_plugins">外掛</string>
+    <string name="setup_theme_future_note">PCL 風格主題與配色系統將於後續單獨重寫，目前先保留深淺外觀與背景圖片設定。</string>
+    <string name="setup_section_touch">觸控與輸入</string>
+    <string name="setup_section_installed_plugins">已安裝外掛</string>
+    <string name="setup_plugin_ffmpeg">FFmpeg 元件</string>
 </resources>

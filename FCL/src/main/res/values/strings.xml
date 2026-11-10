@@ -1810,4 +1810,12 @@
     <string name="acct_external_resolve">Resolve Server</string>
     <string name="acct_external_confirm_add">Confirm Add</string>
     <string name="acct_relogin_required">Authorization expired, please re-login via Microsoft or External Login.</string>
+    <string name="setup_cat_launch">Launch</string>
+    <string name="setup_cat_personal">Personalize</string>
+    <string name="setup_cat_launcher">Launcher</string>
+    <string name="setup_cat_plugins">Plugins</string>
+    <string name="setup_theme_future_note">Theme &amp; palette customization will be rebuilt separately in full PCL style; theme mode &amp; backgrounds remain available here.</string>
+    <string name="setup_section_touch">TouchController &amp; Input</string>
+    <string name="setup_section_installed_plugins">Installed Plugins</string>
+    <string name="setup_plugin_ffmpeg">FFmpeg</string>
 </resources>
