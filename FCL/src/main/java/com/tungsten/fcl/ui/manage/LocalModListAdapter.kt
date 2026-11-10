@@ -276,7 +276,7 @@ class LocalModListAdapter(
         binding.jump.visibility = View.GONE
         binding.jump.setOnClickListener {
             val uiManager = MainActivity.getInstance().uiManager
-            MainActivity.getInstance().binding.download.isSelected = true
+            MainActivity.getInstance().navigateToDownload()
             uiManager.downloadUI.showDownloadPage(DownloadUI.PAGE_ID_DOWNLOAD_MOD)
             uiManager.downloadUI.downloadPage.jumpToModPage(modInfoObject.remoteMod)
         }

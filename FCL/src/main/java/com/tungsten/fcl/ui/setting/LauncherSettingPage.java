@@ -284,7 +284,7 @@ public class LauncherSettingPage extends FCLPage implements LauncherSettingAdapt
         MainActivity.getInstance().fileLauncher.launchSingleSelection(null, suffix, files -> {
             if (files == null) return;
             String path = files.get(0).toFile(getActivity(), new File(FCLPath.CACHE_DIR)).getAbsolutePath();
-            ThemeEngine.getInstance().applyAndSave(getContext(), ((MainActivity) getActivity()).binding.background, isDk ? null : path, isDk ? path : null);
+            ThemeEngine.getInstance().applyAndSave(getContext(), null, isDk ? null : path, isDk ? path : null);
         });
     }
 
@@ -388,7 +388,7 @@ public class LauncherSettingPage extends FCLPage implements LauncherSettingAdapt
             if (!backgroundFile.delete() && backgroundFile.exists())
                 Schedulers.androidUIThread().execute(() -> Toast.makeText(getContext(), getContext().getString(R.string.message_failed), Toast.LENGTH_SHORT).show());
 
-            Schedulers.androidUIThread().execute(() -> ThemeEngine.getInstance().applyAndSave(getContext(), ((MainActivity) getActivity()).binding.background, null, null));
+            Schedulers.androidUIThread().execute(() -> ThemeEngine.getInstance().applyAndSave(getContext(), null, null, null));
         }).start();
     }
 

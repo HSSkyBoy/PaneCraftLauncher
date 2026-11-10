@@ -114,10 +114,7 @@ class VersionListAdapter(val context: Context, initList: List<VersionListItem>) 
             binding.setting.visibility = View.VISIBLE
             binding.setting.setOnClickListener {
                 versionListItem.profile.selectedVersion = versionListItem.version
-                val uiManager = MainActivity.getInstance().uiManager
-                MainActivity.getInstance().binding.manage.isSelected = true
-                val tab = uiManager.manageUI.tabLayout.getTabAt(0)
-                uiManager.manageUI.tabLayout.selectTab(tab)
+                MainActivity.getInstance().navigateToManage(0)
             }
         } else {
             binding.setting.visibility = View.GONE

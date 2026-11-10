@@ -25,7 +25,7 @@ import com.tungsten.fcllibrary.component.ui.FCLCommonUI
  * 页面被 ViewPager 回收（超出 offscreenPageLimit）时销毁对应 UI 实例，
  * 下次进入时全新创建。
  */
-class UIManager(val context: Context, val pager: ViewPager2) {
+class UIManager(val context: Context, val pager: ViewPager2? = null) {
     companion object {
         @JvmStatic
         lateinit var instance: UIManager
@@ -50,6 +50,9 @@ class UIManager(val context: Context, val pager: ViewPager2) {
 
     /** 页面切换回调，MainActivity 用于同步菜单高亮与标题 */
     var pageSelectedListener: ((Int) -> Unit)? = null
+
+    /** Compose 主界面切页回调（无 ViewPager2 时由 Compose 驱动页面切换） */
+    var onComposeSwitchUI: ((Int) -> Unit)? = null
 
     /** 上次 onPageSelected 的页面位置，用于过滤 ViewPager2 重复 dispatch 当前页（如软键盘弹出等布局变化） */
     private var lastSelectedPosition = -1
@@ -86,33 +89,41 @@ class UIManager(val context: Context, val pager: ViewPager2) {
 
     fun init() {
         instance = this
-        pager.adapter = UIAdapter()
-        // 禁止鼠标滚轮翻页（触摸滑动已由 isUserInputEnabled 禁用，但滚轮走另一条事件通道）
-        pager.disableMouseWheelScroll()
-        // 不预加载相邻页面：进入某页时只创建当前页，避免相邻页提前创建带来的
-        // inflate/初始化开销（页面在切换时才创建）
-        pager.offscreenPageLimit = ViewPager2.OFFSCREEN_PAGE_LIMIT_DEFAULT
-        // 主界面切换动画为上下过渡（垂直方向）
-        pager.orientation = ViewPager2.ORIENTATION_VERTICAL
-        // 禁用滑动手势：页面内垂直滚动内容与滑动切换冲突，仅通过菜单切换
-        pager.isUserInputEnabled = false
-        // 不保留页面位置状态：Activity 重建后始终从主页开始，
-        // 避免 ViewPager2 恢复上次位置时途经未初始化的页面（如未 setVersion 的 ManageUI）
-        pager.isSaveEnabled = false
-        pager.registerOnPageChangeCallback(pageChangeCallback)
+        pager?.let {
+            it.adapter = UIAdapter()
+            // 禁止鼠标滚轮翻页（触摸滑动已由 isUserInputEnabled 禁用，但滚轮走另一条事件通道）
+            it.disableMouseWheelScroll()
+            // 不预加载相邻页面：进入某页时只创建当前页，避免相邻页提前创建带来的
+            // inflate/初始化开销（页面在切换时才创建）
+            it.offscreenPageLimit = ViewPager2.OFFSCREEN_PAGE_LIMIT_DEFAULT
+            // 主界面切换动画为上下过渡（垂直方向）
+            it.orientation = ViewPager2.ORIENTATION_VERTICAL
+            // 禁用滑动手势：页面内垂直滚动内容与滑动切换冲突，仅通过菜单切换
+            it.isUserInputEnabled = false
+            // 不保留页面位置状态：Activity 重建后始终从主页开始，
+            // 避免 ViewPager2 恢复上次位置时途经未初始化的页面（如未 setVersion 的 ManageUI）
+            it.isSaveEnabled = false
+            it.registerOnPageChangeCallback(pageChangeCallback)
+        }
     }
 
     fun switchUI(ui: FCLCommonUI) {
         val position = uiRegistry.indexOf(ui)
         if (position < 0) return
         if (ui === currentUI) return
-        if (pager.currentItem == position) {
-            // 与当前页位置相同（如启动时的初始页）：仅更新当前 UI
-            currentUI = ui
+        if (pager != null) {
+            if (pager.currentItem == position) {
+                // 与当前页位置相同（如启动时的初始页）：仅更新当前 UI
+                currentUI = ui
+            } else {
+                // 跨页切换统一瞬时跳转，过渡动画统一由 onPageSelected 的淡入上滑处理。
+                // 不用平滑滑动：远距跳转时平滑滚动会途经中间页导致重 UI 被逐个创建/回收
+                pager.setCurrentItem(position, false)
+            }
         } else {
-            // 跨页切换统一瞬时跳转，过渡动画统一由 onPageSelected 的淡入上滑处理。
-            // 不用平滑滑动：远距跳转时平滑滚动会途经中间页导致重 UI 被逐个创建/回收
-            pager.setCurrentItem(position, false)
+            currentUI = ui
+            pageSelectedListener?.invoke(position)
+            onComposeSwitchUI?.invoke(position)
         }
     }
 

@@ -401,8 +401,7 @@ class LauncherHelper(
             LOG.log(Level.INFO, "Start JVMActivity!")
             context.startActivity(intent)
             if (MainActivity.getInstance().shouldPlayVideo()) {
-                MainActivity.getInstance().mediaPlayer = null
-                MainActivity.getInstance().binding.videoView.stopPlayback()
+                MainActivity.getInstance().stopLiveBackground()
             }
             if (context.getSharedPreferences("launcher", Context.MODE_PRIVATE)
                     .getBoolean("autoExitLauncher", false)
@@ -593,9 +592,7 @@ class LauncherHelper(
                         // 跳转失败同样取消启动，避免退化成用户未选择的“继续启动”
                         withContext(Dispatchers.Main) {
                             runCatching {
-                                MainActivity.getInstance().binding.manage.isSelected = true
-                                val tabLayout = UIManager.instance.manageUI.tabLayout
-                                tabLayout.selectTab(tabLayout.getTabAt(2))
+                                MainActivity.getInstance().navigateToManage(2)
                             }.onFailure {
                                 LOG.log(Level.WARNING, "Unable to open mod loader install page", it)
                             }

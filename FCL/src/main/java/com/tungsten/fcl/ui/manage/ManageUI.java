@@ -133,8 +133,7 @@ public class ManageUI extends FCLMultiPageUI {
                 if (preferredVersionName != null) {
                     loadVersion(preferredVersionName, this.version.get().getProfile());
                 } else if (isShowing()) {
-                    MainActivity.getInstance().refreshMenuView(null);
-                    MainActivity.getInstance().binding.home.setSelected(true);
+                    MainActivity.getInstance().navigateToHome();
                 }
             }
         });

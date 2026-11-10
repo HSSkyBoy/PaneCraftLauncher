@@ -259,8 +259,7 @@ public class Versions {
             builder.setTitle(context.getString(R.string.launch_failed));
             builder.setMessage(context.getString(R.string.version_empty_launch));
             builder.setNegativeButton(context.getString(com.tungsten.fcl.R.string.dialog_positive), () -> {
-                MainActivity.getInstance().refreshMenuView(null);
-                MainActivity.getInstance().binding.download.setSelected(true);
+                MainActivity.getInstance().navigateToDownload();
             });
             builder.create().show();
             return false;

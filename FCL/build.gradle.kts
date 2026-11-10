@@ -10,6 +10,7 @@ import java.util.Properties
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     id("checkstyle")
@@ -86,6 +87,11 @@ android {
                 arguments("-DANDROID_STL=c++_shared")
             }
         }
+        if (System.getProperty("arch", "all") == "all") {
+            ndk {
+                abiFilters += listOf("arm64-v8a", "x86_64")
+            }
+        }
     }
 
     testBuildType = "fordebug"
@@ -126,11 +132,13 @@ android {
         jniLibs {
             useLegacyPackaging = true
             pickFirsts += listOf("**/libbytehook.so")
+            excludes += listOf("**/armeabi-v7a/**", "**/x86/**")
         }
     }
 
     buildFeatures {
         viewBinding = true
+        compose = true
         buildConfig = true
         resValues = true
         prefab = true
@@ -142,7 +150,7 @@ android {
         }
     }
 
-    ndkVersion = "27.0.12077973"
+    ndkVersion = "27.2.12479018"
 
     splits {
         val arch = System.getProperty("arch", "all")
@@ -151,9 +159,7 @@ android {
                 isEnable = true
                 reset()
                 when (arch) {
-                    "arm" -> include("armeabi-v7a")
                     "arm64" -> include("arm64-v8a")
-                    "x86" -> include("x86")
                     "x86_64" -> include("x86_64")
                 }
             }
@@ -179,6 +185,8 @@ val filterJreAssets = tasks.register<FilterJreAssets>("filterJreAssets") {
     into(outputDir)
     if (arch != "all") {
         exclude { it.name.startsWith("bin-") && it.name != "bin-$arch.tar.xz" }
+    } else {
+        exclude { it.name == "bin-arm.tar.xz" || it.name == "bin-x86.tar.xz" }
     }
 }
 
@@ -219,11 +227,7 @@ androidComponents {
 
         // JRE 资产不放在 src/main/assets 里（AGP 的 mergeAssets 不应用 source set 的 exclude 过滤），
         // 而是按架构注册为生成源；arch 变化会让 Sync 任务重新执行，mergeAssets 随之重跑，避免产物残留旧架构文件。
-        if (System.getProperty("arch", "all") != "all") {
-            variant.sources.assets?.addGeneratedSourceDirectory(filterJreAssets) { it.outputDir }
-        } else {
-            variant.sources.assets?.addStaticSourceDirectory("src/main/jreAssets")
-        }
+        variant.sources.assets?.addGeneratedSourceDirectory(filterJreAssets) { it.outputDir }
 
         // LWJGL natives 打包在 lwjgl-*-natives aar 的 assets/app_runtime/lwjgl/<版本>/natives/<abi> 下，
         // JNA natives 在 assets/app_runtime/jna/<版本>/natives/<abi> 下，
@@ -237,12 +241,10 @@ androidComponents {
             mergeAssets.configure { inputs.property("lwjglArch", arch) }
             mergeAssets.configure {
                 doLast {
-                    if (arch == "all") return@doLast
-                    val abi = when (arch) {
-                        "arm" -> "armeabi-v7a"
-                        "arm64" -> "arm64-v8a"
-                        "x86" -> "x86"
-                        "x86_64" -> "x86_64"
+                    val allowedAbis = when (arch) {
+                        "all" -> setOf("arm64-v8a", "x86_64")
+                        "arm64" -> setOf("arm64-v8a")
+                        "x86_64" -> setOf("x86_64")
                         else -> return@doLast
                     }
                     val assetsDir = outputDir.get().asFile
@@ -256,7 +258,7 @@ androidComponents {
                         val nativesDir = File(assetsDir, "app_runtime/lwjgl/$version/natives")
                         if (nativesDir.isDirectory) {
                             nativesDir.listFiles()?.forEach { dir ->
-                                if (dir.isDirectory && dir.name != abi) {
+                                if (dir.isDirectory && dir.name !in allowedAbis) {
                                     logger.lifecycle("删除非目标架构 natives: $dir")
                                     dir.deleteRecursively()
                                 }
@@ -268,7 +270,7 @@ androidComponents {
                         val nativesDir = File(versionDir, "natives")
                         if (nativesDir.isDirectory) {
                             nativesDir.listFiles()?.forEach { dir ->
-                                if (dir.isDirectory && dir.name != abi) {
+                                if (dir.isDirectory && dir.name !in allowedAbis) {
                                     logger.lifecycle("删除非目标架构 natives: $dir")
                                     dir.deleteRecursively()
                                 }
@@ -331,6 +333,10 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
+    implementation(libs.activity.compose)
+    implementation(libs.miuix.ui)
+    implementation(libs.miuix.preference)
+    implementation(libs.miuix.icons)
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation(libs.androidx.test.runner)

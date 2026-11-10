@@ -216,7 +216,7 @@ object ThemeEngine {
         ThemeData.saveTheme(context, getTheme())
     }
 
-    fun applyAndSave(context: Context, view: View, lt: String?, dk: String?) {
+    fun applyAndSave(context: Context, view: View?, lt: String?, dk: String?) {
         applyBackground(context, view, lt, dk)
         ThemeData.saveTheme(context, getTheme())
     }

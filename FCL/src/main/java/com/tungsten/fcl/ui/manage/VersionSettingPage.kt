@@ -346,8 +346,7 @@ class VersionSettingPage(
             }
 
             VersionSettingTag.INSTALL_CONTROLLER -> {
-                MainActivity.getInstance().binding.controller.setSelected(true)
-                MainActivity.getInstance().uiManager.controllerUI.showPage(1)
+                MainActivity.getInstance().navigateToController(1)
             }
 
             VersionSettingTag.EDIT_BACKEND -> {

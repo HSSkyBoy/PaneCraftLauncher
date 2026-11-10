@@ -92,9 +92,7 @@ class ShaderPackListPage(context: Context?, id: Int) :
     /** 跳转到下载页的光影 tab */
     private fun download() {
         val main = MainActivity.getInstance()
-        main.refreshMenuView(null)
-        main.binding.download.isSelected = true
-        main.uiManager.downloadUI.showDownloadPage(DownloadUI.PAGE_ID_DOWNLOAD_SHADER_PACK)
+        main.navigateToDownload(DownloadUI.PAGE_ID_DOWNLOAD_SHADER_PACK)
     }
 
     fun refresh() {

@@ -628,8 +628,7 @@ public class ModListPage extends FCLPage implements ManageUI.VersionLoadable, Vi
     }
 
     public void download() {
-        MainActivity.getInstance().refreshMenuView(null);
-        MainActivity.getInstance().binding.download.setSelected(true);
+        MainActivity.getInstance().navigateToDownload();
         UIManager.getInstance().getDownloadUI().showDownloadPage(DownloadUI.PAGE_ID_DOWNLOAD_MOD);
     }
 

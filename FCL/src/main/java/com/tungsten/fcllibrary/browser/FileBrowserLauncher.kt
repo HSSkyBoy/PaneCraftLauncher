@@ -15,7 +15,7 @@ import com.tungsten.fcllibrary.browser.options.SelectionMode
  * 替代传统的 onActivityResult 和 ResultListener
  */
 class FileBrowserLauncher(val activity: AppCompatActivity) {
-    private val launcher: ActivityResultLauncher<Intent?>
+    private val launcher: ActivityResultLauncher<Intent>
     private var currentFileBrowser: FileBrowser? = null
 
     init {

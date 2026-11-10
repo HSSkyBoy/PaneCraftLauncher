@@ -92,9 +92,7 @@ class ResourcePackListPage(context: Context?, id: Int) :
     /** 跳转到下载页的资源包 tab */
     private fun download() {
         val main = MainActivity.getInstance()
-        main.refreshMenuView(null)
-        main.binding.download.isSelected = true
-        main.uiManager.downloadUI.showDownloadPage(DownloadUI.PAGE_ID_DOWNLOAD_RESOURCE_PACK)
+        main.navigateToDownload(DownloadUI.PAGE_ID_DOWNLOAD_RESOURCE_PACK)
     }
 
     fun refresh() {
