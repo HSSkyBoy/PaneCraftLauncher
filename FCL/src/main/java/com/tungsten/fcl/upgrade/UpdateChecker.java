@@ -22,8 +22,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class UpdateChecker {
 
-    public static final String UPDATE_CHECK_URL = "https://raw.githubusercontent.com/FCL-Team/FoldCraftLauncher/main/version_map.json";
-    public static final String UPDATE_CHECK_URL_CN = "https://gitee.com/fcl-team/FCL-Repo/raw/main/res/version_map.json";
+    public static final String UPDATE_CHECK_URL = "https://raw.githubusercontent.com/HSSkyBoy/ProCraftLauncherFold/main/version_map.json";
+    public static final String UPDATE_CHECK_URL_CN = UPDATE_CHECK_URL;
 
     private static UpdateChecker instance;
 

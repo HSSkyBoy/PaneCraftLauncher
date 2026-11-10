@@ -86,7 +86,7 @@ public class UpdateDialog extends FCLDialog implements View.OnClickListener {
         netdisk.setOnClickListener(this);
 
         positive.setOnLongClickListener(view -> {
-            AndroidUtilKt.openLink(getContext(),"https://github.com/FCL-Team/FoldCraftLauncher/releases/latest");
+            AndroidUtilKt.openLink(getContext(), "https://github.com/HSSkyBoy/ProCraftLauncherFold/releases/latest");
             return true;
         });
 
