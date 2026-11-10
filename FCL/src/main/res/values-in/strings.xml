@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="splash_agreement">FCL memerlukan izin penyimpanan untuk mengelola dan membaca file game. FCL sepenuhnya bersumber terbuka di GitHub, jadi yakinlah dengan keamanan data Anda. Izin tersebut semata-mata agar game dapat beroperasi dengan baik dan tidak menimbulkan risiko keamanan.</string>
-    <string name="splash_permission_msg">Tidak ada izin penyimpanan, harap berikan izin kepada Fold Craft Launcher.</string>
+    <string name="splash_permission_msg">Tidak ada izin penyimpanan, harap berikan izin kepada Pane Craft Launcher.</string>
     <string name="splash_permission_grant">Memberikan</string>
     <string name="splash_permission_title">Diperlukan izin untuk menyimpan</string>
     <string name="splash_permission_close">Tutup aplikasi</string>
     <string name="splash_permission_settings">Pengaturan</string>
     <string name="splash_permission_settings_msg">Anda telah memilih Jangan Pernah Izinkan. Harap berikan izin penyimpanan secara manual di pengaturan.</string>
     <string name="notification_permission">FCL memerlukan izin untuk memposting notifikasi guna mencegah masalah pada instalasi atau memulai game secara normal.</string>
-    <string name="splash_title">Selamat Datang di Fold Craft Launcher</string>
+    <string name="splash_title">Selamat Datang di Pane Craft Launcher</string>
     <string name="splash_eula_error">Gagal mendapatkan EULA, silakan periksa koneksi internet Anda.</string>
     <string name="splash_eula_next">Setuju dan Lanjutkan</string>
     <string name="splash_runtime_title">Instal atau perbarui runtime aplikasi</string>

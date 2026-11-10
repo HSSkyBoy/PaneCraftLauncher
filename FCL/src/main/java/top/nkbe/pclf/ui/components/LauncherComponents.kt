@@ -126,11 +126,11 @@ fun TopNavBar(
                 }
             } else {
                 Text(
-                    text = "ProCraft",
+                    text = "PCL",
                     color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 0.6.sp,
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.8.sp,
                     modifier = slotModifier.padding(start = 4.dp)
                 )
             }

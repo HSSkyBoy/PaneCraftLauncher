@@ -558,13 +558,20 @@ private fun SetupPersonalizationSection(
             )
         }
         Spacer(Modifier.height(10.dp))
+        Text(
+            text = stringResource(R.string.settings_launcher_custom_launcher_name_desc),
+            color = colors.textSecondary,
+            fontSize = 11.5.sp,
+            modifier = Modifier.padding(horizontal = 4.dp)
+        )
+        Spacer(Modifier.height(6.dp))
         TextField(
             value = customLauncherName,
             onValueChange = {
                 customLauncherName = it
                 prefs.edit { putString("custom_launcher_name", it) }
             },
-            label = stringResource(R.string.settings_launcher_custom_launcher_name),
+            label = "${stringResource(R.string.settings_launcher_custom_launcher_name)} (e.g. Pane Craft Launcher/\${launcher_version})",
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )

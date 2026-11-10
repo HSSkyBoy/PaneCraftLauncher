@@ -471,7 +471,7 @@ private fun MoreAboutSection(versionName: String) {
     val context = LocalContext.current
     val colors = LauncherTheme.colors
 
-    SectionCard(title = "ProCraftLauncherFold (v$versionName · ${context.packageName})") {
+    SectionCard(title = "Pane Craft Launcher (v$versionName · ${context.packageName})") {
         Text(
             text = stringResource(R.string.pclf_about_body),
             color = colors.textSecondary,

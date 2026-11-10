@@ -2,14 +2,14 @@
 <resources>
     <string name="app_name_import">安裝整合包</string>
     <string name="splash_agreement">FCL需要儲存權限以管理/讀取遊戲檔案，FCL在GitHub上完全開源，請不用擔心您的資料安全。權限僅用于正常執行遊戲，無任何安全問題。</string>
-    <string name="splash_permission_msg">沒有存儲權限，請授予 Fold Craft Launcher 權限。</string>
+    <string name="splash_permission_msg">沒有存儲權限，請授予 Pane Craft Launcher 權限。</string>
     <string name="splash_permission_grant">授予</string>
     <string name="splash_permission_title">需要存儲權限</string>
     <string name="splash_permission_close">關閉應用</string>
     <string name="splash_permission_settings">去設定</string>
     <string name="splash_permission_settings_msg">您已選擇永不授權，請在設定中手動授予存儲權限。</string>
     <string name="notification_permission">FCL需要發布通知的權限，防止無法正常安裝/啟動遊戲 。</string>
-    <string name="splash_title">歡迎使用 Fold Craft Launcher</string>
+    <string name="splash_title">歡迎使用 Pane Craft Launcher</string>
     <string name="splash_eula_error">無法獲取用戶協議，請檢查網路。</string>
     <string name="splash_eula_next">同意并繼續</string>
     <string name="splash_runtime_title">安裝或更新執行環境</string>
@@ -737,7 +737,7 @@
     <string name="modpack_type_server">伺服器自動更新整合包</string>
     <string name="modpack_type_server_export">允許伺服器管理員遠端更新遊戲客戶端</string>
     <string name="modpack_type_server_malformed">伺服器整合包配置格式錯誤，請聯系伺服器管理員解決此問題</string>
-    <string name="modpack_unsupported">Fold Craft Launcher 不支援該整合包格式</string>
+    <string name="modpack_unsupported">Pane Craft Launcher 不支援該整合包格式</string>
     <string name="modpack_update">正在升級整合包</string>
     <string name="modpack_wizard">匯出整合包向導</string>
     <string name="modpack_wizard_step_1">基本設定</string>
@@ -1508,7 +1508,7 @@
     <string name="file_browser_no_selection">未選擇檔案。</string>
     <string name="file_browser_operation_failed">操作失敗。</string>
     <string name="crash_reporter_title">崩潰報告</string>
-    <string name="crash_reporter_hint">Fold Craft Launcher 遇到了無法解決的錯誤，請向開發者或他人求助。</string>
+    <string name="crash_reporter_hint">Pane Craft Launcher 遇到了無法解決的錯誤，請向開發者或他人求助。</string>
     <string name="crash_reporter_restart">重啟軟體</string>
     <string name="crash_reporter_close">退出軟體</string>
     <string name="crash_reporter_copy">複製日志</string>
@@ -1583,7 +1583,7 @@
     <string name="pclf_more_shell">終端機與除錯 Shell</string>
     <string name="pclf_more_shell_desc">執行本機命令列工具檢查執行環境</string>
     <string name="pclf_more_update">檢查啟動器更新</string>
-    <string name="pclf_more_update_desc">檢查上游與 PCLF 最新版本</string>
+    <string name="pclf_more_update_desc">檢查上游與 Pane Craft Launcher 最新版本</string>
     <string name="pclf_about_title">開源與反轉賣聲明</string>
     <string name="pclf_about_body">本啟動器程式碼遵循 GPL-3.0 協議完全免費開源，核心由 FCL-Team 維護，UI 致敬龍騰貓躍的 Plain Craft Launcher 2。網路上任何收費轉賣的「PCL 手機版」均屬詐騙行為。</string>
     <string name="pclf_env_title">目前遊戲環境</string>
