@@ -25,9 +25,11 @@ import com.tungsten.fcllibrary.component.view.FCLTextView
 import java.io.File
 import java.util.logging.Level
 
-class OfflineAccountSkinDialog(context: Context, private val accountListItem: AccountListItem) :
-    FCLDialog(context), View.OnClickListener {
-    private val account: OfflineAccount = accountListItem.account as OfflineAccount
+class OfflineAccountSkinDialog(
+    context: Context,
+    private val account: OfflineAccount,
+    private val onUpdated: () -> Unit = {}
+) : FCLDialog(context), View.OnClickListener {
     private var binding: DialogOfflineAccountSkinBinding =
         DialogOfflineAccountSkinBinding.inflate(layoutInflater)
     private val renderer: SkinRenderer
@@ -192,7 +194,8 @@ class OfflineAccountSkinDialog(context: Context, private val accountListItem: Ac
                 commitSkinFile(binding.skinPathText, "${account.uuid}.png")
                 commitSkinFile(binding.capePathText, "${account.uuid}_cape.png")
                 account.setSkin(this.skin)
-                accountListItem.refreshSkinBinding()
+                MainActivity.getInstance().refreshAvatar(account)
+                onUpdated()
                 dismiss()
             }
 

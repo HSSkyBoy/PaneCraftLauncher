@@ -1,4 +1,4 @@
-package com.tungsten.fcl.pclf.theme
+package top.nkbe.pclf.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
@@ -14,10 +14,10 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
 /**
- * Authentic PCL2 x Miuix color tokens derived dynamically from FCL's [ThemeData] accent.
+ * Dynamic launcher color tokens derived from FCL's theme seed color.
  */
 @Immutable
-data class PclfColors(
+data class LauncherColors(
     val accent: Color,
     val accentLight: Color,
     val accentDark: Color,
@@ -36,11 +36,11 @@ data class PclfColors(
     val isDark: Boolean
 )
 
-val LocalPclfColors = staticCompositionLocalOf {
-    buildPclfColors(seedColorInt = 0xFF1576D8.toInt(), isDark = false)
+val LocalLauncherColors = staticCompositionLocalOf {
+    buildLauncherColors(seedColorInt = 0xFF1576D8.toInt(), isDark = false)
 }
 
-fun buildPclfColors(seedColorInt: Int, isDark: Boolean): PclfColors {
+fun buildLauncherColors(seedColorInt: Int, isDark: Boolean): LauncherColors {
     val opaqueSeed = seedColorInt or 0xFF000000.toInt()
     val hsl = FloatArray(3)
     ColorUtils.colorToHSL(opaqueSeed, hsl)
@@ -66,7 +66,7 @@ fun buildPclfColors(seedColorInt: Int, isDark: Boolean): PclfColors {
     val canvasTint = Color(ColorUtils.HSLToColor(canvasHsl))
 
     return if (isDark) {
-        PclfColors(
+        LauncherColors(
             accent = accentLight,
             accentLight = accentLight,
             accentDark = titleBarStart,
@@ -85,7 +85,7 @@ fun buildPclfColors(seedColorInt: Int, isDark: Boolean): PclfColors {
             isDark = true
         )
     } else {
-        PclfColors(
+        LauncherColors(
             accent = titleBarStart,
             accentLight = accentLight,
             accentDark = titleBarStart,
@@ -106,20 +106,20 @@ fun buildPclfColors(seedColorInt: Int, isDark: Boolean): PclfColors {
     }
 }
 
-object PclfTheme {
-    val colors: PclfColors
+object LauncherTheme {
+    val colors: LauncherColors
         @Composable @ReadOnlyComposable
-        get() = LocalPclfColors.current
+        get() = LocalLauncherColors.current
 }
 
 @Composable
-fun PclfTheme(
+fun LauncherTheme(
     seedColorInt: Int,
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    val pclfColors = remember(seedColorInt, darkTheme) {
-        buildPclfColors(seedColorInt, darkTheme)
+    val launcherColors = remember(seedColorInt, darkTheme) {
+        buildLauncherColors(seedColorInt, darkTheme)
     }
     val controller = remember(seedColorInt, darkTheme) {
         ThemeController(
@@ -128,7 +128,7 @@ fun PclfTheme(
         )
     }
     MiuixTheme(controller = controller) {
-        CompositionLocalProvider(LocalPclfColors provides pclfColors) {
+        CompositionLocalProvider(LocalLauncherColors provides launcherColors) {
             content()
         }
     }

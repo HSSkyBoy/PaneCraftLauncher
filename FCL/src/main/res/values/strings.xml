@@ -1621,7 +1621,6 @@
     <string name="jar_executor_warn">Note! This feature is not for installing mods. If you are installing mods, please use the launcher\'s download function or add them in "Manage Mods".</string>
 
     <!-- 原 FCLLibrary 模块字符串（模块已并入 FCL） -->
-    <string name="file_browser_provider" translatable="false">com.tungsten.fcl.provider</string>
     <string name="file_browser_title">File Browser</string>
     <string name="file_browser_back">Back</string>
     <string name="file_browser_close">Exit</string>
@@ -1783,4 +1782,32 @@
     <string name="pclf_setup_pick_bg_lt">Pick Light Background</string>
     <string name="pclf_setup_pick_bg_dk">Pick Dark Background</string>
     <string name="pclf_setup_reset_bg">Reset Default Background</string>
+    <string name="acct_tab_saved">Saved Accounts</string>
+    <string name="acct_tab_microsoft">Microsoft</string>
+    <string name="acct_tab_offline">Offline</string>
+    <string name="acct_tab_external">External Auth</string>
+    <string name="acct_ms_recommend_title">Official Microsoft Account Recommended</string>
+    <string name="acct_ms_recommend_body">Offline accounts cannot verify online-mode servers or use official skins/capes. Sign in with Microsoft if you own Minecraft.</string>
+    <string name="acct_go_microsoft">Go to Microsoft Login</string>
+    <string name="acct_ms_builtin_btn">Sign In</string>
+    <string name="acct_ms_browser_btn">Open in System Browser</string>
+    <string name="acct_ms_device_code">Authorization Code (Copied)</string>
+    <string name="acct_copy_code">Copy</string>
+    <string name="acct_code_copied">Authorization code copied</string>
+    <string name="acct_saved_empty">No accounts added yet. Choose a login method from the left sidebar.</string>
+    <string name="acct_current">Active</string>
+    <string name="acct_use">Switch</string>
+    <string name="acct_refresh">Refresh</string>
+    <string name="acct_skin">Skin</string>
+    <string name="acct_delete">Remove</string>
+    <string name="acct_delete_confirm">Remove account "%s"?</string>
+    <string name="acct_refresh_done">Account refreshed</string>
+    <string name="acct_offline_name_hint">Player Name (e.g. Steve)</string>
+    <string name="acct_offline_name_warn">Contains non-standard characters or exceeds 16 chars (may be rejected by some servers)</string>
+    <string name="acct_external_servers">Authentication Servers</string>
+    <string name="acct_external_no_server">No authentication server added yet.</string>
+    <string name="acct_external_add_server_hint">Enter Yggdrasil API URL or domain</string>
+    <string name="acct_external_resolve">Resolve Server</string>
+    <string name="acct_external_confirm_add">Confirm Add</string>
+    <string name="acct_relogin_required">Authorization expired, please re-login via Microsoft or External Login.</string>
 </resources>

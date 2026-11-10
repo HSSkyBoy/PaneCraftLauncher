@@ -48,19 +48,19 @@ import com.mio.util.hasStringId
 import com.mio.util.pixelAwareIcon
 import com.tungsten.fcl.R
 import com.tungsten.fcl.game.TexturesLoader
-import com.tungsten.fcl.pclf.theme.PclfTheme
-import com.tungsten.fcl.pclf.ui.LaunchUiState
-import com.tungsten.fcl.pclf.ui.PclAccountTab
-import com.tungsten.fcl.pclf.ui.PclSubpage
-import com.tungsten.fcl.pclf.ui.PclfMainScreen
-import com.tungsten.fcl.pclf.ui.components.PclMainTab
+import top.nkbe.pclf.theme.LauncherTheme
+import top.nkbe.pclf.ui.AccountSection
+import top.nkbe.pclf.ui.AccountTab
+import top.nkbe.pclf.ui.AppSubpage
+import top.nkbe.pclf.ui.LaunchUiState
+import top.nkbe.pclf.ui.LauncherMainScreen
+import top.nkbe.pclf.ui.components.MainTab
 import com.tungsten.fcl.setting.Accounts
 import com.tungsten.fcl.setting.ConfigHolder
 import com.tungsten.fcl.setting.Controllers
 import com.tungsten.fcl.setting.Profile
 import com.tungsten.fcl.setting.Profiles
 import com.tungsten.fcl.ui.UIManager
-import com.tungsten.fcl.ui.account.CreateAccountDialog
 import com.tungsten.fcl.ui.download.modpack.LocalModpackPage
 import com.tungsten.fcl.ui.version.VersionListViewModel
 import com.tungsten.fcl.ui.version.Versions
@@ -119,8 +119,10 @@ class MainActivity : FCLActivity() {
     private var avatarBinding: ObjectBinding<BitmapDrawable>? = null
 
     // Compose UI States
-    private var selectedTab by mutableStateOf(PclMainTab.LAUNCH)
-    private var activeSubpage by mutableStateOf<PclSubpage?>(null)
+    private var selectedTab by mutableStateOf(MainTab.LAUNCH)
+    private var activeSubpage by mutableStateOf<AppSubpage?>(null)
+    private var accountSectionRequest by mutableStateOf(AccountSection.SAVED)
+    private var accountSectionRequestSeq by mutableIntStateOf(0)
     private var showDownloadPanel by mutableStateOf(false)
     private var launchState by mutableStateOf(LaunchUiState())
     private var seedColorInt by mutableIntStateOf(0xFF1E78D6.toInt())
@@ -162,7 +164,7 @@ class MainActivity : FCLActivity() {
         uiManager = UIManager(this, pager = null).apply {
             registerDefaultBackEvent {
                 activeSubpage = null
-                selectedTab = PclMainTab.LAUNCH
+                selectedTab = MainTab.LAUNCH
             }
             init()
             onComposeSwitchUI = { position ->
@@ -195,13 +197,15 @@ class MainActivity : FCLActivity() {
 
         setContent {
             val isDark = ThemeEngine.isNightMode(this)
-            PclfTheme(
+            LauncherTheme(
                 seedColorInt = seedColorInt,
                 darkTheme = isDark
             ) {
-                PclfMainScreen(
+                LauncherMainScreen(
                     selectedTab = selectedTab,
                     activeSubpage = activeSubpage,
+                    accountSectionRequest = accountSectionRequest,
+                    accountSectionRequestSeq = accountSectionRequestSeq,
                     launchState = launchState,
                     backgroundDrawable = backgroundDrawable,
                     showDownloadPanel = showDownloadPanel,
@@ -215,6 +219,9 @@ class MainActivity : FCLActivity() {
                     onOpenSubpage = { sub ->
                         openSubpage(sub)
                     },
+                    onOpenAccountWithSection = { sec ->
+                        openAccountWithSection(sec)
+                    },
                     onBackFromSubpage = {
                         handleBackNavigation()
                     },
@@ -226,9 +233,6 @@ class MainActivity : FCLActivity() {
                     },
                     onAddAccountForTab = { tab ->
                         addAccountForTab(tab)
-                    },
-                    onManageAllAccounts = {
-                        openSubpage(PclSubpage.ACCOUNT)
                     },
                     onLaunchClick = {
                         launchVersion(Profiles.getSelectedVersion())
@@ -260,6 +264,9 @@ class MainActivity : FCLActivity() {
                     },
                     onPickBackground = { isDarkBg ->
                         pickBackgroundImage(isDarkBg)
+                    },
+                    onAccountUpdated = {
+                        refreshAccountState()
                     }
                 )
             }
@@ -320,13 +327,13 @@ class MainActivity : FCLActivity() {
 
     fun navigateToHome() {
         activeSubpage = null
-        selectedTab = PclMainTab.LAUNCH
+        selectedTab = MainTab.LAUNCH
     }
 
     @JvmOverloads
     fun navigateToDownload(pageId: Int? = null) {
         activeSubpage = null
-        selectedTab = PclMainTab.DOWNLOAD
+        selectedTab = MainTab.DOWNLOAD
         val downloadUI = uiManager.downloadUI
         uiManager.currentUI = downloadUI
         if (pageId != null) {
@@ -341,7 +348,7 @@ class MainActivity : FCLActivity() {
         if (version != null) {
             uiManager.manageUI.setVersion(version, profile)
         }
-        activeSubpage = PclSubpage.MANAGE
+        activeSubpage = AppSubpage.MANAGE
         uiManager.currentUI = uiManager.manageUI
         if (tabIndex != null) {
             val tab = uiManager.manageUI.tabLayout.getTabAt(tabIndex)
@@ -351,7 +358,7 @@ class MainActivity : FCLActivity() {
 
     @JvmOverloads
     fun navigateToController(pageIndex: Int? = null) {
-        activeSubpage = PclSubpage.CONTROLLER
+        activeSubpage = AppSubpage.CONTROLLER
         uiManager.currentUI = uiManager.controllerUI
         if (pageIndex != null) {
             uiManager.controllerUI.showPage(pageIndex)
@@ -420,21 +427,24 @@ class MainActivity : FCLActivity() {
     private fun handleBackNavigation() {
         val current = activeSubpage
         if (current != null) {
-            uiManager.getUI(current.uiIndex).onBackPressed()
+            if (current.uiIndex >= 0) {
+                uiManager.getUI(current.uiIndex).onBackPressed()
+            } else {
+                activeSubpage = null
+            }
             return
         }
 
-        if (selectedTab != PclMainTab.LAUNCH) {
+        if (selectedTab != MainTab.LAUNCH) {
             val legacyIdx = when (selectedTab) {
-                PclMainTab.DOWNLOAD -> 2
-                PclMainTab.LINK -> 4
-                PclMainTab.SETUP -> 5
+                MainTab.DOWNLOAD -> 2
+                MainTab.LINK -> 4
                 else -> -1
             }
             if (legacyIdx >= 0) {
                 uiManager.getUI(legacyIdx).onBackPressed()
             } else {
-                selectedTab = PclMainTab.LAUNCH
+                selectedTab = MainTab.LAUNCH
             }
             return
         }
@@ -447,43 +457,51 @@ class MainActivity : FCLActivity() {
         exitProcess(0)
     }
 
-    private fun syncUiManagerFromTab(tab: PclMainTab) {
+    private fun syncUiManagerFromTab(tab: MainTab) {
         when (tab) {
-            PclMainTab.DOWNLOAD -> uiManager.currentUI = uiManager.downloadUI
-            PclMainTab.LINK -> uiManager.currentUI = uiManager.multiplayerUI
-            PclMainTab.SETUP -> uiManager.currentUI = uiManager.settingUI
+            MainTab.DOWNLOAD -> uiManager.currentUI = uiManager.downloadUI
+            MainTab.LINK -> uiManager.currentUI = uiManager.multiplayerUI
+            MainTab.SETUP -> uiManager.currentUI = uiManager.settingUI
             else -> {}
         }
     }
 
     private fun syncComposeRouteFromUiPosition(position: Int) {
         when (position) {
+            -1 -> openAccountWithSection(AccountSection.SAVED)
             0 -> navigateToHome()
-            1 -> activeSubpage = PclSubpage.MANAGE
+            1 -> activeSubpage = AppSubpage.MANAGE
             2 -> {
                 activeSubpage = null
-                selectedTab = PclMainTab.DOWNLOAD
+                selectedTab = MainTab.DOWNLOAD
             }
-            3 -> activeSubpage = PclSubpage.CONTROLLER
+            3 -> activeSubpage = AppSubpage.CONTROLLER
             4 -> {
                 activeSubpage = null
-                selectedTab = PclMainTab.LINK
+                selectedTab = MainTab.LINK
             }
             5 -> {
                 activeSubpage = null
-                selectedTab = PclMainTab.SETUP
+                selectedTab = MainTab.SETUP
             }
-            6 -> activeSubpage = PclSubpage.ACCOUNT
-            7 -> activeSubpage = PclSubpage.VERSION
+            6 -> activeSubpage = AppSubpage.VERSION
         }
     }
 
-    private fun openSubpage(sub: PclSubpage) {
-        if (sub == PclSubpage.MANAGE) {
+    private fun openAccountWithSection(section: AccountSection) {
+        accountSectionRequest = section
+        accountSectionRequestSeq++
+        activeSubpage = AppSubpage.ACCOUNT
+    }
+
+    private fun openSubpage(sub: AppSubpage) {
+        if (sub == AppSubpage.MANAGE) {
             val profile = Profiles.getSelectedProfile()
             profile.selectedVersion?.let { uiManager.manageUI.setVersion(it, profile) }
         }
-        uiManager.currentUI = uiManager.getUI(sub.uiIndex)
+        if (sub.uiIndex >= 0) {
+            uiManager.currentUI = uiManager.getUI(sub.uiIndex)
+        }
         activeSubpage = sub
     }
 
@@ -491,7 +509,7 @@ class MainActivity : FCLActivity() {
         val profile = Profiles.getSelectedProfile()
         if (profile.versionSetting.isUsesGlobal) {
             activeSubpage = null
-            selectedTab = PclMainTab.SETUP
+            selectedTab = MainTab.SETUP
             val settingUI = uiManager.settingUI
             uiManager.currentUI = settingUI
             val tab = settingUI.tabLayout.getTabAt(0)
@@ -505,7 +523,7 @@ class MainActivity : FCLActivity() {
         val profile = Profiles.getSelectedProfile()
         val versions = profile.repository.versions.map { it.id }
         if (versions.isEmpty()) {
-            openSubpage(PclSubpage.VERSION)
+            openSubpage(AppSubpage.VERSION)
             return
         }
         val currentIdx = versions.indexOf(profile.selectedVersion).coerceAtLeast(0)
@@ -515,7 +533,7 @@ class MainActivity : FCLActivity() {
                 profile.selectedVersion = versions[which]
                 dialog.dismiss()
             }
-            .setPositiveButton("版本管理") { _, _ -> openSubpage(PclSubpage.VERSION) }
+            .setPositiveButton("版本管理") { _, _ -> openSubpage(AppSubpage.VERSION) }
             .setNegativeButton(getString(R.string.dialog_negative), null)
             .show()
     }
@@ -561,12 +579,12 @@ class MainActivity : FCLActivity() {
         refreshAccountState()
     }
 
-    private fun selectAccountTab(tab: PclAccountTab) {
+    private fun selectAccountTab(tab: AccountTab) {
         val current = Accounts.getSelectedAccount()
         val matching = when (tab) {
-            PclAccountTab.MICROSOFT -> Accounts.getAccounts().filterIsInstance<MicrosoftAccount>()
-            PclAccountTab.OFFLINE -> Accounts.getAccounts().filterIsInstance<OfflineAccount>()
-            PclAccountTab.EXTERNAL -> Accounts.getAccounts().filterIsInstance<AuthlibInjectorAccount>()
+            AccountTab.MICROSOFT -> Accounts.getAccounts().filterIsInstance<MicrosoftAccount>()
+            AccountTab.OFFLINE -> Accounts.getAccounts().filterIsInstance<OfflineAccount>()
+            AccountTab.EXTERNAL -> Accounts.getAccounts().filterIsInstance<AuthlibInjectorAccount>()
         }
         val target = matching.firstOrNull { it == current } ?: matching.firstOrNull()
         if (target != null && target != current) {
@@ -576,11 +594,11 @@ class MainActivity : FCLActivity() {
         }
     }
 
-    private fun addAccountForTab(tab: PclAccountTab) {
+    private fun addAccountForTab(tab: AccountTab) {
         when (tab) {
-            PclAccountTab.MICROSOFT -> CreateAccountDialog(this, Accounts.FACTORY_MICROSOFT).show()
-            PclAccountTab.OFFLINE -> CreateAccountDialog(this, Accounts.FACTORY_OFFLINE).show()
-            PclAccountTab.EXTERNAL -> openSubpage(PclSubpage.ACCOUNT)
+            AccountTab.MICROSOFT -> openAccountWithSection(AccountSection.MICROSOFT)
+            AccountTab.OFFLINE -> openAccountWithSection(AccountSection.OFFLINE)
+            AccountTab.EXTERNAL -> openAccountWithSection(AccountSection.EXTERNAL)
         }
     }
 
@@ -592,9 +610,9 @@ class MainActivity : FCLActivity() {
         val account = Accounts.getSelectedAccount()
 
         val resolvedTab = when (account) {
-            is MicrosoftAccount -> PclAccountTab.MICROSOFT
-            is OfflineAccount -> PclAccountTab.OFFLINE
-            is AuthlibInjectorAccount -> PclAccountTab.EXTERNAL
+            is MicrosoftAccount -> AccountTab.MICROSOFT
+            is OfflineAccount -> AccountTab.OFFLINE
+            is AuthlibInjectorAccount -> AccountTab.EXTERNAL
             else -> launchState.activeAccountTab
         }
 

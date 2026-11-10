@@ -568,7 +568,7 @@ public class FileBrowserActivity extends FCLActivity implements View.OnClickList
 
     private void shareFile(File file) {
         Intent intent = new Intent(Intent.ACTION_SEND);
-        Uri uri = FileProvider.getUriForFile(this, getString(R.string.file_browser_provider), file);
+        Uri uri = FileProvider.getUriForFile(this, getPackageName() + ".provider", file);
         intent.setType("*/*");
         intent.putExtra(Intent.EXTRA_STREAM, uri);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);

@@ -1,4 +1,4 @@
-package com.tungsten.fcl.pclf.ui
+package top.nkbe.pclf.ui
 
 import android.content.Context
 import android.view.View
@@ -56,8 +56,6 @@ import com.mio.JavaManager
 import com.mio.manager.RendererManager
 import com.mio.plugin.DriverPlugin
 import com.tungsten.fcl.R
-import com.tungsten.fcl.pclf.theme.PclfTheme
-import com.tungsten.fcl.pclf.ui.components.PclCard
 import com.tungsten.fcl.setting.ConfigHolder
 import com.tungsten.fcl.setting.DownloadSource
 import com.tungsten.fcl.setting.Profiles
@@ -66,6 +64,9 @@ import com.tungsten.fclcore.util.platform.MemoryUtils
 import com.tungsten.fcllibrary.component.theme.ThemeData
 import com.tungsten.fcllibrary.component.theme.ThemeEngine
 import com.tungsten.fcllibrary.util.LocaleUtils
+import top.nkbe.pclf.theme.LauncherTheme
+import top.nkbe.pclf.ui.components.SectionCard
+import top.nkbe.pclf.ui.components.SidebarNavItem
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.LinearProgressIndicator
@@ -84,12 +85,12 @@ private enum class SetupSection {
 }
 
 /**
- * Authentic PCL2 `设置` two-pane layout (matching Screenshot 2) powered by Miuix 0.9.4:
+ * Two-pane Settings page powered by Miuix 0.9.4:
  * - Left white flush sidebar (`172.dp`) with 3.dp vertical accent indicator bar
- * - Right soft-tinted canvas with crisp PCL/Miuix cards directly backed by FCL settings
+ * - Right soft-tinted canvas with crisp cards directly backed by FCL settings
  */
 @Composable
-fun PclfSetupPage(
+fun SetupPage(
     legacySettingUiProvider: () -> SettingUI,
     onPickBackground: (isDark: Boolean) -> Unit,
     onShareLatestLog: () -> Unit,
@@ -97,11 +98,10 @@ fun PclfSetupPage(
     onOpenFullLegacyGameSetting: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val colors = PclfTheme.colors
+    val colors = LauncherTheme.colors
     var section by remember { mutableStateOf(SetupSection.LAUNCH) }
 
     Row(modifier = modifier.fillMaxSize()) {
-        // Left sub-navigation sidebar (`172.dp` pure white flush pane)
         Column(
             modifier = Modifier
                 .background(colors.sidebarBg)
@@ -111,29 +111,28 @@ fun PclfSetupPage(
                 .padding(vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            SetupNavItem(
+            SidebarNavItem(
                 label = stringResource(R.string.pclf_setup_launch),
                 selected = section == SetupSection.LAUNCH,
                 onClick = { section = SetupSection.LAUNCH }
             )
-            SetupNavItem(
+            SidebarNavItem(
                 label = stringResource(R.string.pclf_setup_personalization),
                 selected = section == SetupSection.PERSONALIZATION,
                 onClick = { section = SetupSection.PERSONALIZATION }
             )
-            SetupNavItem(
+            SidebarNavItem(
                 label = stringResource(R.string.pclf_setup_plugins),
                 selected = section == SetupSection.PLUGINS,
                 onClick = { section = SetupSection.PLUGINS }
             )
-            SetupNavItem(
+            SidebarNavItem(
                 label = stringResource(R.string.pclf_setup_other),
                 selected = section == SetupSection.OTHER,
                 onClick = { section = SetupSection.OTHER }
             )
         }
 
-        // PCL 4.dp vertical shadow divider
         Box(
             modifier = Modifier
                 .width(4.dp)
@@ -148,7 +147,6 @@ fun PclfSetupPage(
                 )
         )
 
-        // Right content area
         if (section == SetupSection.PLUGINS) {
             Box(
                 modifier = Modifier
@@ -221,7 +219,7 @@ private fun SetupLaunchSection(
     onOpenFullLegacyGameSetting: () -> Unit
 ) {
     val context = LocalContext.current
-    val colors = PclfTheme.colors
+    val colors = LauncherTheme.colors
     val setting = remember { Profiles.getSelectedProfile().versionSetting }
 
     var isolateGameDir by remember { mutableStateOf(setting.isIsolateGameDir) }
@@ -254,8 +252,7 @@ private fun SetupLaunchSection(
     val totalDeviceRamMb = remember { MemoryUtils.getTotalDeviceMemory(context).coerceAtLeast(2048) }
     val maxAllocatableMb = remember(totalDeviceRamMb) { (totalDeviceRamMb * 0.8f).toInt().coerceAtLeast(1024) }
 
-    // 1. 启动选项卡片
-    PclCard(title = stringResource(R.string.pclf_setup_launch_options)) {
+    SectionCard(title = stringResource(R.string.pclf_setup_launch_options)) {
         Card(
             modifier = Modifier.fillMaxWidth(),
             cornerRadius = 8.dp,
@@ -318,8 +315,7 @@ private fun SetupLaunchSection(
         }
     }
 
-    // 2. 内存分配卡片 (完全还原 PCL2 截图 2 样式：自动/自定义切换 + 滑块 + 内存可视化条)
-    PclCard(title = stringResource(R.string.pclf_setup_memory_alloc)) {
+    SectionCard(title = stringResource(R.string.pclf_setup_memory_alloc)) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -376,8 +372,7 @@ private fun SetupLaunchSection(
         )
     }
 
-    // 3. 高级选项卡片
-    PclCard(title = stringResource(R.string.pclf_setup_advanced)) {
+    SectionCard(title = stringResource(R.string.pclf_setup_advanced)) {
         Card(
             modifier = Modifier.fillMaxWidth(),
             cornerRadius = 8.dp,
@@ -432,7 +427,7 @@ private fun SetupPersonalizationSection(
     onPickBackground: (isDark: Boolean) -> Unit
 ) {
     val context = LocalContext.current
-    val colors = PclfTheme.colors
+    val colors = LauncherTheme.colors
     val prefs = remember { context.getSharedPreferences("launcher", Context.MODE_PRIVATE) }
     var themeModeIdx by remember { mutableIntStateOf(prefs.getInt("themeMode", 0)) }
     val themeModeItems = listOf(
@@ -444,14 +439,14 @@ private fun SetupPersonalizationSection(
     var animSpeed by remember { mutableIntStateOf(ThemeEngine.getInstance().getTheme().animationSpeed) }
 
     val presetColors = listOf(
-        0xFF1576D8.toInt(), // PCL Blue
-        0xFFE86328.toInt(), // Flame Orange
-        0xFF2E9E4B.toInt(), // Creeper Green
-        0xFF8B3DFF.toInt(), // Obsidian Purple
-        0xFFE04F80.toInt()  // Sakura Pink
+        0xFF1576D8.toInt(),
+        0xFFE86328.toInt(),
+        0xFF2E9E4B.toInt(),
+        0xFF8B3DFF.toInt(),
+        0xFFE04F80.toInt()
     )
 
-    PclCard(title = stringResource(R.string.pclf_setup_theme_colors)) {
+    SectionCard(title = stringResource(R.string.pclf_setup_theme_colors)) {
         WindowDropdownPreference(
             items = themeModeItems,
             selectedIndex = themeModeIdx,
@@ -513,7 +508,7 @@ private fun SetupPersonalizationSection(
         )
     }
 
-    PclCard(title = stringResource(R.string.pclf_setup_bg_anim)) {
+    SectionCard(title = stringResource(R.string.pclf_setup_bg_anim)) {
         ArrowPreference(
             title = stringResource(R.string.pclf_setup_pick_bg_lt),
             onClick = { onPickBackground(false) }
@@ -557,7 +552,7 @@ private fun SetupOtherSection(
     onCheckUpdate: () -> Unit
 ) {
     val context = LocalContext.current
-    val colors = PclfTheme.colors
+    val colors = LauncherTheme.colors
     val prefs = remember { context.getSharedPreferences("launcher", Context.MODE_PRIVATE) }
     val config = remember { ConfigHolder.config() }
 
@@ -591,7 +586,7 @@ private fun SetupOtherSection(
     var downloadThreads by remember { mutableIntStateOf(config.downloadThreads) }
     var autoExit by remember { mutableStateOf(prefs.getBoolean("autoExitLauncher", false)) }
 
-    PclCard(title = stringResource(R.string.pclf_setup_lang_download)) {
+    SectionCard(title = stringResource(R.string.pclf_setup_lang_download)) {
         WindowDropdownPreference(
             items = langNames,
             selectedIndex = selectedLangIdx,
@@ -651,7 +646,7 @@ private fun SetupOtherSection(
         }
     }
 
-    PclCard(title = stringResource(R.string.pclf_setup_behavior_logs)) {
+    SectionCard(title = stringResource(R.string.pclf_setup_behavior_logs)) {
         SwitchPreference(
             title = stringResource(R.string.settings_launcher_exit_after_launching),
             summary = stringResource(R.string.settings_launcher_exit_after_launching_desc),
@@ -692,7 +687,7 @@ private fun MemoryModeRadioPill(
     selected: Boolean,
     onClick: () -> Unit
 ) {
-    val colors = PclfTheme.colors
+    val colors = LauncherTheme.colors
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -718,38 +713,6 @@ private fun MemoryModeRadioPill(
             text = label,
             color = if (selected) colors.accent else colors.textPrimary,
             fontSize = 12.5.sp,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
-        )
-    }
-}
-
-@Composable
-private fun SetupNavItem(
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    val colors = PclfTheme.colors
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(40.dp)
-            .clickable(onClick = onClick)
-            .padding(end = 12.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .width(3.dp)
-                .height(if (selected) 20.dp else 0.dp)
-                .clip(RoundedCornerShape(topEnd = 2.dp, bottomEnd = 2.dp))
-                .background(if (selected) colors.accent else Color.Transparent)
-        )
-        Spacer(Modifier.width(14.dp))
-        Text(
-            text = label,
-            color = if (selected) colors.accent else colors.textPrimary,
-            fontSize = 13.sp,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
         )
     }

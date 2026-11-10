@@ -7,7 +7,6 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.mio.util.disableMouseWheelScroll
 import com.tungsten.fcl.R
-import com.tungsten.fcl.ui.account.AccountUI
 import com.tungsten.fcl.ui.controller.ControllerUI
 import com.tungsten.fcl.ui.download.DownloadUI
 import com.tungsten.fcl.ui.main.MainUI
@@ -32,7 +31,7 @@ class UIManager(val context: Context, val pager: ViewPager2? = null) {
     }
 
     /** 页面位置 → UI 实例注册表，页面被回收时销毁并清空对应位 */
-    private val uiRegistry = arrayOfNulls<FCLCommonUI>(8)
+    private val uiRegistry = arrayOfNulls<FCLCommonUI>(7)
 
     /** 页面位置 → UI 工厂 */
     private val factories: List<() -> FCLCommonUI> = listOf(
@@ -42,7 +41,6 @@ class UIManager(val context: Context, val pager: ViewPager2? = null) {
         { ControllerUI(context, R.layout.ui_controller) },
         { MultiplayerUI(context, R.layout.ui_multiplayer) },
         { SettingUI(context, R.layout.ui_setting) },
-        { AccountUI(context, R.layout.ui_account) },
         { VersionUI(context, R.layout.ui_version) }
     )
 
@@ -84,8 +82,11 @@ class UIManager(val context: Context, val pager: ViewPager2? = null) {
     val controllerUI: ControllerUI get() = getUI(3) as ControllerUI
     val multiplayerUI: MultiplayerUI get() = getUI(4) as MultiplayerUI
     val settingUI: SettingUI get() = getUI(5) as SettingUI
-    val accountUI: AccountUI get() = getUI(6) as AccountUI
-    val versionUI: VersionUI get() = getUI(7) as VersionUI
+    val versionUI: VersionUI get() = getUI(6) as VersionUI
+
+    fun switchToAccountPage() {
+        onComposeSwitchUI?.invoke(-1)
+    }
 
     fun init() {
         instance = this
@@ -166,7 +167,7 @@ class UIManager(val context: Context, val pager: ViewPager2? = null) {
             var boundPosition: Int = 0
         }
 
-        override fun getItemCount(): Int = 8
+        override fun getItemCount(): Int = factories.size
 
         override fun getItemViewType(position: Int): Int = position
 

@@ -346,7 +346,7 @@ class ControllerManagePage(context: Context, id: Int) :
         val intent = Intent(Intent.ACTION_SEND)
         val uri = FileProvider.getUriForFile(
             context,
-            context.getString(R.string.file_browser_provider),
+            "${context.packageName}.provider",
             file
         )
         intent.type = mimeType

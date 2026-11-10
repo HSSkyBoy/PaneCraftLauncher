@@ -1,4 +1,4 @@
-package com.tungsten.fcl.pclf.ui
+package top.nkbe.pclf.ui
 
 import android.graphics.drawable.BitmapDrawable
 import android.view.View
@@ -48,43 +48,45 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.mio.download.DownloadTaskInfo
 import com.tungsten.fcl.R
-import com.tungsten.fcl.pclf.theme.PclfTheme
-import com.tungsten.fcl.pclf.ui.components.PclButton
-import com.tungsten.fcl.pclf.ui.components.PclMainTab
-import com.tungsten.fcl.pclf.ui.components.PclTopBar
 import com.tungsten.fcl.ui.setting.SettingUI
 import com.tungsten.fclcore.auth.Account
 import com.tungsten.fcllibrary.component.ui.FCLCommonUI
+import top.nkbe.pclf.theme.LauncherTheme
+import top.nkbe.pclf.ui.components.LauncherButton
+import top.nkbe.pclf.ui.components.MainTab
+import top.nkbe.pclf.ui.components.TopNavBar
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import top.yukonga.miuix.kmp.basic.LinearProgressIndicator
 import top.yukonga.miuix.kmp.basic.Text
 
-enum class PclSubpage(@StringRes val titleRes: Int, val uiIndex: Int) {
+enum class AppSubpage(@StringRes val titleRes: Int, val uiIndex: Int) {
     MANAGE(R.string.manage, 1),
     CONTROLLER(R.string.pclf_more_controller, 3),
     LEGACY_SETUP(R.string.pclf_setup_legacy_more, 5),
-    ACCOUNT(R.string.pclf_more_account, 6),
-    VERSION(R.string.pclf_btn_version_select, 7)
+    ACCOUNT(R.string.pclf_more_account, -1),
+    VERSION(R.string.pclf_btn_version_select, 6)
 }
 
 @Composable
-fun PclfMainScreen(
-    selectedTab: PclMainTab,
-    activeSubpage: PclSubpage?,
+fun LauncherMainScreen(
+    selectedTab: MainTab,
+    activeSubpage: AppSubpage?,
+    accountSectionRequest: AccountSection,
+    accountSectionRequestSeq: Int,
     launchState: LaunchUiState,
     backgroundDrawable: BitmapDrawable?,
     showDownloadPanel: Boolean,
     appVersionName: String,
     legacyUiProvider: (Int) -> FCLCommonUI,
-    onSelectTab: (PclMainTab) -> Unit,
-    onOpenSubpage: (PclSubpage) -> Unit,
+    onSelectTab: (MainTab) -> Unit,
+    onOpenSubpage: (AppSubpage) -> Unit,
+    onOpenAccountWithSection: (AccountSection) -> Unit,
     onBackFromSubpage: () -> Unit,
-    onSelectAccountTab: (PclAccountTab) -> Unit,
+    onSelectAccountTab: (AccountTab) -> Unit,
     onSelectAccount: (Account) -> Unit,
-    onAddAccountForTab: (PclAccountTab) -> Unit,
-    onManageAllAccounts: () -> Unit,
+    onAddAccountForTab: (AccountTab) -> Unit,
     onLaunchClick: () -> Unit,
     onLaunchLongClick: () -> Unit,
     onVersionLongClick: () -> Unit,
@@ -95,9 +97,10 @@ fun PclfMainScreen(
     onOpenShell: () -> Unit,
     onCheckUpdate: () -> Unit,
     onPickBackground: (Boolean) -> Unit,
+    onAccountUpdated: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val colors = PclfTheme.colors
+    val colors = LauncherTheme.colors
 
     Box(modifier = modifier.fillMaxSize()) {
         val bgBitmap = remember(backgroundDrawable) {
@@ -124,7 +127,7 @@ fun PclfMainScreen(
         }
 
         Column(modifier = Modifier.fillMaxSize().navigationBarsPadding()) {
-            PclTopBar(
+            TopNavBar(
                 selectedTab = selectedTab,
                 subpageTitle = activeSubpage?.let { stringResource(it.titleRes) },
                 hasDownloadTasks = launchState.downloadTasks.isNotEmpty(),
@@ -142,50 +145,56 @@ fun PclfMainScreen(
                         (fadeIn(tween(180)) + slideInVertically(tween(200)) { it / 28 }) togetherWith
                             fadeOut(tween(140))
                     },
-                    label = "PclfPageTransition"
+                    label = "PageTransition"
                 ) { target ->
                     when (target) {
-                        PclMainTab.LAUNCH -> PclfLaunchPage(
+                        MainTab.LAUNCH -> LaunchPage(
                             state = launchState,
                             onSelectAccountTab = onSelectAccountTab,
                             onSelectAccount = onSelectAccount,
                             onAddAccountForTab = onAddAccountForTab,
-                            onManageAllAccounts = onManageAllAccounts,
+                            onManageAllAccounts = { onOpenAccountWithSection(AccountSection.SAVED) },
                             onLaunchClick = onLaunchClick,
                             onLaunchLongClick = onLaunchLongClick,
-                            onVersionSelectClick = { onOpenSubpage(PclSubpage.VERSION) },
+                            onVersionSelectClick = { onOpenSubpage(AppSubpage.VERSION) },
                             onVersionLongClick = onVersionLongClick,
                             onVersionSettingClick = onVersionSettingClick,
                             onOpenDownloadPanel = onToggleDownloadPanel
                         )
 
-                        PclMainTab.DOWNLOAD -> LegacyFclUiHost(
+                        MainTab.DOWNLOAD -> LegacyFclUiHost(
                             ui = remember(legacyUiProvider) { legacyUiProvider(2) }
                         )
 
-                        PclMainTab.LINK -> LegacyFclUiHost(
+                        MainTab.LINK -> LegacyFclUiHost(
                             ui = remember(legacyUiProvider) { legacyUiProvider(4) }
                         )
 
-                        PclMainTab.SETUP -> PclfSetupPage(
+                        MainTab.SETUP -> SetupPage(
                             legacySettingUiProvider = { legacyUiProvider(5) as SettingUI },
                             onPickBackground = onPickBackground,
                             onShareLatestLog = onShareLatestLog,
                             onCheckUpdate = onCheckUpdate,
-                            onOpenFullLegacyGameSetting = { onOpenSubpage(PclSubpage.LEGACY_SETUP) }
+                            onOpenFullLegacyGameSetting = { onOpenSubpage(AppSubpage.LEGACY_SETUP) }
                         )
 
-                        PclMainTab.MORE -> PclfMorePage(
+                        MainTab.MORE -> MorePage(
                             versionName = appVersionName,
-                            onOpenController = { onOpenSubpage(PclSubpage.CONTROLLER) },
-                            onOpenAccount = { onOpenSubpage(PclSubpage.ACCOUNT) },
-                            onOpenVersions = { onOpenSubpage(PclSubpage.VERSION) },
+                            onOpenController = { onOpenSubpage(AppSubpage.CONTROLLER) },
+                            onOpenAccount = { onOpenAccountWithSection(AccountSection.SAVED) },
+                            onOpenVersions = { onOpenSubpage(AppSubpage.VERSION) },
                             onShareLatestLog = onShareLatestLog,
                             onOpenShell = onOpenShell,
                             onCheckUpdate = onCheckUpdate
                         )
 
-                        is PclSubpage -> LegacyFclUiHost(
+                        AppSubpage.ACCOUNT -> AccountPage(
+                            initialSection = accountSectionRequest,
+                            sectionRequestSeq = accountSectionRequestSeq,
+                            onAccountChanged = onAccountUpdated
+                        )
+
+                        is AppSubpage -> LegacyFclUiHost(
                             ui = remember(target, legacyUiProvider) { legacyUiProvider(target.uiIndex) }
                         )
                     }
@@ -227,7 +236,7 @@ fun PclfMainScreen(
                         text = stringResource(R.string.pclf_collapse),
                         color = colors.accent,
                         fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Medium,
                         modifier = Modifier
                             .clip(RoundedCornerShape(4.dp))
                             .clickable(onClick = onToggleDownloadPanel)
@@ -265,7 +274,7 @@ fun PclfMainScreen(
                                 )
                                 Spacer(Modifier.width(8.dp))
                                 if (info.ready && info.installAction != null) {
-                                    PclButton(
+                                    LauncherButton(
                                         text = stringResource(R.string.pclf_install),
                                         onClick = { info.installAction.run() },
                                         height = 26.dp
@@ -300,8 +309,8 @@ private fun LegacyFclUiHost(
     modifier: Modifier = Modifier
 ) {
     AndroidView(
-        factory = { context ->
-            FrameLayout(context).apply {
+        factory = { ctx ->
+            FrameLayout(ctx).apply {
                 layoutParams = ViewGroup.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT
@@ -309,12 +318,12 @@ private fun LegacyFclUiHost(
             }
         },
         update = { container ->
-            val contentView: View = ui.contentView
-            if (contentView.parent !== container) {
-                (contentView.parent as? ViewGroup)?.removeView(contentView)
+            val view: View = ui.contentView
+            if (view.parent !== container) {
+                (view.parent as? ViewGroup)?.removeView(view)
                 container.removeAllViews()
                 container.addView(
-                    contentView,
+                    view,
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT
                 )

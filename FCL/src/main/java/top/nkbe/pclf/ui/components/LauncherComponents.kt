@@ -1,4 +1,4 @@
-package com.tungsten.fcl.pclf.ui.components
+package top.nkbe.pclf.ui.components
 
 import androidx.annotation.StringRes
 import androidx.compose.animation.animateColorAsState
@@ -48,13 +48,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tungsten.fcl.R
-import com.tungsten.fcl.pclf.theme.PclfTheme
+import top.nkbe.pclf.theme.LauncherTheme
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import top.yukonga.miuix.kmp.basic.Text
 
-enum class PclMainTab(@StringRes val labelRes: Int) {
+enum class MainTab(@StringRes val labelRes: Int) {
     LAUNCH(R.string.pclf_tab_launch),
     DOWNLOAD(R.string.pclf_tab_download),
     LINK(R.string.pclf_tab_link),
@@ -63,23 +63,23 @@ enum class PclMainTab(@StringRes val labelRes: Int) {
 }
 
 /**
- * Authentic PCL2 Top Title Bar (`PanTitle`):
- * - Left: Crisp `PCLF` title (or back arrow when inside a subpage)
+ * Top title bar:
+ * - Left: Launcher mark (or back arrow when inside a subpage)
  * - Center: 27dp white pill radio tabs
  * - Right: Active download progress pill
  */
 @Composable
-fun PclTopBar(
-    selectedTab: PclMainTab,
+fun TopNavBar(
+    selectedTab: MainTab,
     subpageTitle: String?,
     hasDownloadTasks: Boolean,
     downloadProgress: Float,
-    onSelectTab: (PclMainTab) -> Unit,
+    onSelectTab: (MainTab) -> Unit,
     onBackFromSubpage: () -> Unit,
     onToggleDownloadPanel: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val colors = PclfTheme.colors
+    val colors = LauncherTheme.colors
     val topBarInsets = WindowInsets.statusBars.union(WindowInsets.displayCutout)
         .only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
 
@@ -126,11 +126,11 @@ fun PclTopBar(
                 }
             } else {
                 Text(
-                    text = "PCLF",
+                    text = "ProCraft",
                     color = Color.White,
-                    fontSize = 17.sp,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 0.8.sp,
+                    letterSpacing = 0.6.sp,
                     modifier = Modifier.padding(start = 4.dp)
                 )
             }
@@ -144,8 +144,8 @@ fun PclTopBar(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    PclMainTab.entries.forEach { tab ->
-                        PclTitleTabPill(
+                    MainTab.entries.forEach { tab ->
+                        TitleTabPill(
                             label = stringResource(tab.labelRes),
                             selected = selectedTab == tab,
                             accentColor = colors.titleBarStart,
@@ -185,7 +185,7 @@ fun PclTopBar(
 }
 
 @Composable
-private fun PclTitleTabPill(
+private fun TitleTabPill(
     label: String,
     selected: Boolean,
     accentColor: Color,
@@ -235,19 +235,19 @@ private fun PclTitleTabPill(
 }
 
 /**
- * Authentic PCL2 `MyButton`:
- * Crisp 3.dp corners, 1.dp neutral border, translucent white fill, spring press feedback.
+ * Outlined desktop-style action button with spring press feedback.
  */
 @Composable
-fun PclButton(
+fun LauncherButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     onLongClick: (() -> Unit)? = null,
     enabled: Boolean = true,
+    accentStyle: Boolean = false,
     height: Dp = 34.dp
 ) {
-    val colors = PclfTheme.colors
+    val colors = LauncherTheme.colors
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
@@ -257,6 +257,13 @@ fun PclButton(
             stiffness = Spring.StiffnessMedium
         )
     )
+    val borderColor = if (accentStyle) colors.buttonBorderAccent else colors.buttonBorderNeutral
+    val bgColor = if (accentStyle && enabled) colors.accent else colors.buttonBg
+    val fgColor = when {
+        !enabled -> colors.textSecondary
+        accentStyle -> Color.White
+        else -> colors.textPrimary
+    }
 
     Box(
         contentAlignment = Alignment.Center,
@@ -266,9 +273,9 @@ fun PclButton(
                 scaleX = scale
                 scaleY = scale
             }
-            .clip(RoundedCornerShape(3.dp))
-            .background(colors.buttonBg)
-            .border(1.dp, colors.buttonBorderNeutral, RoundedCornerShape(3.dp))
+            .clip(RoundedCornerShape(4.dp))
+            .background(bgColor)
+            .border(1.dp, borderColor.copy(alpha = if (enabled) 1f else 0.45f), RoundedCornerShape(4.dp))
             .combinedClickable(
                 enabled = enabled,
                 interactionSource = interactionSource,
@@ -276,13 +283,13 @@ fun PclButton(
                 onClick = onClick,
                 onLongClick = onLongClick
             )
-            .padding(horizontal = 10.dp)
+            .padding(horizontal = 12.dp)
     ) {
         Text(
             text = text,
-            color = if (enabled) colors.textPrimary else colors.textSecondary,
+            color = fgColor,
             fontSize = 12.5.sp,
-            fontWeight = FontWeight.Normal,
+            fontWeight = if (accentStyle) FontWeight.SemiBold else FontWeight.Normal,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -290,12 +297,12 @@ fun PclButton(
 }
 
 /**
- * Authentic PCL2 `BtnLaunch`:
- * - Idle: White/translucent background with 1.dp accent border, accent title, grey subtitle below.
- * - Pressed or Launching (`isActive`): Smoothly transitions to solid accent fill with white text.
+ * Primary launch button:
+ * - Idle: clean translucent surface with 1.dp accent border, accent title, grey subtitle below.
+ * - Pressed or Launching (`isActive`): transitions to solid accent fill with white text.
  */
 @Composable
-fun PclLaunchButton(
+fun LaunchActionButton(
     title: String,
     versionSubtitle: String,
     isLoadingVersion: Boolean,
@@ -304,7 +311,7 @@ fun PclLaunchButton(
     modifier: Modifier = Modifier,
     isActive: Boolean = false
 ) {
-    val colors = PclfTheme.colors
+    val colors = LauncherTheme.colors
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
     val filled = pressed || isActive
@@ -368,16 +375,16 @@ fun PclLaunchButton(
 }
 
 /**
- * PCL2 `MyCard` powered by Miuix [Card] with crisp borders.
+ * Section card container backed by Miuix [Card] with crisp borders.
  */
 @Composable
-fun PclCard(
+fun SectionCard(
     title: String,
     modifier: Modifier = Modifier,
     trailingAction: (@Composable () -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val colors = PclfTheme.colors
+    val colors = LauncherTheme.colors
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -406,5 +413,43 @@ fun PclCard(
         HorizontalDivider(color = colors.cardBorder)
         Spacer(Modifier.height(10.dp))
         content()
+    }
+}
+
+/**
+ * Shared left-sidebar navigation item with 3dp vertical accent indicator bar.
+ */
+@Composable
+fun SidebarNavItem(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = LauncherTheme.colors
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .fillMaxWidth()
+            .height(40.dp)
+            .clickable(onClick = onClick)
+            .padding(end = 12.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .width(3.dp)
+                .height(if (selected) 20.dp else 0.dp)
+                .clip(RoundedCornerShape(topEnd = 2.dp, bottomEnd = 2.dp))
+                .background(if (selected) colors.accent else Color.Transparent)
+        )
+        Spacer(Modifier.width(14.dp))
+        Text(
+            text = label,
+            color = if (selected) colors.accent else colors.textPrimary,
+            fontSize = 13.sp,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }

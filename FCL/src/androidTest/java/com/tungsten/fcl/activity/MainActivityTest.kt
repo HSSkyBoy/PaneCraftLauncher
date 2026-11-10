@@ -122,7 +122,6 @@ class MainActivityTest {
                 assertNotNull(ui.controllerUI)
                 assertNotNull(ui.multiplayerUI)
                 assertNotNull(ui.settingUI)
-                assertNotNull(ui.accountUI)
                 assertNotNull(ui.versionUI)
                 // 初始页为主界面
                 assertEquals(ui.mainUI, ui.currentUI)

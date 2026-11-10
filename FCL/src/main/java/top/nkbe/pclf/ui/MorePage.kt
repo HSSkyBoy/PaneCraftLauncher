@@ -1,21 +1,18 @@
-package com.tungsten.fcl.pclf.ui
+package top.nkbe.pclf.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -29,18 +26,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tungsten.fcl.R
-import com.tungsten.fcl.pclf.theme.PclfTheme
-import com.tungsten.fcl.pclf.ui.components.PclCard
+import top.nkbe.pclf.theme.LauncherTheme
+import top.nkbe.pclf.ui.components.SectionCard
+import top.nkbe.pclf.ui.components.SidebarNavItem
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.Text
@@ -53,12 +48,12 @@ private enum class MoreSection {
 }
 
 /**
- * Authentic PCL2 `更多` two-pane layout (matching screenshots 3 & 4):
+ * Two-pane More page:
  * - Left white sidebar with 3.dp vertical accent indicator bar
- * - Right soft-tinted canvas with crisp white Miuix cards
+ * - Right soft-tinted canvas with crisp Miuix cards
  */
 @Composable
-fun PclfMorePage(
+fun MorePage(
     versionName: String,
     onOpenController: () -> Unit,
     onOpenAccount: () -> Unit,
@@ -68,11 +63,10 @@ fun PclfMorePage(
     onCheckUpdate: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val colors = PclfTheme.colors
+    val colors = LauncherTheme.colors
     var section by remember { mutableStateOf(MoreSection.TOOLS) }
 
     Row(modifier = modifier.fillMaxSize()) {
-        // Left sub-navigation sidebar (`172.dp` white flush pane)
         Column(
             modifier = Modifier
                 .background(colors.sidebarBg)
@@ -82,24 +76,23 @@ fun PclfMorePage(
                 .padding(vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            MoreNavItem(
+            SidebarNavItem(
                 label = stringResource(R.string.pclf_more_tools_title),
                 selected = section == MoreSection.TOOLS,
                 onClick = { section = MoreSection.TOOLS }
             )
-            MoreNavItem(
+            SidebarNavItem(
                 label = stringResource(R.string.pclf_more_diag_title),
                 selected = section == MoreSection.DIAGNOSTICS,
                 onClick = { section = MoreSection.DIAGNOSTICS }
             )
-            MoreNavItem(
+            SidebarNavItem(
                 label = stringResource(R.string.pclf_about_title),
                 selected = section == MoreSection.ABOUT,
                 onClick = { section = MoreSection.ABOUT }
             )
         }
 
-        // PCL 4.dp vertical shadow divider
         Box(
             modifier = Modifier
                 .width(4.dp)
@@ -114,7 +107,6 @@ fun PclfMorePage(
                 )
         )
 
-        // Right content area
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -187,7 +179,7 @@ fun PclfMorePage(
                     }
 
                     MoreSection.ABOUT -> {
-                        PclCard(title = "ProCraftLauncherFold (v$versionName)") {
+                        SectionCard(title = "ProCraftLauncherFold (v$versionName)") {
                             Text(
                                 text = stringResource(R.string.pclf_about_body),
                                 color = colors.textSecondary,
@@ -199,37 +191,5 @@ fun PclfMorePage(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun MoreNavItem(
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    val colors = PclfTheme.colors
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(40.dp)
-            .clickable(onClick = onClick)
-            .padding(end = 12.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .width(3.dp)
-                .height(if (selected) 20.dp else 0.dp)
-                .clip(RoundedCornerShape(topEnd = 2.dp, bottomEnd = 2.dp))
-                .background(if (selected) colors.accent else Color.Transparent)
-        )
-        Spacer(Modifier.width(14.dp))
-        Text(
-            text = label,
-            color = if (selected) colors.accent else colors.textPrimary,
-            fontSize = 13.sp,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
-        )
     }
 }

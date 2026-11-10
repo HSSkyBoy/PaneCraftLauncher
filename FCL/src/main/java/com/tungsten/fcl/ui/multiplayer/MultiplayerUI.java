@@ -130,7 +130,7 @@ public class MultiplayerUI extends FCLCommonUI implements View.OnClickListener, 
         if (v == shareLog) {
             if (new File(FCLPath.LOG_DIR, "terracotta.log").exists()) {
                 Intent intent = new Intent(Intent.ACTION_SEND);
-                Uri uri = FileProvider.getUriForFile(getContext(), getContext().getString(com.tungsten.fcl.R.string.file_browser_provider), new File(FCLPath.LOG_DIR, "terracotta.log"));
+                Uri uri = FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".provider", new File(FCLPath.LOG_DIR, "terracotta.log"));
                 intent.setType(AndroidUtilKt.getMimeType(FCLPath.LOG_DIR + "/" + "terracotta.log"));
                 intent.putExtra(Intent.EXTRA_STREAM, uri);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

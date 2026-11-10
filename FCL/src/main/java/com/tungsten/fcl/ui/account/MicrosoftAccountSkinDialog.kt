@@ -14,6 +14,7 @@ import com.mio.util.getScreenWidth
 import com.tungsten.fcl.R
 import com.tungsten.fcl.activity.MainActivity
 import com.tungsten.fcl.databinding.DialogMicrosoftAccountSkinBinding
+import com.tungsten.fcl.game.TexturesLoader
 import com.tungsten.fclauncher.utils.FCLPath
 import com.tungsten.fclcore.auth.AuthenticationException
 import com.tungsten.fclcore.auth.microsoft.MicrosoftAccount
@@ -37,10 +38,11 @@ import java.util.logging.Level
 
 class MicrosoftAccountSkinDialog(
     context: Context,
-    private val accountListItem: AccountListItem
+    private val account: MicrosoftAccount,
+    private val onUpdated: () -> Unit = {}
 ) : FCLDialog(context), View.OnClickListener {
 
-    private val account: MicrosoftAccount = accountListItem.account as MicrosoftAccount
+    private val textureBinding = TexturesLoader.textureBinding(account)
     private var binding: DialogMicrosoftAccountSkinBinding =
         DialogMicrosoftAccountSkinBinding.inflate(layoutInflater)
     private val renderer: SkinRenderer
@@ -84,12 +86,13 @@ class MicrosoftAccountSkinDialog(
 
     override fun dismiss() {
         binding.skinView.onPause()
+        textureBinding.dispose()
         scope.cancel()
         super.dismiss()
     }
 
     private fun refreshPreview() {
-        val texture = accountListItem.texture.get()
+        val texture = textureBinding.get()
         if (texture != null && texture.size >= 2) {
             renderer.setTexture(
                 texture[0],
@@ -103,7 +106,7 @@ class MicrosoftAccountSkinDialog(
      * and update the radio button accordingly.
      */
     private fun detectCurrentModel() {
-        val texture = accountListItem.texture.get()
+        val texture = textureBinding.get()
         val skinBitmap = texture?.getOrNull(0) ?: return
         try {
             val normalized = NormalizedSkin(skinBitmap)
@@ -133,7 +136,7 @@ class MicrosoftAccountSkinDialog(
                 binding.modelClassic.isChecked = true
             }
             // Update 3D preview: new skin, keep current cape
-            val currentCape = accountListItem.texture.get()?.getOrNull(1)
+            val currentCape = textureBinding.get()?.getOrNull(1)
             renderer.setTexture(normalized.normalizedTexture, currentCape)
         } catch (_: Exception) {
             // Ignore preview errors
@@ -287,7 +290,8 @@ class MicrosoftAccountSkinDialog(
                     }
                     Toast.makeText(context, R.string.account_skin_uploaded, Toast.LENGTH_SHORT)
                         .show()
-                    accountListItem.refreshSkinBinding()
+                    MainActivity.getInstance().refreshAvatar(account)
+                    onUpdated()
                     // Don't call refreshPreview() here — the binding resets to fallback
                     // before async fetch completes. The preview from updatePreviewFromFile()
                     // already shows the correct uploaded skin.
@@ -312,7 +316,8 @@ class MicrosoftAccountSkinDialog(
                     setLoading(false)
                     Toast.makeText(context, R.string.account_skin_reset_done, Toast.LENGTH_SHORT)
                         .show()
-                    accountListItem.refreshSkinBinding()
+                    MainActivity.getInstance().refreshAvatar(account)
+                    onUpdated()
                     refreshPreview()
                 }
             } catch (e: Exception) {

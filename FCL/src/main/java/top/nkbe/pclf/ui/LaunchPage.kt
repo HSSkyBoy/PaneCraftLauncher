@@ -1,4 +1,4 @@
-package com.tungsten.fcl.pclf.ui
+package top.nkbe.pclf.ui
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
@@ -54,11 +54,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mio.download.DownloadTaskInfo
 import com.tungsten.fcl.R
-import com.tungsten.fcl.pclf.theme.PclfTheme
-import com.tungsten.fcl.pclf.ui.components.PclButton
-import com.tungsten.fcl.pclf.ui.components.PclCard
-import com.tungsten.fcl.pclf.ui.components.PclLaunchButton
 import com.tungsten.fclcore.auth.Account
+import top.nkbe.pclf.theme.LauncherTheme
+import top.nkbe.pclf.ui.components.LaunchActionButton
+import top.nkbe.pclf.ui.components.LauncherButton
+import top.nkbe.pclf.ui.components.SectionCard
 import top.yukonga.miuix.kmp.basic.DropdownImpl
 import top.yukonga.miuix.kmp.basic.LinearProgressIndicator
 import top.yukonga.miuix.kmp.basic.ListPopupColumn
@@ -66,7 +66,7 @@ import top.yukonga.miuix.kmp.basic.ListPopupDefaults
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.window.WindowListPopup
 
-enum class PclAccountTab {
+enum class AccountTab {
     MICROSOFT,
     OFFLINE,
     EXTERNAL
@@ -74,7 +74,7 @@ enum class PclAccountTab {
 
 @Immutable
 data class LaunchUiState(
-    val activeAccountTab: PclAccountTab = PclAccountTab.MICROSOFT,
+    val activeAccountTab: AccountTab = AccountTab.MICROSOFT,
     val selectedAccount: Account? = null,
     val microsoftAccounts: List<Account> = emptyList(),
     val offlineAccounts: List<Account> = emptyList(),
@@ -95,14 +95,16 @@ data class LaunchUiState(
 )
 
 /**
- * 1:1 PCL2 `PageLaunchLeft` (with inline PCL account switcher/creator) + balanced `PageLaunchRight`.
+ * Two-column Launch home:
+ * - Left white flush sidebar (`256.dp`) with account tabs/switcher + primary launch controls
+ * - Right soft-tinted canvas with environment overview & tips carousel constrained to `460.dp`
  */
 @Composable
-fun PclfLaunchPage(
+fun LaunchPage(
     state: LaunchUiState,
-    onSelectAccountTab: (PclAccountTab) -> Unit,
+    onSelectAccountTab: (AccountTab) -> Unit,
     onSelectAccount: (Account) -> Unit,
-    onAddAccountForTab: (PclAccountTab) -> Unit,
+    onAddAccountForTab: (AccountTab) -> Unit,
     onManageAllAccounts: () -> Unit,
     onLaunchClick: () -> Unit,
     onLaunchLongClick: () -> Unit,
@@ -112,7 +114,7 @@ fun PclfLaunchPage(
     onOpenDownloadPanel: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val colors = PclfTheme.colors
+    val colors = LauncherTheme.colors
     val displayVersionName = state.selectedVersionName.ifBlank { stringResource(R.string.version_no_version) }
     var tipIndex by remember { mutableIntStateOf(0) }
 
@@ -121,7 +123,6 @@ fun PclfLaunchPage(
 
         if (isExpanded) {
             Row(modifier = Modifier.fillMaxSize()) {
-                // 1. 贴边满高纯白左侧栏 (`256.dp`)
                 BoxWithConstraints(
                     modifier = Modifier
                         .background(colors.sidebarBg)
@@ -130,7 +131,7 @@ fun PclfLaunchPage(
                         .fillMaxHeight()
                 ) {
                     val isShortLandscape = maxHeight < 390.dp
-                    PclLeftLaunchPanel(
+                    LeftLaunchPanel(
                         state = state,
                         displayVersionName = displayVersionName,
                         compactHeight = isShortLandscape,
@@ -153,7 +154,6 @@ fun PclfLaunchPage(
                     )
                 }
 
-                // PCL 4.dp 垂直分割阴影线 (`RectLeftShadow`)
                 Box(
                     modifier = Modifier
                         .width(4.dp)
@@ -168,7 +168,6 @@ fun PclfLaunchPage(
                         )
                 )
 
-                // 2. 右侧卡片区：保持 max = 460.dp 舒适阅读宽度，不铺满 20:9 超宽屏幕
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -178,7 +177,7 @@ fun PclfLaunchPage(
                         .padding(horizontal = 24.dp, vertical = 18.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    PclRightCardsColumn(
+                    RightCardsColumn(
                         state = state,
                         displayVersionName = displayVersionName,
                         tipIndex = tipIndex,
@@ -202,7 +201,7 @@ fun PclfLaunchPage(
                         .background(colors.sidebarBg)
                         .border(0.5.dp, colors.sidebarBorder)
                 ) {
-                    PclLeftLaunchPanel(
+                    LeftLaunchPanel(
                         state = state,
                         displayVersionName = displayVersionName,
                         compactHeight = false,
@@ -226,7 +225,7 @@ fun PclfLaunchPage(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    PclRightCardsColumn(
+                    RightCardsColumn(
                         state = state,
                         displayVersionName = displayVersionName,
                         tipIndex = tipIndex,
@@ -243,7 +242,7 @@ fun PclfLaunchPage(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun PclRightCardsColumn(
+private fun RightCardsColumn(
     state: LaunchUiState,
     displayVersionName: String,
     tipIndex: Int,
@@ -252,7 +251,7 @@ private fun PclRightCardsColumn(
     onOpenDownloadPanel: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val colors = PclfTheme.colors
+    val colors = LauncherTheme.colors
     val tips = listOf(
         stringResource(R.string.pclf_tip_1),
         stringResource(R.string.pclf_tip_2),
@@ -266,7 +265,7 @@ private fun PclRightCardsColumn(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         if (state.downloadTasks.isNotEmpty()) {
-            PclCard(
+            SectionCard(
                 title = stringResource(R.string.pclf_download_tasks, state.downloadTasks.size),
                 trailingAction = {
                     Text(
@@ -291,8 +290,7 @@ private fun PclRightCardsColumn(
             }
         }
 
-        // 当前游戏环境卡片 (约束在 460.dp 宽度内，精致比例)
-        PclCard(
+        SectionCard(
             title = stringResource(R.string.pclf_env_title),
             trailingAction = {
                 Text(
@@ -392,8 +390,7 @@ private fun PclRightCardsColumn(
             }
         }
 
-        // 你知道吗 (小贴士轮播卡片)
-        PclCard(
+        SectionCard(
             title = stringResource(R.string.pclf_tips_title),
             trailingAction = {
                 Text(
@@ -411,7 +408,7 @@ private fun PclRightCardsColumn(
             AnimatedContent(
                 targetState = tips[tipIndex % tips.size],
                 transitionSpec = { fadeIn() togetherWith fadeOut() },
-                label = "PclfTipAnim"
+                label = "TipAnim"
             ) { tip ->
                 Text(
                     text = tip,
@@ -431,7 +428,7 @@ private fun EnvTag(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null
 ) {
-    val colors = PclfTheme.colors
+    val colors = LauncherTheme.colors
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(4.dp))
@@ -457,13 +454,13 @@ private fun EnvTag(
 }
 
 @Composable
-private fun PclLeftLaunchPanel(
+private fun LeftLaunchPanel(
     state: LaunchUiState,
     displayVersionName: String,
     compactHeight: Boolean,
-    onSelectAccountTab: (PclAccountTab) -> Unit,
+    onSelectAccountTab: (AccountTab) -> Unit,
     onSelectAccount: (Account) -> Unit,
-    onAddAccountForTab: (PclAccountTab) -> Unit,
+    onAddAccountForTab: (AccountTab) -> Unit,
     onManageAllAccounts: () -> Unit,
     onLaunchClick: () -> Unit,
     onLaunchLongClick: () -> Unit,
@@ -472,12 +469,12 @@ private fun PclLeftLaunchPanel(
     onVersionSettingClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val colors = PclfTheme.colors
+    val colors = LauncherTheme.colors
     val avatarSize = if (compactHeight) 56.dp else 66.dp
     val tabAccounts = when (state.activeAccountTab) {
-        PclAccountTab.MICROSOFT -> state.microsoftAccounts
-        PclAccountTab.OFFLINE -> state.offlineAccounts
-        PclAccountTab.EXTERNAL -> state.externalAccounts
+        AccountTab.MICROSOFT -> state.microsoftAccounts
+        AccountTab.OFFLINE -> state.offlineAccounts
+        AccountTab.EXTERNAL -> state.externalAccounts
     }
     var showAccountMenu by remember { mutableStateOf(false) }
 
@@ -486,37 +483,35 @@ private fun PclLeftLaunchPanel(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-        // 顶部：PCL2 经典账号类型切换胶囊 (`正版` / `离线` / 可选 `外置`)
         Row(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             LoginModePill(
                 label = stringResource(R.string.pclf_login_official),
-                selected = state.activeAccountTab == PclAccountTab.MICROSOFT,
+                selected = state.activeAccountTab == AccountTab.MICROSOFT,
                 accentColor = colors.accent,
                 inactiveTextColor = colors.accent,
-                onClick = { onSelectAccountTab(PclAccountTab.MICROSOFT) }
+                onClick = { onSelectAccountTab(AccountTab.MICROSOFT) }
             )
             LoginModePill(
                 label = stringResource(R.string.pclf_login_offline),
-                selected = state.activeAccountTab == PclAccountTab.OFFLINE,
+                selected = state.activeAccountTab == AccountTab.OFFLINE,
                 accentColor = colors.accent,
                 inactiveTextColor = colors.accent,
-                onClick = { onSelectAccountTab(PclAccountTab.OFFLINE) }
+                onClick = { onSelectAccountTab(AccountTab.OFFLINE) }
             )
             if (state.externalAccounts.isNotEmpty()) {
                 LoginModePill(
                     label = stringResource(R.string.pclf_login_external),
-                    selected = state.activeAccountTab == PclAccountTab.EXTERNAL,
+                    selected = state.activeAccountTab == AccountTab.EXTERNAL,
                     accentColor = colors.accent,
                     inactiveTextColor = colors.accent,
-                    onClick = { onSelectAccountTab(PclAccountTab.EXTERNAL) }
+                    onClick = { onSelectAccountTab(AccountTab.EXTERNAL) }
                 )
             }
         }
 
-        // 中间：PCL 内联账号区
         val activeForTab = state.selectedAccount?.takeIf { it in tabAccounts } ?: tabAccounts.firstOrNull()
         if (activeForTab != null) {
             Box(contentAlignment = Alignment.Center) {
@@ -570,9 +565,9 @@ private fun PclLeftLaunchPanel(
                 }
 
                 val addLabelText = "+ " + when (state.activeAccountTab) {
-                    PclAccountTab.MICROSOFT -> stringResource(R.string.pclf_add_microsoft)
-                    PclAccountTab.OFFLINE -> stringResource(R.string.pclf_add_offline)
-                    PclAccountTab.EXTERNAL -> stringResource(R.string.pclf_manage_accounts)
+                    AccountTab.MICROSOFT -> stringResource(R.string.pclf_add_microsoft)
+                    AccountTab.OFFLINE -> stringResource(R.string.pclf_add_offline)
+                    AccountTab.EXTERNAL -> stringResource(R.string.pclf_manage_accounts)
                 }
                 val manageAllText = stringResource(R.string.pclf_manage_accounts)
                 WindowListPopup(
@@ -625,11 +620,11 @@ private fun PclLeftLaunchPanel(
                     .padding(vertical = if (compactHeight) 8.dp else 14.dp)
             ) {
                 val addLabel = when (state.activeAccountTab) {
-                    PclAccountTab.MICROSOFT -> stringResource(R.string.pclf_add_microsoft)
-                    PclAccountTab.OFFLINE -> stringResource(R.string.pclf_add_offline)
-                    PclAccountTab.EXTERNAL -> stringResource(R.string.pclf_manage_accounts)
+                    AccountTab.MICROSOFT -> stringResource(R.string.pclf_add_microsoft)
+                    AccountTab.OFFLINE -> stringResource(R.string.pclf_add_offline)
+                    AccountTab.EXTERNAL -> stringResource(R.string.pclf_manage_accounts)
                 }
-                PclButton(
+                LauncherButton(
                     text = addLabel,
                     onClick = { onAddAccountForTab(state.activeAccountTab) },
                     modifier = Modifier.fillMaxWidth(0.85f),
@@ -647,12 +642,11 @@ private fun PclLeftLaunchPanel(
             }
         }
 
-        // 底部：`BtnLaunch` (平时白底蓝框，按下/启动中实心蓝底) + `BtnVersion` / `BtnMore`
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            PclLaunchButton(
+            LaunchActionButton(
                 title = stringResource(R.string.pclf_btn_launch),
                 versionSubtitle = displayVersionName,
                 isLoadingVersion = state.isVersionLoading,
@@ -665,14 +659,14 @@ private fun PclLeftLaunchPanel(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                PclButton(
+                LauncherButton(
                     text = stringResource(R.string.pclf_btn_version_select),
                     onClick = onVersionSelectClick,
                     onLongClick = onVersionLongClick,
                     modifier = Modifier.weight(1f),
                     height = 34.dp
                 )
-                PclButton(
+                LauncherButton(
                     text = stringResource(R.string.pclf_btn_version_setting),
                     onClick = onVersionSettingClick,
                     modifier = Modifier.weight(1f),
@@ -704,7 +698,8 @@ private fun LoginModePill(
             text = label,
             color = if (selected) Color.White else inactiveTextColor,
             fontSize = 12.5.sp,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+            maxLines = 1
         )
     }
 }

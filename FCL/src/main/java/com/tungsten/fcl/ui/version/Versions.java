@@ -276,8 +276,7 @@ public class Versions {
         }
         // 未创建账户：提示后跳转账户管理页，中止本次启动
         Toast.makeText(context, R.string.create_account_first, Toast.LENGTH_SHORT).show();
-        UIManager uiManager = UIManager.getInstance();
-        uiManager.switchUI(uiManager.getAccountUI());
+        UIManager.getInstance().switchToAccountPage();
     }
 
 }
