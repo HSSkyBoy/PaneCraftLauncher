@@ -14,6 +14,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -83,7 +84,7 @@ fun TopNavBar(
     val topBarInsets = WindowInsets.statusBars.union(WindowInsets.displayCutout)
         .only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
 
-    Box(
+    BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
             .background(
@@ -95,15 +96,14 @@ fun TopNavBar(
             .height(46.dp)
             .padding(horizontal = 14.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().align(Alignment.Center),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
+        val centerTabsInScreen = maxWidth >= 460.dp
+
+        @Composable
+        fun LeftSlot(slotModifier: Modifier = Modifier) {
             if (subpageTitle != null) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
+                    modifier = slotModifier
                         .clip(RoundedCornerShape(14.dp))
                         .clickable(onClick = onBackFromSubpage)
                         .padding(horizontal = 8.dp, vertical = 4.dp)
@@ -131,54 +131,85 @@ fun TopNavBar(
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                     letterSpacing = 0.6.sp,
-                    modifier = Modifier.padding(start = 4.dp)
+                    modifier = slotModifier.padding(start = 4.dp)
                 )
             }
+        }
 
-            if (subpageTitle == null) {
+        @Composable
+        fun DownloadBadgeSlot(slotModifier: Modifier = Modifier) {
+            if (hasDownloadTasks) {
                 Row(
-                    modifier = Modifier
-                        .weight(1f, fill = false)
-                        .padding(horizontal = 8.dp)
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = slotModifier
+                        .height(27.dp)
+                        .clip(RoundedCornerShape(13.5.dp))
+                        .background(Color.White.copy(alpha = 0.22f))
+                        .clickable(onClick = onToggleDownloadPanel)
+                        .padding(horizontal = 10.dp)
                 ) {
-                    MainTab.entries.forEach { tab ->
-                        TitleTabPill(
-                            label = stringResource(tab.labelRes),
-                            selected = selectedTab == tab,
-                            accentColor = colors.titleBarStart,
-                            onClick = { onSelectTab(tab) }
-                        )
-                    }
+                    Text(
+                        text = "↓ ${(downloadProgress * 100).toInt()}%",
+                        color = Color.White,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
-            } else {
-                Spacer(Modifier.weight(1f))
             }
+        }
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                if (hasDownloadTasks) {
+        if (centerTabsInScreen) {
+            Box(modifier = Modifier.fillMaxWidth().align(Alignment.Center)) {
+                LeftSlot(Modifier.align(Alignment.CenterStart))
+                if (subpageTitle == null) {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
-                            .height(27.dp)
-                            .clip(RoundedCornerShape(13.5.dp))
-                            .background(Color.White.copy(alpha = 0.22f))
-                            .clickable(onClick = onToggleDownloadPanel)
-                            .padding(horizontal = 10.dp)
+                            .align(Alignment.Center)
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "↓ ${(downloadProgress * 100).toInt()}%",
-                            color = Color.White,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        MainTab.entries.forEach { tab ->
+                            TitleTabPill(
+                                label = stringResource(tab.labelRes),
+                                selected = selectedTab == tab,
+                                accentColor = colors.titleBarStart,
+                                onClick = { onSelectTab(tab) }
+                            )
+                        }
                     }
                 }
+                DownloadBadgeSlot(Modifier.align(Alignment.CenterEnd))
+            }
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth().align(Alignment.Center),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                LeftSlot()
+                if (subpageTitle == null) {
+                    Row(
+                        modifier = Modifier
+                            .weight(1f, fill = false)
+                            .padding(horizontal = 8.dp)
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        MainTab.entries.forEach { tab ->
+                            TitleTabPill(
+                                label = stringResource(tab.labelRes),
+                                selected = selectedTab == tab,
+                                accentColor = colors.titleBarStart,
+                                onClick = { onSelectTab(tab) }
+                            )
+                        }
+                    }
+                } else {
+                    Spacer(Modifier.weight(1f))
+                }
+                DownloadBadgeSlot()
             }
         }
     }

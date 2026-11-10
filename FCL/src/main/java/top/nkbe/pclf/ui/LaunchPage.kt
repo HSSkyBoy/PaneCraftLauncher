@@ -175,13 +175,14 @@ fun LaunchPage(
                         .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Right))
                         .verticalScroll(rememberScrollState())
                         .padding(horizontal = 24.dp, vertical = 18.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
                     RightCardsColumn(
                         state = state,
                         displayVersionName = displayVersionName,
                         tipIndex = tipIndex,
-                        onNextTip = { tipIndex = (tipIndex + 1) % 5 },
+                        onNextTip = { tipIndex = (tipIndex + 1) % 14 },
                         onChangeRenderer = onLaunchLongClick,
                         onOpenDownloadPanel = onOpenDownloadPanel,
                         modifier = Modifier.widthIn(max = 460.dp)
@@ -229,7 +230,7 @@ fun LaunchPage(
                         state = state,
                         displayVersionName = displayVersionName,
                         tipIndex = tipIndex,
-                        onNextTip = { tipIndex = (tipIndex + 1) % 5 },
+                        onNextTip = { tipIndex = (tipIndex + 1) % 14 },
                         onChangeRenderer = onLaunchLongClick,
                         onOpenDownloadPanel = onOpenDownloadPanel,
                         modifier = Modifier.fillMaxWidth()
@@ -257,7 +258,16 @@ private fun RightCardsColumn(
         stringResource(R.string.pclf_tip_2),
         stringResource(R.string.pclf_tip_3),
         stringResource(R.string.pclf_tip_4),
-        stringResource(R.string.pclf_tip_5)
+        stringResource(R.string.pclf_tip_5),
+        stringResource(R.string.pclf_tip_6),
+        stringResource(R.string.pclf_tip_7),
+        stringResource(R.string.pclf_tip_8),
+        stringResource(R.string.pclf_tip_9),
+        stringResource(R.string.pclf_tip_10),
+        stringResource(R.string.pclf_tip_11),
+        stringResource(R.string.pclf_tip_12),
+        stringResource(R.string.pclf_tip_13),
+        stringResource(R.string.pclf_tip_14)
     )
 
     Column(
