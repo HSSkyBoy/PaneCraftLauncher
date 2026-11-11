@@ -18,7 +18,6 @@ import com.tungsten.fcl.ui.TaskDialog;
 import com.tungsten.fcl.ui.UIManager;
 import com.tungsten.fcl.ui.download.modpack.LocalModpackPage;
 import com.tungsten.fcl.ui.download.modpack.ModpackSelectionPage;
-import com.tungsten.fcl.ui.manage.ModpackTypeSelectionPage;
 import com.tungsten.fcl.util.TaskCancellationAction;
 import com.tungsten.fclcore.auth.Account;
 import com.tungsten.fclcore.download.game.GameAssetDownloadTask;
@@ -178,11 +177,6 @@ public class Versions {
         });
         dialog.show();
         return dialog.getFuture();
-    }
-
-    public static void exportVersion(Context context, Profile profile, String version) {
-        ModpackTypeSelectionPage page = new ModpackTypeSelectionPage(context, FCLPage.PAGE_ID_TEMP, profile, version);
-        UIManager.getInstance().getManageUI().showTempPage(page);
     }
 
     public static void duplicateVersion(Context context, Profile profile, String version) {

@@ -87,44 +87,21 @@ public class ManageUI extends FCLMultiPageUI {
 
     @Override
     public int getPageCount() {
-        return 7;
+        return 0;
     }
 
     @Override
     public FCLPage createPage(int position) {
-        return switch (position) {
-            case 1 ->
-                    new ManagePage(getContext(), PAGE_ID_MANAGE_MANAGE);
-            case 2 ->
-                    new InstallerListPage(getContext(), PAGE_ID_MANAGE_INSTALL);
-            case 3 -> new ModListPage(getContext(), PAGE_ID_MANAGE_MOD);
-            case 4 ->
-                    new WorldListPage(getContext(), PAGE_ID_MANAGE_WORLD);
-            case 5 ->
-                    new ResourcePackListPage(getContext(), PAGE_ID_MANAGE_RESOURCE_PACK);
-            case 6 ->
-                    new ShaderPackListPage(getContext(), PAGE_ID_MANAGE_SHADER_PACK);
-            default ->
-                    new VersionSettingPage(getContext(), PAGE_ID_MANAGE_SETTING, false);
-        };
+        return null;
     }
 
     @Override
     public String[] getTabTitles() {
-        return new String[]{
-                getContext().getString(R.string.settings_game),
-                getContext().getString(R.string.manage),
-                getContext().getString(R.string.settings_tabs_installers),
-                getContext().getString(R.string.mods_manage),
-                getContext().getString(R.string.world_manage),
-                getContext().getString(R.string.resourcepack_manage),
-                getContext().getString(R.string.shaderpack_manage)
-        };
+        return new String[0];
     }
 
     @Override
     protected void onPageCreated(FCLPage page) {
-        // 未 setVersion 时跳过（版本校验由 RefreshedVersionsEvent 事件兜底）
         if (page instanceof VersionLoadable && getProfile() != null) {
             ((VersionLoadable) page).loadVersion(getProfile(), getVersion());
         }
@@ -168,25 +145,14 @@ public class ManageUI extends FCLMultiPageUI {
     }
 
     /**
-     * 游戏目录变更时刷新模组/世界列表（原 ManagePageManager.onRunDirectoryChange）
+     * 游戏目录变更时通知依赖方（Compose 管理页已响应式监听并按需重载）。
      */
     public void onRunDirectoryChange(Profile profile, String version) {
-        FCLPage modPage = getPage(3);
-        if (modPage instanceof VersionLoadable) {
-            ((VersionLoadable) modPage).loadVersion(profile, version);
-        }
-        FCLPage worldPage = getPage(4);
-        if (worldPage instanceof VersionLoadable) {
-            ((VersionLoadable) worldPage).loadVersion(profile, version);
-        }
-        FCLPage resourcePackPage = getPage(5);
-        if (resourcePackPage instanceof VersionLoadable) {
-            ((VersionLoadable) resourcePackPage).loadVersion(profile, version);
-        }
-        FCLPage shaderPackPage = getPage(6);
-        if (shaderPackPage instanceof VersionLoadable) {
-            ((VersionLoadable) shaderPackPage).loadVersion(profile, version);
-        }
+        forEachCreatedPage(page -> {
+            if (page instanceof VersionLoadable) {
+                ((VersionLoadable) page).loadVersion(profile, version);
+            }
+        });
     }
 
     public Profile getProfile() {
