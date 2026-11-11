@@ -4,6 +4,8 @@ build/
 
 # Local configuration file (sdk path, etc)
 local.properties
+pclf-key.p12
+*.p12
 
 # Log/OS Files
 *.log

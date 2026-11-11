@@ -20,7 +20,10 @@ jobs:
         arch: ["all", "arm64", "x86_64"]
       fail-fast: false
     env:
-      FCL_KEYSTORE_PASSWORD: ${{ secrets.FCL_KEYSTORE_PASSWORD }}
+      PCLF_KEYSTORE_PATH: ${{ github.workspace }}/pclf-key.p12
+      PCLF_KEYSTORE_PASSWORD: ${{ secrets.PCLF_KEYSTORE_PASSWORD }}
+      PCLF_KEY_ALIAS: ${{ secrets.PCLF_KEY_ALIAS }}
+      PCLF_KEY_PASSWORD: ${{ secrets.PCLF_KEY_PASSWORD }}
       CURSE_API_KEY: ${{ secrets.CURSE_API_KEY }}
       OAUTH_API_KEY: ${{ secrets.OAUTH_API_KEY }}
     runs-on: ubuntu-latest
@@ -38,11 +41,23 @@ jobs:
           java-version: 17
           cache: "gradle"
 
+      - name: Decode PCLF keystore
+        if: ${{ github.repository_owner == 'HSSkyBoy' && github.event_name != 'pull_request' }}
+        env:
+          PCLF_KEYSTORE_BASE64: ${{ secrets.PCLF_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$PCLF_KEYSTORE_BASE64" ]; then
+            echo "Missing PCLF_KEYSTORE_BASE64 secret" >&2
+            exit 1
+          fi
+          printf '%s' "$PCLF_KEYSTORE_BASE64" | base64 --decode > "${{ github.workspace }}/pclf-key.p12"
+          test -s "${{ github.workspace }}/pclf-key.p12"
+
       - name: Build release apk
         if: ${{ github.repository_owner == 'HSSkyBoy' && github.event_name != 'pull_request' }}
         run: |
           chmod +x gradlew
-          ./gradlew assemblerelease -Darch=${{ matrix.arch }} --no-daemon
+          ./gradlew assembleRelease -Darch=${{ matrix.arch }} --no-daemon
 
       - name: Build debug apk
         if: ${{ github.repository_owner != 'HSSkyBoy' || github.event_name == 'pull_request' }}

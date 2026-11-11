@@ -45,7 +45,17 @@ android {
         localProperty = Properties()
         file("${rootDir}/local.properties").inputStream().use { localProperty.load(it) }
     }
-    val pwd = System.getenv("FCL_KEYSTORE_PASSWORD") ?: localProperty?.getProperty("pwd")
+    val pclfKeystorePath = System.getenv("PCLF_KEYSTORE_PATH")
+        ?: localProperty?.getProperty("pclf.keystore.path")
+        ?: "../pclf-key.p12"
+    val pclfKeystorePassword = System.getenv("PCLF_KEYSTORE_PASSWORD")
+        ?: localProperty?.getProperty("pclf.keystore.password")
+    val pclfKeyAlias = System.getenv("PCLF_KEY_ALIAS")
+        ?: localProperty?.getProperty("pclf.key.alias")
+        ?: "PCLF"
+    val pclfKeyPassword = System.getenv("PCLF_KEY_PASSWORD")
+        ?: localProperty?.getProperty("pclf.key.password")
+        ?: pclfKeystorePassword
     val curseApiKey = System.getenv("CURSE_API_KEY") ?: localProperty?.getProperty("curse.api.key")
     val oauthApiKey = System.getenv("OAUTH_API_KEY") ?: localProperty?.getProperty("oauth.api.key")
     // 命令行 -Darch 优先；local.properties 仅在命令行未指定时生效
@@ -57,11 +67,20 @@ android {
         System.setProperty("arch", "arm64")
 
     signingConfigs {
-        create("FCLKey") {
-            storeFile = file("../key-store.jks")
-            storePassword = pwd
-            keyAlias = "FCL-Key"
-            keyPassword = pwd
+        create("PCLFKey") {
+            val resolvedStore = file(pclfKeystorePath)
+            if (resolvedStore.exists() && !pclfKeystorePassword.isNullOrBlank()) {
+                storeFile = resolvedStore
+                storeType = "PKCS12"
+                storePassword = pclfKeystorePassword
+                keyAlias = pclfKeyAlias
+                keyPassword = pclfKeyPassword
+            } else {
+                storeFile = file("../debug-key.jks")
+                storePassword = "FCL-Debug"
+                keyAlias = "FCL-Debug"
+                keyPassword = "FCL-Debug"
+            }
         }
         create("FCLDebugKey") {
             storeFile = file("../debug-key.jks")
@@ -101,11 +120,11 @@ android {
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("FCLKey")
+            signingConfig = signingConfigs.getByName("PCLFKey")
         }
         getByName("debug") {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("FCLKey")
+            signingConfig = signingConfigs.getByName("PCLFKey")
         }
         create("fordebug") {
             initWith(getByName("debug"))
@@ -327,13 +346,10 @@ fun patchedLwjgl341Aar(): File {
 dependencies {
     coreLibraryDesugaring(libs.desugar.jdk.libs)
     implementation(
-        fileTree(
-            mapOf(
-                "dir" to "libs",
-                "include" to listOf("*.jar", "*.aar"),
-                "exclude" to listOf("lwjgl-3.4.1-natives-release.aar")
-            )
-        )
+        fileTree("libs") {
+            include("*.jar", "*.aar")
+            exclude("lwjgl-3.4.1-natives-release.aar")
+        }
     )
     implementation(files(patchedLwjgl341Aar()))
     implementation(project(":ZipFileSystem"))
