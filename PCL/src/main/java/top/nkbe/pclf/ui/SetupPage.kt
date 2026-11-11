@@ -490,7 +490,6 @@ private fun SetupPersonalizationSection(
         stringResource(R.string.settings_launcher_theme_mode_dark)
     )
     var fullscreen by remember { mutableStateOf(ThemeEngine.getInstance().getTheme().fullscreen) }
-    var closeSkinModel by remember { mutableStateOf(ThemeEngine.getInstance().getTheme().closeSkinModel) }
     var animSpeed by remember { mutableIntStateOf(ThemeEngine.getInstance().getTheme().animationSpeed) }
     var customLauncherName by remember {
         mutableStateOf(prefs.getString("custom_launcher_name", context.getString(R.string.app_name)) ?: "")
@@ -544,16 +543,6 @@ private fun SetupPersonalizationSection(
                         WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
                         WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
                     )
-                }
-            )
-            SwitchPreference(
-                title = stringResource(R.string.settings_launcher_close_skin_view),
-                summary = stringResource(R.string.settings_launcher_close_skin_view_desc),
-                checked = closeSkinModel,
-                onCheckedChange = { checked ->
-                    closeSkinModel = checked
-                    ThemeEngine.getInstance().setCloseSkinModel(checked)
-                    ThemeData.saveTheme(context, ThemeEngine.getInstance().getTheme())
                 }
             )
         }

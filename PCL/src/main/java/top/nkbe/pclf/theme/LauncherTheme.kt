@@ -46,21 +46,24 @@ fun buildLauncherColors(seedColorInt: Int, isDark: Boolean): LauncherColors {
     ColorUtils.colorToHSL(opaqueSeed, hsl)
 
     val startHsl = hsl.copyOf().apply {
-        this[2] = (this[2] * 0.92f).coerceIn(0.22f, 0.52f)
+        this[1] = (this[1] * 1.05f).coerceIn(0.65f, 0.95f)
+        this[2] = (this[2] * 0.98f).coerceIn(0.38f, 0.52f)
     }
     val endHsl = hsl.copyOf().apply {
-        this[2] = (this[2] * 1.06f).coerceIn(0.28f, 0.58f)
+        this[1] = (this[1] * 1.10f).coerceIn(0.65f, 0.98f)
+        this[2] = (this[2] * 1.05f).coerceIn(0.42f, 0.58f)
     }
     val lightHsl = hsl.copyOf().apply {
-        this[2] = (this[2] + 0.16f).coerceIn(0.42f, 0.85f)
+        this[1] = (this[1] * 1.05f).coerceIn(0.50f, 0.90f)
+        this[2] = (this[2] + 0.16f).coerceIn(0.48f, 0.82f)
     }
     val canvasHsl = hsl.copyOf().apply {
-        this[1] = (this[1] * 0.55f).coerceIn(0.15f, 0.65f)
-        this[2] = if (isDark) 0.13f else 0.89f
+        this[1] = (this[1] * 0.35f).coerceIn(0.18f, 0.40f)
+        this[2] = if (isDark) 0.13f else 0.95f
     }
 
     val accent = Color(opaqueSeed)
-    val titleBarStart = Color(ColorUtils.HSLToColor(startHsl))
+    val titleBarStart = Color(opaqueSeed)
     val titleBarEnd = Color(ColorUtils.HSLToColor(endHsl))
     val accentLight = Color(ColorUtils.HSLToColor(lightHsl))
     val canvasTint = Color(ColorUtils.HSLToColor(canvasHsl))
@@ -86,9 +89,9 @@ fun buildLauncherColors(seedColorInt: Int, isDark: Boolean): LauncherColors {
         )
     } else {
         LauncherColors(
-            accent = titleBarStart,
+            accent = accent,
             accentLight = accentLight,
-            accentDark = titleBarStart,
+            accentDark = Color(ColorUtils.HSLToColor(startHsl)),
             titleBarStart = titleBarStart,
             titleBarEnd = titleBarEnd,
             canvasTint = canvasTint,
@@ -98,7 +101,7 @@ fun buildLauncherColors(seedColorInt: Int, isDark: Boolean): LauncherColors {
             cardBorder = Color(0x16000000),
             buttonBg = Color(0xF5FFFFFF),
             buttonBorderNeutral = Color(0xFF8C96A5),
-            buttonBorderAccent = titleBarStart,
+            buttonBorderAccent = accent,
             textPrimary = Color(0xFF1F242D),
             textSecondary = Color(0xFF7B8494),
             isDark = false

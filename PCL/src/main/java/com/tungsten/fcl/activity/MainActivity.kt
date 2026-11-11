@@ -349,7 +349,6 @@ class MainActivity : FCLActivity() {
         return super.onKeyDown(keyCode, event)
     }
 
-    // ==================== Navigation Helpers (Clean Bridge for FCL Callers) ====================
 
     fun navigateToHome() {
         activeSubpage = null
@@ -460,7 +459,6 @@ class MainActivity : FCLActivity() {
         }
     }
 
-    // ==================== Private Setup & Logic ====================
 
     private fun handleBackNavigation() {
         val current = activeSubpage

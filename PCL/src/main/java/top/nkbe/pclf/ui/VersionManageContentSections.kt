@@ -131,8 +131,6 @@ import java.util.logging.Level
 import java.util.regex.Pattern
 import kotlin.io.path.pathString
 
-// ==================== 1. Installer Management Section ====================
-
 private data class InstallerRowState(
     val libraryId: String,
     val displayName: String,
@@ -452,8 +450,6 @@ fun ManageInstallersSection(
         }
     }
 }
-
-// ==================== 2. Mods Management Section ====================
 
 private enum class ModActiveFilter { ALL, ENABLED, DISABLED }
 
@@ -1169,7 +1165,6 @@ fun ManageModsSection(
     }
 }
 
-// ==================== 3. Worlds & Datapacks Management Section ====================
 
 @Composable
 fun ManageWorldsSection(
@@ -1584,7 +1579,6 @@ fun ManageWorldsSection(
     }
 }
 
-// ==================== 4. Resource Packs & 5. Shader Packs Sections ====================
 
 @Composable
 fun ManageResourcePacksSection(
@@ -1827,7 +1821,6 @@ fun ManageShaderPacksSection(
     }
 }
 
-// ==================== Shared Pack UI Helpers ====================
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable

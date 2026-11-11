@@ -340,7 +340,6 @@ private class ComposeModUpdateTask(
     }
 }
 
-// ==================== 1. Mod Updates Overlay ====================
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -574,7 +573,6 @@ private fun ModUpdatesOverlay(
     }
 }
 
-// ==================== 2. World Info Overlay ====================
 
 private enum class WorldDifficultyOption {
     PEACEFUL, EASY, NORMAL, HARD;
@@ -1097,7 +1095,6 @@ private fun InfoKeyValueRow(label: String, value: String) {
     }
 }
 
-// ==================== 3. Datapacks Overlay ====================
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -1357,7 +1354,6 @@ private fun DatapacksOverlay(
     }
 }
 
-// ==================== 4. World Export Dialog ====================
 
 @Composable
 fun WorldExportComposeDialog(
@@ -1448,7 +1444,6 @@ fun WorldExportComposeDialog(
     }
 }
 
-// ==================== 5. Modpack Export Wizard Overlay ====================
 
 private const val MODPACK_TYPE_MCBBS = "mcbbs"
 private const val MODPACK_TYPE_SERVER = "server"

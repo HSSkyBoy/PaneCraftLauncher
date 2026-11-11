@@ -108,7 +108,12 @@ data class ThemeData(
             val migrated = pref == ThemePreference() &&
                     context.getSharedPreferences("theme", Context.MODE_PRIVATE)
                         .contains("theme_color")
-            val effective = if (migrated) migrateFromSharedPreferences(context) else pref
+            val effectiveRaw = if (migrated) migrateFromSharedPreferences(context) else pref
+            val effective = if (effectiveRaw.color == 0xFF7797CF.toInt()) {
+                effectiveRaw.copy(color = 0xFF1976D2.toInt(), colorDark = 0xFF1565C0.toInt())
+            } else {
+                effectiveRaw
+            }
             val lt = ImageUtil.load(context.filesDir.absolutePath + "/background/lt.png")
                 .map { BitmapDrawable(context.resources, it) }
                 .orElse(null)

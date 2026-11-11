@@ -111,7 +111,6 @@ import java.util.concurrent.CancellationException
 import java.util.logging.Level
 import java.util.zip.ZipException
 
-// ==================== Shared Helpers ====================
 
 @Composable
 private fun DownloadCardBlock(

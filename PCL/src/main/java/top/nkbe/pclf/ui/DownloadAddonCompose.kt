@@ -90,8 +90,6 @@ import java.io.File
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 
-// ==================== 1. Modpack Install Wizard (Local/Remote) ====================
-
 sealed class ModpackSource {
     data class LocalFile(val file: File) : ModpackSource()
     data class RemoteManifest(val manifest: ServerModpackManifest) : ModpackSource()
@@ -379,8 +377,6 @@ fun ModpackInstallWizardOverlay(
     }
 }
 
-// ==================== 2. Addon Search & Category Model ====================
-
 enum class AddonSortOption(val sortType: RemoteModRepository.SortType, val titleRes: Int) {
     POPULARITY(RemoteModRepository.SortType.POPULARITY, R.string.curse_sort_popularity),
     LAST_UPDATED(RemoteModRepository.SortType.LAST_UPDATED, R.string.curse_sort_last_updated),
@@ -402,8 +398,6 @@ data class AddonSearchCriteria(
     val modLoader: ModLoaderType = ModLoaderType.UNKNOWN,
     val gameVersion: String? = null
 )
-
-// ==================== 3. Addon Item Card ====================
 
 @Composable
 fun AddonItemCard(

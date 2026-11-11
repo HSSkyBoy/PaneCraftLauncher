@@ -47,6 +47,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -499,6 +500,7 @@ private fun LeftLaunchPanel(
         ) {
             LoginModePill(
                 label = stringResource(R.string.pclf_login_official),
+                iconRes = R.drawable.ic_pcl_shield_check,
                 selected = state.activeAccountTab == AccountTab.MICROSOFT,
                 accentColor = colors.accent,
                 inactiveTextColor = colors.accent,
@@ -506,6 +508,7 @@ private fun LeftLaunchPanel(
             )
             LoginModePill(
                 label = stringResource(R.string.pclf_login_offline),
+                iconRes = R.drawable.ic_pcl_link,
                 selected = state.activeAccountTab == AccountTab.OFFLINE,
                 accentColor = colors.accent,
                 inactiveTextColor = colors.accent,
@@ -690,6 +693,7 @@ private fun LeftLaunchPanel(
 @Composable
 private fun LoginModePill(
     label: String,
+    iconRes: Int? = null,
     selected: Boolean,
     accentColor: Color,
     inactiveTextColor: Color,
@@ -702,14 +706,29 @@ private fun LoginModePill(
             .clip(RoundedCornerShape(13.5.dp))
             .background(if (selected) accentColor else Color.Transparent)
             .clickable(onClick = onClick)
-            .padding(horizontal = 13.dp)
+            .padding(horizontal = 10.dp)
     ) {
-        Text(
-            text = label,
-            color = if (selected) Color.White else inactiveTextColor,
-            fontSize = 12.5.sp,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-            maxLines = 1
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            if (iconRes != null) {
+                Image(
+                    painter = painterResource(iconRes),
+                    contentDescription = null,
+                    modifier = Modifier.size(13.dp),
+                    colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
+                        if (selected) Color.White else inactiveTextColor
+                    )
+                )
+            }
+            Text(
+                text = label,
+                color = if (selected) Color.White else inactiveTextColor,
+                fontSize = 12.5.sp,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                maxLines = 1
+            )
+        }
     }
 }
