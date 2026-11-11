@@ -280,17 +280,12 @@ fun VersionManagePage(
                 )
         )
 
-        // Right detail canvas
-        val legacyTabIndex = section.legacyTabIndex
-        val showLegacyBridge = tempPageCount > 0 || legacyTabIndex != null
-        if (showLegacyBridge) {
-            LaunchedEffect(legacyTabIndex, profile, version) {
+        // Right detail canvas (all 7 sections are pure Compose; legacy host shown only for active TempPages)
+        if (tempPageCount > 0) {
+            LaunchedEffect(profile, version) {
                 manageUI.setTabBarVisible(false)
                 if (!version.isNullOrBlank()) {
                     manageUI.setVersion(version, profile)
-                }
-                if (legacyTabIndex != null) {
-                    manageUI.showPage(legacyTabIndex)
                 }
             }
             AndroidView(
@@ -316,9 +311,6 @@ fun VersionManagePage(
                         )
                     }
                     manageUI.setTabBarVisible(false)
-                    if (legacyTabIndex != null && manageUI.currentPagePosition != legacyTabIndex) {
-                        manageUI.showPage(legacyTabIndex)
-                    }
                 },
                 modifier = Modifier
                     .weight(1f)
@@ -339,47 +331,84 @@ fun VersionManagePage(
                     fontSize = 14.sp
                 )
             }
-        } else {
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Right))
-                    .verticalScroll(rememberScrollState())
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
+        } else when (section) {
+            ManageSection.OVERVIEW, ManageSection.SETTINGS -> {
                 Column(
-                    modifier = Modifier.widthIn(max = 680.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Right))
+                        .verticalScroll(rememberScrollState())
+                        .padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    when (section) {
-                        ManageSection.OVERVIEW -> ManageOverviewSection(
-                            profile = profile,
-                            version = version,
-                            isModpack = isModpack,
-                            manageUI = manageUI,
-                            onNavigateToSection = { section = it }
-                        )
-
-                        ManageSection.SETTINGS -> ManageSettingsSection(
-                            profile = profile,
-                            version = version,
-                            isModpack = isModpack,
-                            manageUI = manageUI,
-                            iconBitmap = versionIconBitmap,
-                            onIconUpdated = {
-                                iconVersionNonce++
-                                onVersionDisplayChanged()
-                            },
-                            onOpenGlobalSetup = onOpenGlobalSetup,
-                            onOpenControllerPage = onOpenControllerPage
-                        )
-
-                        else -> Unit
+                    Column(
+                        modifier = Modifier.widthIn(max = 680.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        if (section == ManageSection.OVERVIEW) {
+                            ManageOverviewSection(
+                                profile = profile,
+                                version = version,
+                                isModpack = isModpack,
+                                manageUI = manageUI,
+                                onNavigateToSection = { section = it }
+                            )
+                        } else {
+                            ManageSettingsSection(
+                                profile = profile,
+                                version = version,
+                                isModpack = isModpack,
+                                manageUI = manageUI,
+                                iconBitmap = versionIconBitmap,
+                                onIconUpdated = {
+                                    iconVersionNonce++
+                                    onVersionDisplayChanged()
+                                },
+                                onOpenGlobalSetup = onOpenGlobalSetup,
+                                onOpenControllerPage = onOpenControllerPage
+                            )
+                        }
                     }
                 }
             }
+
+            ManageSection.INSTALLER -> ManageInstallersSection(
+                profile = profile,
+                version = version,
+                manageUI = manageUI,
+                onVersionChanged = {
+                    iconVersionNonce++
+                    onVersionDisplayChanged()
+                },
+                modifier = Modifier.weight(1f).fillMaxHeight()
+            )
+
+            ManageSection.MODS -> ManageModsSection(
+                profile = profile,
+                version = version,
+                manageUI = manageUI,
+                modifier = Modifier.weight(1f).fillMaxHeight()
+            )
+
+            ManageSection.WORLDS -> ManageWorldsSection(
+                profile = profile,
+                version = version,
+                manageUI = manageUI,
+                modifier = Modifier.weight(1f).fillMaxHeight()
+            )
+
+            ManageSection.RESOURCE_PACKS -> ManageResourcePacksSection(
+                profile = profile,
+                version = version,
+                modifier = Modifier.weight(1f).fillMaxHeight()
+            )
+
+            ManageSection.SHADER_PACKS -> ManageShaderPacksSection(
+                profile = profile,
+                version = version,
+                modifier = Modifier.weight(1f).fillMaxHeight()
+            )
         }
     }
 }
@@ -1260,7 +1289,7 @@ private fun ManageSettingsSection(
 }
 
 @Composable
-private fun ManageMemoryPill(
+internal fun ManageMemoryPill(
     label: String,
     selected: Boolean,
     onClick: () -> Unit
