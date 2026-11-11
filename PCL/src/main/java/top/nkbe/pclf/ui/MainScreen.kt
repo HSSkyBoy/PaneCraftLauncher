@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.mio.download.DownloadTaskInfo
 import com.tungsten.fcl.R
+import com.tungsten.fcl.ui.download.DownloadUI
 import com.tungsten.fcl.ui.manage.ManageUI
 import com.tungsten.fclcore.auth.Account
 import com.tungsten.fcllibrary.component.ui.FCLCommonUI
@@ -76,11 +77,14 @@ fun LauncherMainScreen(
     accountSectionRequestSeq: Int,
     manageSectionRequest: ManageSection,
     manageSectionRequestSeq: Int,
+    downloadSectionRequest: DownloadSection = DownloadSection.GAME,
+    downloadSectionRequestSeq: Int = 0,
     launchState: LaunchUiState,
     backgroundDrawable: BitmapDrawable?,
     showDownloadPanel: Boolean,
     appVersionName: String,
     manageUI: ManageUI,
+    downloadUI: DownloadUI,
     legacyUiProvider: (Int) -> FCLCommonUI,
     onSelectTab: (MainTab) -> Unit,
     onOpenSubpage: (AppSubpage) -> Unit,
@@ -103,6 +107,7 @@ fun LauncherMainScreen(
     onOpenControllerPage: () -> Unit,
     onVersionDisplayChanged: () -> Unit,
     onRegisterManageBackHandler: ((() -> Boolean)?) -> Unit = {},
+    onRegisterDownloadBackHandler: ((() -> Boolean)?) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val colors = LauncherTheme.colors
@@ -167,8 +172,11 @@ fun LauncherMainScreen(
                             onOpenDownloadPanel = onToggleDownloadPanel
                         )
 
-                        MainTab.DOWNLOAD -> LegacyFclUiHost(
-                            ui = remember(legacyUiProvider) { legacyUiProvider(2) }
+                        MainTab.DOWNLOAD -> DownloadScreen(
+                            downloadUI = downloadUI,
+                            initialSection = downloadSectionRequest,
+                            sectionRequestSeq = downloadSectionRequestSeq,
+                            onRegisterBackHandler = onRegisterDownloadBackHandler
                         )
 
                         MainTab.LINK -> LegacyFclUiHost(

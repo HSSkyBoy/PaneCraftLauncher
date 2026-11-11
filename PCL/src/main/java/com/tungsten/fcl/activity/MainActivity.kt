@@ -52,6 +52,7 @@ import top.nkbe.pclf.theme.LauncherTheme
 import top.nkbe.pclf.ui.AccountSection
 import top.nkbe.pclf.ui.AccountTab
 import top.nkbe.pclf.ui.AppSubpage
+import top.nkbe.pclf.ui.DownloadSection
 import top.nkbe.pclf.ui.LaunchUiState
 import top.nkbe.pclf.ui.LauncherMainScreen
 import top.nkbe.pclf.ui.ManageSection
@@ -127,6 +128,9 @@ class MainActivity : FCLActivity() {
     private var manageSectionRequest by mutableStateOf(ManageSection.OVERVIEW)
     private var manageSectionRequestSeq by mutableIntStateOf(0)
     private var manageBackInterceptor: (() -> Boolean)? = null
+    private var downloadSectionRequest by mutableStateOf(DownloadSection.GAME)
+    private var downloadSectionRequestSeq by mutableIntStateOf(0)
+    private var downloadBackInterceptor: (() -> Boolean)? = null
     private var showDownloadPanel by mutableStateOf(false)
     private var launchState by mutableStateOf(LaunchUiState())
     private var seedColorInt by mutableIntStateOf(0xFF1E78D6.toInt())
@@ -212,11 +216,14 @@ class MainActivity : FCLActivity() {
                     accountSectionRequestSeq = accountSectionRequestSeq,
                     manageSectionRequest = manageSectionRequest,
                     manageSectionRequestSeq = manageSectionRequestSeq,
+                    downloadSectionRequest = downloadSectionRequest,
+                    downloadSectionRequestSeq = downloadSectionRequestSeq,
                     launchState = launchState,
                     backgroundDrawable = backgroundDrawable,
                     showDownloadPanel = showDownloadPanel,
                     appVersionName = appVersion,
                     manageUI = uiManager.manageUI,
+                    downloadUI = uiManager.downloadUI,
                     legacyUiProvider = { pos -> uiManager.getUI(pos) },
                     onSelectTab = { tab ->
                         activeSubpage = null
@@ -283,6 +290,9 @@ class MainActivity : FCLActivity() {
                     },
                     onRegisterManageBackHandler = { handler ->
                         manageBackInterceptor = handler
+                    },
+                    onRegisterDownloadBackHandler = { handler ->
+                        downloadBackInterceptor = handler
                     }
                 )
             }
@@ -353,8 +363,14 @@ class MainActivity : FCLActivity() {
         val downloadUI = uiManager.downloadUI
         uiManager.currentUI = downloadUI
         if (pageId != null) {
+            downloadSectionRequest = DownloadSection.fromPageId(pageId)
+            downloadSectionRequestSeq++
             downloadUI.showDownloadPage(pageId)
+        } else {
+            downloadSectionRequest = DownloadSection.GAME
+            downloadSectionRequestSeq++
         }
+        downloadUI.setTabBarVisible(false)
     }
 
     @JvmOverloads
@@ -467,6 +483,15 @@ class MainActivity : FCLActivity() {
         }
 
         if (selectedTab != MainTab.LAUNCH) {
+            if (selectedTab == MainTab.DOWNLOAD) {
+                if (downloadBackInterceptor?.invoke() == true) {
+                    return
+                }
+                if (uiManager.downloadUI.canReturn()) {
+                    uiManager.downloadUI.dismissCurrentTempPage()
+                    return
+                }
+            }
             val legacyIdx = when (selectedTab) {
                 MainTab.DOWNLOAD -> 2
                 MainTab.LINK -> 4

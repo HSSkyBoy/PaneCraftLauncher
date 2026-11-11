@@ -78,8 +78,6 @@ import com.tungsten.fcl.setting.Profile
 import com.tungsten.fcl.ui.InstallerItem
 import com.tungsten.fcl.ui.TaskDialog
 import com.tungsten.fcl.ui.download.DownloadUI
-import com.tungsten.fcl.ui.download.version.InstallerListPage
-import com.tungsten.fcl.ui.download.version.VersionInstallInfoPage
 import com.tungsten.fcl.ui.manage.ManageUI
 import com.tungsten.fcl.ui.manage.ModCheckUpdatesTask
 import com.tungsten.fcl.util.TaskCancellationAction
@@ -161,6 +159,7 @@ fun ManageInstallersSection(
     var isLoading by remember { mutableStateOf(true) }
     var gameVersion by remember { mutableStateOf<String?>(null) }
     var items by remember { mutableStateOf<List<InstallerRowState>>(emptyList()) }
+    var activeComponentPicker by remember { mutableStateOf<InstallerRowState?>(null) }
     var confirmSwitch by remember { mutableStateOf<Pair<InstallerRowState, ComponentRemoteVersion>?>(null) }
     var confirmRemove by remember { mutableStateOf<InstallerRowState?>(null) }
 
@@ -227,7 +226,7 @@ fun ManageInstallersSection(
                             .create()
                             .show()
                     } else if (executor.exception != null) {
-                        VersionInstallInfoPage.alertFailureMessage(context, executor.exception) {}
+                        alertInstallFailureMessage(context, executor.exception)
                     }
                     reloadNonce++
                 }
@@ -267,7 +266,7 @@ fun ManageInstallersSection(
                                 .create()
                                 .show()
                         } else if (executor.exception != null) {
-                            VersionInstallInfoPage.alertFailureMessage(context, executor.exception) {}
+                            alertInstallFailureMessage(context, executor.exception)
                         }
                         reloadNonce++
                     }
@@ -353,15 +352,9 @@ fun ManageInstallersSection(
                                 text = if (row.installedVersion == null) stringResource(R.string.pclf_install) else stringResource(R.string.install_change_version),
                                 accentStyle = row.installedVersion != null,
                                 onClick = {
-                                    val gv = gameVersion ?: return@LauncherButton
-                                    val page = InstallerListPage(context, FCLPage.PAGE_ID_TEMP, gv, row.libraryId) { remote ->
-                                        if (row.installedVersion == null) {
-                                            installRemoteComponent(remote)
-                                        } else {
-                                            confirmSwitch = row to remote
-                                        }
+                                    if (gameVersion != null) {
+                                        activeComponentPicker = row
                                     }
-                                    manageUI.showTempPage(page)
                                 },
                                 height = 30.dp
                             )
@@ -370,6 +363,24 @@ fun ManageInstallersSection(
                 }
             }
         }
+    }
+
+    val pickerTarget = activeComponentPicker
+    val targetGv = gameVersion
+    if (pickerTarget != null && targetGv != null) {
+        ComponentVersionPickerOverlay(
+            gameVersion = targetGv,
+            libraryId = pickerTarget.libraryId,
+            onBack = { activeComponentPicker = null },
+            onSelect = { remote ->
+                activeComponentPicker = null
+                if (pickerTarget.installedVersion == null) {
+                    installRemoteComponent(remote)
+                } else {
+                    confirmSwitch = pickerTarget to remote
+                }
+            }
+        )
     }
 
     val pendingSwitch = confirmSwitch

@@ -50,6 +50,24 @@ public class DownloadUI extends FCLCommonUI {
 
     private final ArrayList<FCLPage> tempPageStack = new ArrayList<>();
     private int currentPageId = PAGE_ID_DOWNLOAD_GAME;
+    private TempPageListener tempPageListener;
+
+    public interface TempPageListener {
+        void onTempPageChanged(int stackSize);
+    }
+
+    public void setTempPageListener(TempPageListener listener) {
+        this.tempPageListener = listener;
+        if (listener != null) {
+            listener.onTempPageChanged(tempPageStack.size());
+        }
+    }
+
+    public void setTabBarVisible(boolean visible) {
+        if (tabLayout != null) {
+            tabLayout.setVisibility(visible ? View.VISIBLE : View.GONE);
+        }
+    }
 
     public DownloadUI(Context context, int id) {
         super(context, id);
@@ -156,6 +174,7 @@ public class DownloadUI extends FCLCommonUI {
 
     private static int pageIdToTabPosition(int pageId) {
         return switch (pageId) {
+            case PAGE_ID_DOWNLOAD_GAME -> 0;
             case PAGE_ID_DOWNLOAD_MODPACK -> 1;
             case PAGE_ID_DOWNLOAD_MOD -> 2;
             case PAGE_ID_DOWNLOAD_RESOURCE_PACK -> 3;
@@ -231,6 +250,9 @@ public class DownloadUI extends FCLCommonUI {
         overlay.addView(view, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
         view.animate().alpha(1f).setDuration(TEMP_PAGE_ANIM_DURATION).start();
         tempPageStack.add(page);
+        if (tempPageListener != null) {
+            tempPageListener.onTempPageChanged(tempPageStack.size());
+        }
     }
 
     /**
@@ -255,6 +277,9 @@ public class DownloadUI extends FCLCommonUI {
             contentContainer.setVisibility(View.VISIBLE);
             slideIn(contentContainer);
             overlay.setVisibility(View.GONE);
+        }
+        if (tempPageListener != null) {
+            tempPageListener.onTempPageChanged(tempPageStack.size());
         }
     }
 
