@@ -73,11 +73,13 @@ fun DownloadScreen(
     var tempPageCount by remember { mutableIntStateOf(if (downloadUI.canReturn()) 1 else 0) }
     var selectedGameVersion by remember { mutableStateOf<String?>(null) }
     var pickingLibraryId by remember { mutableStateOf<String?>(null) }
+    var activeModpackWizardSource by remember { mutableStateOf<ModpackSource?>(null) }
 
     LaunchedEffect(sectionRequestSeq) {
         section = initialSection
         selectedGameVersion = null
         pickingLibraryId = null
+        activeModpackWizardSource = null
     }
 
     DisposableEffect(downloadUI) {
@@ -92,7 +94,10 @@ fun DownloadScreen(
 
     DisposableEffect(Unit) {
         onRegisterBackHandler {
-            if (downloadUI.canReturn()) {
+            if (activeModpackWizardSource != null) {
+                activeModpackWizardSource = null
+                true
+            } else if (downloadUI.canReturn()) {
                 downloadUI.dismissCurrentTempPage()
                 true
             } else if (section == DownloadSection.GAME && pickingLibraryId != null) {
@@ -129,6 +134,7 @@ fun DownloadScreen(
                         downloadUI.dismissAllTempPages()
                         selectedGameVersion = null
                         pickingLibraryId = null
+                        activeModpackWizardSource = null
                         section = s
                     }
                 )
@@ -149,7 +155,22 @@ fun DownloadScreen(
                 )
         )
 
-        if (tempPageCount > 0 || section != DownloadSection.GAME) {
+        val wizardSource = activeModpackWizardSource
+        if (wizardSource != null) {
+            ModpackInstallWizardOverlay(
+                source = wizardSource,
+                onBack = { activeModpackWizardSource = null },
+                onInstallSuccess = {
+                    activeModpackWizardSource = null
+                    selectedGameVersion = null
+                    pickingLibraryId = null
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Right))
+            )
+        } else if (tempPageCount > 0 || section != DownloadSection.GAME) {
             LaunchedEffect(section, tempPageCount) {
                 downloadUI.setTabBarVisible(false)
                 if (tempPageCount == 0) {
