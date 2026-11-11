@@ -138,6 +138,7 @@ fun VersionManagePage(
     onOpenGlobalSetup: () -> Unit,
     onOpenControllerPage: () -> Unit,
     onVersionDisplayChanged: () -> Unit,
+    onRegisterBackHandler: ((() -> Boolean)?) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -150,15 +151,41 @@ fun VersionManagePage(
 
     var section by remember { mutableStateOf(initialSection) }
     var tempPageCount by remember { mutableIntStateOf(if (manageUI.hasTempPages()) 1 else 0) }
+    var activeOverlay by remember { mutableStateOf<ManageOverlay?>(null) }
+    var modpackStep by remember { mutableIntStateOf(1) }
     var iconVersionNonce by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(sectionRequestSeq) {
         section = initialSection
+        activeOverlay = null
+        modpackStep = 1
     }
 
     LaunchedEffect(profile, version) {
+        activeOverlay = null
+        modpackStep = 1
         if (!version.isNullOrBlank()) {
             manageUI.setVersion(version, profile)
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onRegisterBackHandler {
+            val current = activeOverlay
+            if (current != null) {
+                if (current is ManageOverlay.ModpackExport && modpackStep > 1) {
+                    modpackStep -= 1
+                } else {
+                    activeOverlay = null
+                    modpackStep = 1
+                }
+                true
+            } else {
+                false
+            }
+        }
+        onDispose {
+            onRegisterBackHandler(null)
         }
     }
 
@@ -212,6 +239,8 @@ fun VersionManagePage(
                 selected = section == ManageSection.OVERVIEW,
                 onClick = {
                     manageUI.dismissAllTempPages()
+                    activeOverlay = null
+                    modpackStep = 1
                     section = ManageSection.OVERVIEW
                 }
             )
@@ -220,6 +249,8 @@ fun VersionManagePage(
                 selected = section == ManageSection.SETTINGS,
                 onClick = {
                     manageUI.dismissAllTempPages()
+                    activeOverlay = null
+                    modpackStep = 1
                     section = ManageSection.SETTINGS
                 }
             )
@@ -228,6 +259,8 @@ fun VersionManagePage(
                 selected = section == ManageSection.INSTALLER,
                 onClick = {
                     manageUI.dismissAllTempPages()
+                    activeOverlay = null
+                    modpackStep = 1
                     section = ManageSection.INSTALLER
                 }
             )
@@ -236,6 +269,8 @@ fun VersionManagePage(
                 selected = section == ManageSection.MODS,
                 onClick = {
                     manageUI.dismissAllTempPages()
+                    activeOverlay = null
+                    modpackStep = 1
                     section = ManageSection.MODS
                 }
             )
@@ -244,6 +279,8 @@ fun VersionManagePage(
                 selected = section == ManageSection.WORLDS,
                 onClick = {
                     manageUI.dismissAllTempPages()
+                    activeOverlay = null
+                    modpackStep = 1
                     section = ManageSection.WORLDS
                 }
             )
@@ -252,6 +289,8 @@ fun VersionManagePage(
                 selected = section == ManageSection.RESOURCE_PACKS,
                 onClick = {
                     manageUI.dismissAllTempPages()
+                    activeOverlay = null
+                    modpackStep = 1
                     section = ManageSection.RESOURCE_PACKS
                 }
             )
@@ -260,6 +299,8 @@ fun VersionManagePage(
                 selected = section == ManageSection.SHADER_PACKS,
                 onClick = {
                     manageUI.dismissAllTempPages()
+                    activeOverlay = null
+                    modpackStep = 1
                     section = ManageSection.SHADER_PACKS
                 }
             )
@@ -331,6 +372,25 @@ fun VersionManagePage(
                     fontSize = 14.sp
                 )
             }
+        } else if (activeOverlay != null) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Right))
+            ) {
+                ManageOverlayHost(
+                    overlay = activeOverlay!!,
+                    profile = profile,
+                    version = version,
+                    modpackStep = modpackStep,
+                    onModpackStepChange = { modpackStep = it },
+                    onDismiss = {
+                        activeOverlay = null
+                        modpackStep = 1
+                    }
+                )
+            }
         } else when (section) {
             ManageSection.OVERVIEW, ManageSection.SETTINGS -> {
                 Column(
@@ -352,7 +412,11 @@ fun VersionManagePage(
                                 version = version,
                                 isModpack = isModpack,
                                 manageUI = manageUI,
-                                onNavigateToSection = { section = it }
+                                onNavigateToSection = { section = it },
+                                onOpenModpackExport = {
+                                    modpackStep = 1
+                                    activeOverlay = ManageOverlay.ModpackExport
+                                }
                             )
                         } else {
                             ManageSettingsSection(
@@ -387,14 +451,21 @@ fun VersionManagePage(
             ManageSection.MODS -> ManageModsSection(
                 profile = profile,
                 version = version,
-                manageUI = manageUI,
+                onOpenUpdates = { mgr, updates ->
+                    activeOverlay = ManageOverlay.ModUpdates(mgr, updates)
+                },
                 modifier = Modifier.weight(1f).fillMaxHeight()
             )
 
             ManageSection.WORLDS -> ManageWorldsSection(
                 profile = profile,
                 version = version,
-                manageUI = manageUI,
+                onOpenWorldInfo = { world ->
+                    activeOverlay = ManageOverlay.WorldInfo(world)
+                },
+                onOpenDatapacks = { world ->
+                    activeOverlay = ManageOverlay.Datapacks(world)
+                },
                 modifier = Modifier.weight(1f).fillMaxHeight()
             )
 
@@ -491,7 +562,8 @@ private fun ManageOverviewSection(
     version: String,
     isModpack: Boolean,
     manageUI: ManageUI,
-    onNavigateToSection: (ManageSection) -> Unit
+    onNavigateToSection: (ManageSection) -> Unit,
+    onOpenModpackExport: () -> Unit
 ) {
     val context = LocalContext.current
     val activity = MainActivity.getInstance()
@@ -558,7 +630,7 @@ private fun ManageOverviewSection(
             )
             LauncherButton(
                 text = stringResource(R.string.modpack_export),
-                onClick = { Versions.exportVersion(context, profile, version) },
+                onClick = onOpenModpackExport,
                 height = 34.dp
             )
             if (isModpack) {

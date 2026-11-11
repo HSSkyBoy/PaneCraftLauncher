@@ -80,12 +80,8 @@ import com.tungsten.fcl.ui.TaskDialog
 import com.tungsten.fcl.ui.download.DownloadUI
 import com.tungsten.fcl.ui.download.version.InstallerListPage
 import com.tungsten.fcl.ui.download.version.VersionInstallInfoPage
-import com.tungsten.fcl.ui.manage.DatapackListPage
 import com.tungsten.fcl.ui.manage.ManageUI
 import com.tungsten.fcl.ui.manage.ModCheckUpdatesTask
-import com.tungsten.fcl.ui.manage.ModUpdatesPage
-import com.tungsten.fcl.ui.manage.WorldExportDialog
-import com.tungsten.fcl.ui.manage.WorldInfoPage
 import com.tungsten.fcl.util.TaskCancellationAction
 import com.tungsten.fclauncher.utils.FCLPath
 import com.tungsten.fclcore.download.ComponentRemoteVersion
@@ -465,7 +461,7 @@ private data class ModRowItem(
 fun ManageModsSection(
     profile: Profile,
     version: String,
-    manageUI: ManageUI,
+    onOpenUpdates: (ModManager, List<LocalModFile.ModUpdate>) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -554,7 +550,7 @@ fun ManageModsSection(
                     ta.compareTo(tb)
                 }
             }
-            else -> return list
+            ModSortField.DEFAULT -> return list
         }
         return list.sortedWith(if (asc) cmp else cmp.reversed())
     }
@@ -656,8 +652,7 @@ fun ManageModsSection(
                         .create().show()
 
                     else -> {
-                        val page = ModUpdatesPage(context, FCLPage.PAGE_ID_TEMP, null, mgr, result)
-                        manageUI.showTempPage(page)
+                        onOpenUpdates(mgr, result)
                     }
                 }
             }.withStagesHint(listOf("mods.check_updates"))
@@ -1169,7 +1164,8 @@ fun ManageModsSection(
 fun ManageWorldsSection(
     profile: Profile,
     version: String,
-    manageUI: ManageUI,
+    onOpenWorldInfo: (World) -> Unit,
+    onOpenDatapacks: (World) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -1188,6 +1184,7 @@ fun ManageWorldsSection(
     var duplicateTarget by remember { mutableStateOf<World?>(null) }
     var duplicateName by remember { mutableStateOf("") }
     var deleteTarget by remember { mutableStateOf<World?>(null) }
+    var exportTarget by remember { mutableStateOf<kotlin.Pair<World, String>?>(null) }
     var datapackUnsupportedNotice by remember { mutableStateOf(false) }
 
     val savesDir = remember(profile, version) {
@@ -1371,12 +1368,7 @@ fun ManageWorldsSection(
                         ) {
                             LauncherButton(
                                 text = stringResource(R.string.dialog_info),
-                                onClick = {
-                                    runCatching {
-                                        val page = WorldInfoPage(context, FCLPage.PAGE_ID_TEMP, world)
-                                        manageUI.showTempPage(page)
-                                    }
-                                },
+                                onClick = { onOpenWorldInfo(world) },
                                 height = 28.dp
                             )
                             LauncherButton(
@@ -1385,8 +1377,7 @@ fun ManageWorldsSection(
                                     if (!world.supportDataPacks()) {
                                         datapackUnsupportedNotice = true
                                     } else {
-                                        val page = DatapackListPage(context, FCLPage.PAGE_ID_TEMP, world.worldName, world.file)
-                                        manageUI.showTempPage(page)
+                                        onOpenDatapacks(world)
                                     }
                                 },
                                 height = 28.dp
@@ -1396,7 +1387,7 @@ fun ManageWorldsSection(
                                 onClick = {
                                     activity.fileLauncher.launchSingleSelection(null, null, true) { files ->
                                         val dir = files?.firstOrNull()?.path ?: return@launchSingleSelection
-                                        WorldExportDialog(context, world, dir).show()
+                                        exportTarget = world to dir
                                     }
                                 },
                                 height = 28.dp
@@ -1570,6 +1561,14 @@ fun ManageWorldsSection(
             text = stringResource(R.string.dialog_positive),
             onClick = { datapackUnsupportedNotice = false },
             modifier = Modifier.fillMaxWidth()
+        )
+    }
+
+    exportTarget?.let { (world, dir) ->
+        WorldExportComposeDialog(
+            world = world,
+            targetDirPath = dir,
+            onDismiss = { exportTarget = null }
         )
     }
 }

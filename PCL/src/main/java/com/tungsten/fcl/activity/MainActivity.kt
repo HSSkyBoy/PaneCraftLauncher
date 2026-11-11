@@ -126,6 +126,7 @@ class MainActivity : FCLActivity() {
     private var accountSectionRequestSeq by mutableIntStateOf(0)
     private var manageSectionRequest by mutableStateOf(ManageSection.OVERVIEW)
     private var manageSectionRequestSeq by mutableIntStateOf(0)
+    private var manageBackInterceptor: (() -> Boolean)? = null
     private var showDownloadPanel by mutableStateOf(false)
     private var launchState by mutableStateOf(LaunchUiState())
     private var seedColorInt by mutableIntStateOf(0xFF1E78D6.toInt())
@@ -279,6 +280,9 @@ class MainActivity : FCLActivity() {
                     },
                     onVersionDisplayChanged = {
                         refreshVersionDisplay(Profiles.getSelectedVersion())
+                    },
+                    onRegisterManageBackHandler = { handler ->
+                        manageBackInterceptor = handler
                     }
                 )
             }
@@ -446,6 +450,9 @@ class MainActivity : FCLActivity() {
         val current = activeSubpage
         if (current != null) {
             if (current == AppSubpage.MANAGE) {
+                if (manageBackInterceptor?.invoke() == true) {
+                    return
+                }
                 if (uiManager.manageUI.canReturn()) {
                     uiManager.manageUI.dismissCurrentTempPage()
                 } else {

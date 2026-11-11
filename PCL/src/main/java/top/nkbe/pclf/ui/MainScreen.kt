@@ -102,6 +102,7 @@ fun LauncherMainScreen(
     onAccountUpdated: () -> Unit,
     onOpenControllerPage: () -> Unit,
     onVersionDisplayChanged: () -> Unit,
+    onRegisterManageBackHandler: ((() -> Boolean)?) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val colors = LauncherTheme.colors
@@ -199,7 +200,8 @@ fun LauncherMainScreen(
                                 onSelectTab(MainTab.SETUP)
                             },
                             onOpenControllerPage = onOpenControllerPage,
-                            onVersionDisplayChanged = onVersionDisplayChanged
+                            onVersionDisplayChanged = onVersionDisplayChanged,
+                            onRegisterBackHandler = onRegisterManageBackHandler
                         )
 
                         AppSubpage.ACCOUNT -> AccountPage(
