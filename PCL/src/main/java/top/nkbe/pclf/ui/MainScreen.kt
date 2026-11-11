@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.mio.download.DownloadTaskInfo
 import com.tungsten.fcl.R
+import com.tungsten.fcl.ui.manage.ManageUI
 import com.tungsten.fclcore.auth.Account
 import com.tungsten.fcllibrary.component.ui.FCLCommonUI
 import top.nkbe.pclf.theme.LauncherTheme
@@ -61,7 +62,7 @@ import top.yukonga.miuix.kmp.basic.LinearProgressIndicator
 import top.yukonga.miuix.kmp.basic.Text
 
 enum class AppSubpage(@StringRes val titleRes: Int, val uiIndex: Int) {
-    MANAGE(R.string.manage, 1),
+    MANAGE(R.string.manage, -1),
     CONTROLLER(R.string.pclf_more_controller, 3),
     ACCOUNT(R.string.pclf_more_account, -1),
     VERSION(R.string.pclf_btn_version_select, 5)
@@ -73,10 +74,13 @@ fun LauncherMainScreen(
     activeSubpage: AppSubpage?,
     accountSectionRequest: AccountSection,
     accountSectionRequestSeq: Int,
+    manageSectionRequest: ManageSection,
+    manageSectionRequestSeq: Int,
     launchState: LaunchUiState,
     backgroundDrawable: BitmapDrawable?,
     showDownloadPanel: Boolean,
     appVersionName: String,
+    manageUI: ManageUI,
     legacyUiProvider: (Int) -> FCLCommonUI,
     onSelectTab: (MainTab) -> Unit,
     onOpenSubpage: (AppSubpage) -> Unit,
@@ -96,6 +100,8 @@ fun LauncherMainScreen(
     onCheckUpdate: () -> Unit,
     onPickBackground: (Boolean) -> Unit,
     onAccountUpdated: () -> Unit,
+    onOpenControllerPage: () -> Unit,
+    onVersionDisplayChanged: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val colors = LauncherTheme.colors
@@ -182,6 +188,18 @@ fun LauncherMainScreen(
                             onShareLatestLog = onShareLatestLog,
                             onOpenShell = onOpenShell,
                             onCheckUpdate = onCheckUpdate
+                        )
+
+                        AppSubpage.MANAGE -> VersionManagePage(
+                            manageUI = manageUI,
+                            initialSection = manageSectionRequest,
+                            sectionRequestSeq = manageSectionRequestSeq,
+                            onOpenGlobalSetup = {
+                                onBackFromSubpage()
+                                onSelectTab(MainTab.SETUP)
+                            },
+                            onOpenControllerPage = onOpenControllerPage,
+                            onVersionDisplayChanged = onVersionDisplayChanged
                         )
 
                         AppSubpage.ACCOUNT -> AccountPage(

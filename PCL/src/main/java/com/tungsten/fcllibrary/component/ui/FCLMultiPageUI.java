@@ -43,6 +43,19 @@ public abstract class FCLMultiPageUI extends FCLCommonUI {
     private final ArrayList<FCLPage> pageRegistry = new ArrayList<>();
 
     private final ArrayList<FCLPage> tempPageStack = new ArrayList<>();
+    private TempPageListener tempPageListener;
+
+    public interface TempPageListener {
+        void onTempPageChanged(int stackSize);
+    }
+
+    public void setTempPageListener(TempPageListener listener) {
+        this.tempPageListener = listener;
+    }
+
+    public boolean hasTempPages() {
+        return !tempPageStack.isEmpty();
+    }
 
     private ViewPager2 pagePager;
     private FrameLayout overlay;
@@ -210,6 +223,9 @@ public abstract class FCLMultiPageUI extends FCLCommonUI {
         overlay.addView(view, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         view.animate().alpha(1f).setDuration(TEMP_PAGE_ANIM_DURATION).start();
         tempPageStack.add(page);
+        if (tempPageListener != null) {
+            tempPageListener.onTempPageChanged(tempPageStack.size());
+        }
     }
 
     /**
@@ -231,6 +247,9 @@ public abstract class FCLMultiPageUI extends FCLCommonUI {
             if (pagePager != null) {
                 pagePager.setVisibility(View.VISIBLE);
             }
+        }
+        if (tempPageListener != null) {
+            tempPageListener.onTempPageChanged(tempPageStack.size());
         }
     }
 

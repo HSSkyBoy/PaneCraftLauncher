@@ -54,6 +54,7 @@ import top.nkbe.pclf.ui.AccountTab
 import top.nkbe.pclf.ui.AppSubpage
 import top.nkbe.pclf.ui.LaunchUiState
 import top.nkbe.pclf.ui.LauncherMainScreen
+import top.nkbe.pclf.ui.ManageSection
 import top.nkbe.pclf.ui.components.MainTab
 import com.tungsten.fcl.setting.Accounts
 import com.tungsten.fcl.setting.ConfigHolder
@@ -123,6 +124,8 @@ class MainActivity : FCLActivity() {
     private var activeSubpage by mutableStateOf<AppSubpage?>(null)
     private var accountSectionRequest by mutableStateOf(AccountSection.SAVED)
     private var accountSectionRequestSeq by mutableIntStateOf(0)
+    private var manageSectionRequest by mutableStateOf(ManageSection.OVERVIEW)
+    private var manageSectionRequestSeq by mutableIntStateOf(0)
     private var showDownloadPanel by mutableStateOf(false)
     private var launchState by mutableStateOf(LaunchUiState())
     private var seedColorInt by mutableIntStateOf(0xFF1E78D6.toInt())
@@ -206,10 +209,13 @@ class MainActivity : FCLActivity() {
                     activeSubpage = activeSubpage,
                     accountSectionRequest = accountSectionRequest,
                     accountSectionRequestSeq = accountSectionRequestSeq,
+                    manageSectionRequest = manageSectionRequest,
+                    manageSectionRequestSeq = manageSectionRequestSeq,
                     launchState = launchState,
                     backgroundDrawable = backgroundDrawable,
                     showDownloadPanel = showDownloadPanel,
                     appVersionName = appVersion,
+                    manageUI = uiManager.manageUI,
                     legacyUiProvider = { pos -> uiManager.getUI(pos) },
                     onSelectTab = { tab ->
                         activeSubpage = null
@@ -267,6 +273,12 @@ class MainActivity : FCLActivity() {
                     },
                     onAccountUpdated = {
                         refreshAccountState()
+                    },
+                    onOpenControllerPage = {
+                        navigateToController(1)
+                    },
+                    onVersionDisplayChanged = {
+                        refreshVersionDisplay(Profiles.getSelectedVersion())
                     }
                 )
             }
@@ -348,12 +360,18 @@ class MainActivity : FCLActivity() {
         if (version != null) {
             uiManager.manageUI.setVersion(version, profile)
         }
-        activeSubpage = AppSubpage.MANAGE
-        uiManager.currentUI = uiManager.manageUI
-        if (tabIndex != null) {
-            val tab = uiManager.manageUI.tabLayout.getTabAt(tabIndex)
-            uiManager.manageUI.tabLayout.selectTab(tab)
+        manageSectionRequest = when (tabIndex) {
+            0 -> ManageSection.SETTINGS
+            2 -> ManageSection.INSTALLER
+            3 -> ManageSection.MODS
+            4 -> ManageSection.WORLDS
+            5 -> ManageSection.RESOURCE_PACKS
+            6 -> ManageSection.SHADER_PACKS
+            else -> ManageSection.OVERVIEW
         }
+        manageSectionRequestSeq++
+        uiManager.manageUI.setTabBarVisible(false)
+        activeSubpage = AppSubpage.MANAGE
     }
 
     @JvmOverloads
@@ -427,7 +445,13 @@ class MainActivity : FCLActivity() {
     private fun handleBackNavigation() {
         val current = activeSubpage
         if (current != null) {
-            if (current.uiIndex >= 0) {
+            if (current == AppSubpage.MANAGE) {
+                if (uiManager.manageUI.canReturn()) {
+                    uiManager.manageUI.dismissCurrentTempPage()
+                } else {
+                    activeSubpage = null
+                }
+            } else if (current.uiIndex >= 0) {
                 uiManager.getUI(current.uiIndex).onBackPressed()
             } else {
                 activeSubpage = null
@@ -497,6 +521,9 @@ class MainActivity : FCLActivity() {
         if (sub == AppSubpage.MANAGE) {
             val profile = Profiles.getSelectedProfile()
             profile.selectedVersion?.let { uiManager.manageUI.setVersion(it, profile) }
+            manageSectionRequest = ManageSection.OVERVIEW
+            manageSectionRequestSeq++
+            uiManager.manageUI.setTabBarVisible(false)
         }
         if (sub.uiIndex >= 0) {
             uiManager.currentUI = uiManager.getUI(sub.uiIndex)
@@ -506,11 +533,11 @@ class MainActivity : FCLActivity() {
 
     private fun openVersionOrGlobalSetting() {
         val profile = Profiles.getSelectedProfile()
-        if (profile.versionSetting.isUsesGlobal) {
+        if (profile.selectedVersion.isNullOrBlank()) {
             activeSubpage = null
             selectedTab = MainTab.SETUP
         } else {
-            navigateToManage(0)
+            navigateToManage(1)
         }
     }
 

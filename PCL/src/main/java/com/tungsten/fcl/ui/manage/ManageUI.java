@@ -79,6 +79,12 @@ public class ManageUI extends FCLMultiPageUI {
         });
     }
 
+    public void setTabBarVisible(boolean visible) {
+        if (tabLayout != null) {
+            tabLayout.setVisibility(visible ? View.VISIBLE : View.GONE);
+        }
+    }
+
     @Override
     public int getPageCount() {
         return 7;
