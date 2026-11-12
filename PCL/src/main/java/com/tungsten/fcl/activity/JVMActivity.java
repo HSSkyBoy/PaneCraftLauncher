@@ -16,7 +16,9 @@ import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -91,6 +93,7 @@ public class JVMActivity extends FCLActivity implements TextureView.SurfaceTextu
     private boolean isTranslated = false;
     private static boolean isRunning = false;
     private long volumeDownTime = 0;
+    private long lastBackPressedTime = 0;
     /** 上次 letterbox 计算使用的窗口尺寸，布局回调据此判断窗口尺寸是否变化 */
     private int lastLetterboxWidth = -1;
     private int lastLetterboxHeight = -1;
@@ -120,6 +123,13 @@ public class JVMActivity extends FCLActivity implements TextureView.SurfaceTextu
         }
 
         addContentView(menu.getLayout(), new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                handleBackAction();
+            }
+        });
 
         applyMaxRefreshRatePolicy();
         DisplayManager displayManager = (DisplayManager) getSystemService(Context.DISPLAY_SERVICE);
@@ -421,15 +431,49 @@ public class JVMActivity extends FCLActivity implements TextureView.SurfaceTextu
     }
 
     @Override
+    public void onBackPressed() {
+        handleBackAction();
+    }
+
+    public void handleBackAction() {
+        if (menu != null && menuType == MenuType.GAME) {
+            GameMenu gameMenu = (GameMenu) menu;
+            if (menu.getLayout() instanceof DrawerLayout) {
+                DrawerLayout drawerLayout = (DrawerLayout) menu.getLayout();
+                if (drawerLayout.isDrawerOpen(GravityCompat.START) || drawerLayout.isDrawerOpen(GravityCompat.END)) {
+                    drawerLayout.closeDrawers();
+                    return;
+                }
+            }
+            if (gameMenu.getTouchCharInput() != null && gameMenu.getTouchCharInput().isEnabled()) {
+                gameMenu.getTouchCharInput().hide();
+                return;
+            }
+            if (menu.getInput() != null) {
+                menu.getInput().sendKeyEvent(FCLKeycodes.KEY_ESC, true);
+                menu.getInput().sendKeyEvent(FCLKeycodes.KEY_ESC, false);
+                return;
+            }
+        } else if (menuType != MenuType.GAME) {
+            long now = SystemClock.elapsedRealtime();
+            if (now - lastBackPressedTime < 2000) {
+                finish();
+            } else {
+                lastBackPressedTime = now;
+                Toast.makeText(this, "再次返回以退出", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         boolean handleEvent = true;
         if (menu != null && menuType == MenuType.GAME) {
             if (!(handleEvent = menu.getInput().handleKeyEvent(event))) {
-                if (event.getKeyCode() == KeyEvent.KEYCODE_BACK && !((GameMenu) menu).getTouchCharInput().isEnabled()) {
-                    if (event.getAction() != KeyEvent.ACTION_UP)
-                        return true;
-                    menu.getInput().sendKeyEvent(FCLKeycodes.KEY_ESC, true);
-                    menu.getInput().sendKeyEvent(FCLKeycodes.KEY_ESC, false);
+                if (event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
+                    if (event.getAction() == KeyEvent.ACTION_UP) {
+                        handleBackAction();
+                    }
                     return true;
                 } else if ((event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_DOWN || event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_UP)) {
                     MenuView menuView = ((GameMenu) menu).getMenuView();
