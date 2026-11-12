@@ -11,6 +11,7 @@ import android.view.Choreographer;
 import android.view.InputDevice;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 
 import androidx.annotation.NonNull;
 
@@ -49,6 +50,8 @@ public class TouchPad extends View {
         super(context, attrs, defStyleAttr);
         this.screenWidth = AndroidUtilKt.getScreenWidth();
         this.screenHeight = AndroidUtilKt.getScreenHeight();
+        float density = getResources().getDisplayMetrics().density;
+        this.touchSlop = Math.max(ViewConfiguration.get(context).getScaledTouchSlop(), 12f * density);
         init();
     }
 
@@ -58,6 +61,23 @@ public class TouchPad extends View {
         linePaint.setColor(Color.GREEN);
         linePaint.setStyle(Paint.Style.STROKE);
     }
+
+    private final float touchSlop;
+
+    // 手势死区与防抖状态
+    private float startX;
+    private float startY;
+    private long startDownTime;
+    private boolean isDragStarted = false;
+    private boolean isLongPressTriggered = false;
+
+    // 双击快速反向操作（如 BUILD 模式双击攻击打怪，FIGHT 模式双击副手使用）
+    private long lastTapTime = 0;
+    private float lastTapX = 0;
+    private float lastTapY = 0;
+    private static final long DOUBLE_TAP_TIMEOUT = 280;
+    private static final long TAP_TIMEOUT = 250;
+    private static final long LONG_PRESS_TIMEOUT = 320;
 
     // 触摸坐标全程 float：中途取整会让慢移时的小步长增量整体丢失，转视角顿挫
     private float downX;
@@ -80,6 +100,7 @@ public class TouchPad extends View {
 
     private final Runnable runnable = () -> {
         if (!gameMenu.getMenuSetting().isDisableGesture()) {
+            isLongPressTriggered = true;
             if (getGestureMode() == GestureMode.BUILD) {
                 gameMenu.getInput().sendKeyEvent(FCLInput.MOUSE_LEFT, true);
                 cancelMouseLeft = true;
@@ -109,6 +130,7 @@ public class TouchPad extends View {
             gameMenu.getInput().sendKeyEvent(FCLInput.MOUSE_RIGHT, false);
             cancelMouseRight = false;
         }
+        isLongPressTriggered = false;
     }
 
     private Path path;
@@ -220,7 +242,10 @@ public class TouchPad extends View {
                     case MotionEvent.ACTION_DOWN:
                         downX = event.getX();
                         downY = event.getY();
-                        downTime = System.currentTimeMillis();
+                        startX = downX;
+                        startY = downY;
+                        startDownTime = System.currentTimeMillis();
+                        downTime = startDownTime;
                         initialX = gameMenu.getCursorX();
                         initialY = gameMenu.getCursorY();
                         break;
@@ -230,6 +255,8 @@ public class TouchPad extends View {
                             cursorMode = gameMenu.getCursorMode();
                             downX = event.getX();
                             downY = event.getY();
+                            startX = downX;
+                            startY = downY;
                             initialX = gameMenu.getCursorX();
                             initialY = gameMenu.getCursorY();
                             break;
@@ -243,11 +270,12 @@ public class TouchPad extends View {
                         break;
                     case MotionEvent.ACTION_CANCEL:
                     case MotionEvent.ACTION_UP:
-                        if (System.currentTimeMillis() - downTime <= 100
-                                && Math.abs(event.getX() - downX) <= 10
-                                && Math.abs(event.getY() - downY) <= 10) {
+                        long duration = System.currentTimeMillis() - startDownTime;
+                        float distSq = (event.getX() - startX) * (event.getX() - startX)
+                                + (event.getY() - startY) * (event.getY() - startY);
+                        if (duration <= TAP_TIMEOUT && distSq <= touchSlop * touchSlop) {
                             gameMenu.getInput().sendKeyEvent(FCLInput.MOUSE_LEFT, true);
-                            gameMenu.getInput().sendKeyEvent(FCLInput.MOUSE_LEFT, false);
+                            Choreographer.getInstance().postFrameCallbackDelayed(frameTimeNanos -> gameMenu.getInput().sendKeyEvent(FCLInput.MOUSE_LEFT, false), 33);
                         }
                         if (Objects.equals(gameMenu.getInput().getPointerId(), POINTER_ID)) {
                             gameMenu.getInput().setPointerId(null);
@@ -271,10 +299,15 @@ public class TouchPad extends View {
                     currentPointerID = event.getPointerId(0);
                     downX = event.getX();
                     downY = event.getY();
-                    downTime = System.currentTimeMillis();
+                    startX = downX;
+                    startY = downY;
+                    startDownTime = System.currentTimeMillis();
+                    downTime = startDownTime;
+                    isDragStarted = false;
+                    isLongPressTriggered = false;
                     acceleratedDistance = 0;
                     lastMoveTime = event.getEventTime();
-                    handler.postDelayed(runnable, 400);
+                    handler.postDelayed(runnable, LONG_PRESS_TIMEOUT);
                     break;
                 case MotionEvent.ACTION_MOVE:
                     int pointerCount = event.getPointerCount();
@@ -285,6 +318,8 @@ public class TouchPad extends View {
                         cursorMode = gameMenu.getCursorMode();
                         downX = pointerIndex == -1 ? event.getX() : event.getX(pointerIndex);
                         downY = pointerIndex == -1 ? event.getY() : event.getY(pointerIndex);
+                        startX = downX;
+                        startY = downY;
                         acceleratedDistance = 0;
                         lastMoveTime = event.getEventTime();
                         break;
@@ -294,17 +329,33 @@ public class TouchPad extends View {
                         currentPointerID = event.getPointerId(0);
                         downX = event.getX();
                         downY = event.getY();
+                        startX = downX;
+                        startY = downY;
                         acceleratedDistance = 0;
                         lastMoveTime = event.getEventTime();
                         break;
                     }
                     float newDownX = event.getX(pointerIndex);
                     float newDownY = event.getY(pointerIndex);
+
+                    // 手势死区防抖判定：未达到滑动阈值前不转动视角、不打断长按计时
+                    if (!isDragStarted && !isLongPressTriggered) {
+                        float totalDX = newDownX - startX;
+                        float totalDY = newDownY - startY;
+                        if (totalDX * totalDX + totalDY * totalDY > touchSlop * touchSlop) {
+                            isDragStarted = true;
+                            handler.removeCallbacks(runnable);
+                            downX = newDownX;
+                            downY = newDownY;
+                        } else {
+                            break;
+                        }
+                    }
+
                     float frameDX = newDownX - downX;
                     float frameDY = newDownY - downY;
                     float acceleration = viewAcceleration(event, frameDX, frameDY);
                     // 捕获态统一走相对增量流，与陀螺仪等来源的增量叠加互不干扰
-                    // 触摸按历史标定 1:1 下发，不乘 scaleFactor：旧实现的预先除法与 setPointer 内的乘法恰好抵消，保持手感
                     double sensitivity = gameMenu.getMenuSetting().getMouseSensitivity();
                     float gameDX = (float) (frameDX * sensitivity * acceleration);
                     float gameDY = (float) (frameDY * sensitivity * acceleration);
@@ -313,9 +364,6 @@ public class TouchPad extends View {
                     // 非同时控制模式下先开始拖动的一方独占视角，被占用时丢弃增量；锚点已推进，不累积位移
                     if (gameMenu.getInput().acquireLookOwner(POINTER_ID)) {
                         FCLBridge.pushEventLookDelta(gameDX, gameDY);
-                    }
-                    if ((Math.abs(gameDX) > 1 || Math.abs(gameDY) > 1) && System.currentTimeMillis() - downTime < 400) {
-                        handler.removeCallbacks(runnable);
                     }
                     break;
                 case MotionEvent.ACTION_CANCEL:
@@ -326,19 +374,36 @@ public class TouchPad extends View {
                     }
                     shouldBeDown = false;
                     currentPointerID = -1;
-                    if (System.currentTimeMillis() - downTime <= 100
-                            && Math.abs(event.getX() - downX) <= 10
-                            && Math.abs(event.getY() - downY) <= 10) {
-                        if (!gameMenu.getMenuSetting().isDisableGesture()) {
-                            if (getGestureMode() == GestureMode.BUILD) {
-                                gameMenu.getInput().sendKeyEvent(FCLInput.MOUSE_RIGHT, true);
-                                gameMenu.getInput().sendKeyEvent(FCLInput.MOUSE_RIGHT, false);
-                            } else {
-                                gameMenu.getInput().sendKeyEvent(FCLInput.MOUSE_LEFT, true);
-                                gameMenu.getInput().sendKeyEvent(FCLInput.MOUSE_LEFT, false);
+                    handler.removeCallbacks(runnable);
+
+                    if (!isDragStarted && !isLongPressTriggered) {
+                        long duration = System.currentTimeMillis() - startDownTime;
+                        float totalDistSq = (event.getX() - startX) * (event.getX() - startX)
+                                + (event.getY() - startY) * (event.getY() - startY);
+                        if (duration <= TAP_TIMEOUT && totalDistSq <= touchSlop * touchSlop) {
+                            if (!gameMenu.getMenuSetting().isDisableGesture()) {
+                                long now = System.currentTimeMillis();
+                                float distFromLastTapSq = (event.getX() - lastTapX) * (event.getX() - lastTapX)
+                                        + (event.getY() - lastTapY) * (event.getY() - lastTapY);
+                                if (now - lastTapTime <= DOUBLE_TAP_TIMEOUT && distFromLastTapSq <= touchSlop * touchSlop * 4) {
+                                    // 双击手势：执行反向操作（BUILD 模式双击即为左键攻击，FIGHT 模式双击为右键使用）
+                                    lastTapTime = 0;
+                                    int key = (getGestureMode() == GestureMode.BUILD) ? FCLInput.MOUSE_LEFT : FCLInput.MOUSE_RIGHT;
+                                    gameMenu.getInput().sendKeyEvent(key, true);
+                                    Choreographer.getInstance().postFrameCallbackDelayed(frameTimeNanos -> gameMenu.getInput().sendKeyEvent(key, false), 33);
+                                } else {
+                                    // 单击手势：正常操作（BUILD 模式为右键放置/互动，FIGHT 模式为左键攻击）
+                                    lastTapTime = now;
+                                    lastTapX = event.getX();
+                                    lastTapY = event.getY();
+                                    int key = (getGestureMode() == GestureMode.BUILD) ? FCLInput.MOUSE_RIGHT : FCLInput.MOUSE_LEFT;
+                                    gameMenu.getInput().sendKeyEvent(key, true);
+                                    Choreographer.getInstance().postFrameCallbackDelayed(frameTimeNanos -> gameMenu.getInput().sendKeyEvent(key, false), 33);
+                                }
                             }
                         }
                     }
+                    releaseHoldKeys();
                     break;
                 default:
                     break;
