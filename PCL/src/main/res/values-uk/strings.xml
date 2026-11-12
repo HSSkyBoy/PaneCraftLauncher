@@ -719,7 +719,6 @@
     <string name="settings_launcher_cursor">Курсор</string>
     <string name="settings_launcher_menu_icon">Іконка меню</string>
     <string name="settings_launcher_ignore_notch">Ігнорувати виріз фронтальної камери</string>
-    <string name="settings_launcher_close_skin_view">Приховати модель скіна</string>
     <string name="settings_launcher_animation_speed">Швидкість анімації переходів</string>
     <string name="settings_memory">Пам\'ять</string>
     <string name="settings_memory_allocate_auto">%1$.1f ГБ мінімум / %2$.1f ГБ виділено</string>
@@ -950,5 +949,4 @@
     <string name="version_list_refreshing">Отримання списку віддалених версій…</string>
     <string name="renderer_source">Джерело:</string>
     <string name="renderer_source_builtin">Вбудований</string>
-    <string name="animation_idle">Стояння</string>
 </resources>

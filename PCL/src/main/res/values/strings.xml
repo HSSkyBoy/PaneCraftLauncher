@@ -1237,8 +1237,6 @@
     <string name="settings_launcher_menu_icon_desc">Customize the in-game floating window menu icon (GIF supported).</string>
     <string name="settings_launcher_ignore_notch">Fullscreen</string>
     <string name="settings_launcher_ignore_notch_desc">Ignore the screen notch area and display in fullscreen.</string>
-    <string name="settings_launcher_close_skin_view">Close Skin Model Viewing</string>
-    <string name="settings_launcher_close_skin_view_desc">Disable the skin model on the home page.</string>
     <string name="settings_launcher_animation_speed">Animation Speed</string>
     <string name="settings_launcher_animation_speed_desc">Adjust the UI animation speed.</string>
     <string name="settings_launcher_vibrate_duration">Vibration Duration</string>
@@ -1511,7 +1509,6 @@
     <string name="modpack_download_warn_msg">Before installation, you should understand that most modpacks are designed for PC, so there is a high probability that you will encounter crashes or other issues when trying to launch. This is often not a problem that can be solved at the launcher level. Therefore, you need to understand the relevant knowledge and try to solve the problem yourself or seek help from others (do not ask the launcher developer!).</string>
     <string name="guide_theme2">If you find the color of the text on the right side is not clear, you can click here, then click \"Launcher Settings\", and select \"Secondary Theme Color\"</string>
     <string name="guide_share_log">Long press here to share the game log (latest_game.log).</string>
-    <string name="guide_skin_model">Tap with two fingers on the skin model to open its settings.</string>
     <string name="guide_version_card">Tap the version card to open the version list and manage your versions. Long press to quickly select a version.</string>
     <string name="guide_account">No account yet? Tap here to add one.</string>
     <string name="guide_start">Tap to launch the selected version, long-press to pick a renderer and launch directly.</string>
@@ -1695,18 +1692,6 @@
     <string name="version_list_refreshing">Fetching remote version list…</string>
     <string name="skin_settings">Skin Settings</string>
     <string name="skin_solid_layer">3D Skin Layer</string>
-    <string name="skin_tap_sound">Tap Sound Effect</string>
-    <string name="animation_idle">Idle</string>
-    <string name="animation_walking">Walking</string>
-    <string name="animation_running">Running</string>
-    <string name="animation_wave">Wave</string>
-    <string name="animation_hit">Hit</string>
-    <string name="animation_flying">Flying</string>
-    <string name="animation_crouch">Crouch</string>
-    <string name="animation_swim">Swim</string>
-    <string name="animation_hands_up_running">Hands-up Running</string>
-    <string name="animation_hands_up_jumping">Hands-up Jumping</string>
-    <string name="animation_spin_jump">Spin Jump</string>
     <string name="quark_promo_title">Support FCL</string>
     <string name="quark_promo_message">This is your %1$dth game launch!\n\nIf FCL has been helpful to you, feel free to take a moment to open Quark Drive, sign up or log in and tap the Save to Drive button (no download needed). It would mean a lot to us. Thank you so much!</string>
     <string name="quark_promo_open">Open Quark Drive</string>

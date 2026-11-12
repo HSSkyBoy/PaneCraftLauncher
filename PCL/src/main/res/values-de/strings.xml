@@ -698,7 +698,6 @@
     <string name="settings_launcher_cursor">Cursor</string>
     <string name="settings_launcher_menu_icon">Menü-Icon</string>
     <string name="settings_launcher_ignore_notch">Frontkamera-Ausschnitt ignorieren</string>
-    <string name="settings_launcher_close_skin_view">Skin-Modell ausblenden</string>
     <string name="settings_launcher_animation_speed">Geschwindigkeit der Übergangsanimationen</string>
     <string name="settings_memory">Speicher</string>
     <string name="settings_memory_allocate_auto">%1$.1f GB Minimum / %2$.1f GB zugewiesen</string>
@@ -932,5 +931,4 @@
     <string name="version_list_refreshing">Remote-Versionsliste wird abgerufen…</string>
     <string name="renderer_source">Quelle:</string>
     <string name="renderer_source_builtin">Integriert</string>
-    <string name="animation_idle">Stillstehen</string>
 </resources>

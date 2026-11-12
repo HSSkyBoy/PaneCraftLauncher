@@ -222,11 +222,6 @@ object ThemeEngine {
         ThemeData.saveTheme(context, getTheme())
     }
 
-    /** 关闭皮肤模型开关（替代原 Theme.setiIgnoreSkinContainer 字段直改） */
-    fun setCloseSkinModel(closeSkinModel: Boolean) {
-        updateTheme { it.copy(closeSkinModel = closeSkinModel) }
-    }
-
     /** 动画速度（替代原 animationSpeedProperty().set 字段直改） */
     fun setAnimationSpeed(animationSpeed: Int) {
         updateTheme { it.copy(animationSpeed = animationSpeed) }

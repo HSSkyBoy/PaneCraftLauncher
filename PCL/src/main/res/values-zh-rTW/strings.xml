@@ -1095,8 +1095,6 @@
     <string name="settings_launcher_menu_icon_desc">自訂遊戲內懸浮窗菜單圖示，支援使用gif</string>
     <string name="settings_launcher_ignore_notch">全屏</string>
     <string name="settings_launcher_ignore_notch_desc">忽略螢幕劉海區域，全屏顯示</string>
-    <string name="settings_launcher_close_skin_view">關閉皮膚模型閱覽</string>
-    <string name="settings_launcher_close_skin_view_desc">關閉主界面皮膚模型顯示</string>
     <string name="settings_launcher_animation_speed">動畫速度</string>
     <string name="settings_launcher_animation_speed_desc">調整界面動畫速度</string>
     <string name="settings_launcher_vibrate_duration">震動時長</string>
@@ -1360,7 +1358,6 @@
     <string name="modpack_download_warn_msg">在安裝前，你需要明白，絕大多數整合包都是給電腦端制作的，所以當你嘗試啟動時會有極大概率出現崩潰或是其他問題，這往往不是在啟動器層面上能解決的問題。所以你需要自己了解相關知識后嘗試自己解決，或是尋求其他人幫忙（不要詢問啟動器開發者！）。</string>
     <string name="guide_theme2">如果你發現右側的文字顏色看不清可以在點擊這里，再點擊“啟動器設定”，設定里面的“次要主題色”即可</string>
     <string name="guide_share_log">長按這里分享遊戲日志（latest_game.log）。</string>
-    <string name="guide_skin_model">雙指點擊皮膚模型打開設定菜單</string>
     <string name="guide_version_card">點擊版本卡片打開版本列表，管理你的版本。長按快速選擇版本。</string>
     <string name="guide_account">還沒有帳戶？點擊這里添加。</string>
     <string name="guide_start">點擊啟動選中的版本，長按可以選擇指定渲染器然后直接啟動。</string>
@@ -1533,18 +1530,6 @@
     <string name="version_list_refreshing">正在獲取遠端版本列表…</string>
     <string name="skin_settings">皮膚設定</string>
     <string name="skin_solid_layer">3D 皮膚層</string>
-    <string name="skin_tap_sound">點擊音效</string>
-    <string name="animation_idle">待機</string>
-    <string name="animation_walking">走路</string>
-    <string name="animation_running">奔跑</string>
-    <string name="animation_wave">揮手</string>
-    <string name="animation_hit">揮擊</string>
-    <string name="animation_flying">飛行</string>
-    <string name="animation_crouch">潛行</string>
-    <string name="animation_swim">游泳</string>
-    <string name="animation_hands_up_running">舉手奔跑</string>
-    <string name="animation_hands_up_jumping">舉手蹦跳 \\😭/</string>
-    <string name="animation_spin_jump">邦友的酒</string>
     <string name="quark_promo_title">支援 FCL</string>
     <string name="quark_promo_message">這是你第 %1$d 次啟動遊戲！\n\n如果 FCL 對你有幫助，歡迎動動手指打開夸克網盤，註冊或登入後點擊儲存到網盤（不用下載），就是對我們最大的支援，十分感謝～</string>
     <string name="quark_promo_open">打開夸克網盤</string>

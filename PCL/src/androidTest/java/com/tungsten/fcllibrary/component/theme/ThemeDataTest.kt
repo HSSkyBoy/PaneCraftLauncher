@@ -36,7 +36,7 @@ class ThemeDataTest {
         color2: Int = Color.BLACK,
         color2Dark: Int = Color.WHITE
     ) = ThemeData(color, colorDark, color2, color2Dark,
-        fullscreen = false, closeSkinModel = false, animationSpeed = 8, colorAlpha = 255,
+        fullscreen = false, animationSpeed = 8, colorAlpha = 255,
         backgroundLt = BitmapDrawableStub(), backgroundDk = BitmapDrawableStub())
 
     /** 占位背景（测试不依赖真实图片资源） */
@@ -99,7 +99,7 @@ class ThemeDataTest {
             color = 0x123456,
             color2 = 0x654321,
             color2Dark = 0xAABBCC,
-        ).copy(fullscreen = true, closeSkinModel = true, animationSpeed = 5)
+        ).copy(fullscreen = true, animationSpeed = 5)
         ThemeData.saveTheme(context, theme)
         // saveTheme 异步写入，等待 DataStore 落盘完成
         runBlocking { context.themeDataStore.data.first { it.color == 0x123456 } }
@@ -108,7 +108,6 @@ class ThemeDataTest {
         assertEquals(0x654321, loaded.color2)
         assertEquals(0xAABBCC, loaded.color2Dark)
         assertTrue(loaded.fullscreen)
-        assertTrue(loaded.closeSkinModel)
         assertEquals(5, loaded.animationSpeed)
         // 默认无自定义背景（需用户手动设置或自定义图片）
         assertNull(loaded.backgroundLt)

@@ -34,12 +34,6 @@ class SkinViewer @JvmOverloads constructor(
     private var renderer: SkinRenderer? = null
     private var density = 1f
 
-    /** 双指点击模型回调（UI 线程，SAM 接口便于 Java 侧 lambda 调用） */
-    fun interface OnTwoFingerTapListener {
-        fun onTwoFingerTap()
-    }
-
-    var onTwoFingerTap: OnTwoFingerTapListener? = null
 
     // 触摸状态（仅 UI 线程访问）
     private var previousX = 0f
@@ -88,7 +82,6 @@ class SkinViewer @JvmOverloads constructor(
         isOpaque = false
         isClickable = true
         surfaceTextureListener = this
-        SkinTapSound.preload(context)
     }
 
     /** 绑定渲染器与手势密度（须在 surface 可用前调用） */
@@ -126,20 +119,15 @@ class SkinViewer @JvmOverloads constructor(
                 }
                 if (event.actionMasked == MotionEvent.ACTION_UP) {
                     if (twoFingerGesture) {
-                        // 双指手势收尾：短按且未移动判定为双指点击，不触发单击压扁
-                        if (!twoFingerMoved && event.eventTime - twoFingerDownTime < TAP_INTERVAL) {
-                            onTwoFingerTap?.onTwoFingerTap()
-                        }
                         twoFingerGesture = false
                     } else {
-                        // 单击（短按未拖动）触发点按压扁与音效；无论是否拖动，手势结束都开始回正
+                        // 单击（短按未拖动）触发点按压扁；无论是否拖动，手势結束都开始回正
                         val dx = x - downX
                         val dy = y - downY
                         if (event.eventTime - event.downTime < TAP_INTERVAL &&
                             dx * dx + dy * dy < touchSlop * touchSlop
                         ) {
                             renderer?.squashTap()
-                            SkinTapSound.play()
                         }
                     }
                     renderer?.onDragEnd()

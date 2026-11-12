@@ -432,17 +432,6 @@
     <string name="quark_promo_open">Buka Quark Drive</string>
     <string name="quark_promo_message">Ini adalah peluncuran game ke-%1$d Anda!\n\nJika FCL bermanfaat bagi Anda, silakan luangkan waktu sejenak untuk membuka Quark Drive, mendaftar atau masuk, dan ketuk tombol Simpan ke Drive (tidak perlu mengunduh). Itu akan sangat berarti bagi kami. Terima kasih banyak!</string>
     <string name="quark_promo_title">Dukungan FCL</string>
-    <string name="animation_spin_jump">Lompatan Berputar</string>
-    <string name="animation_hands_up_jumping">Melompat dengan Tangan Terangkat</string>
-    <string name="animation_hands_up_running">Lari dengan Tangan Terangkat</string>
-    <string name="animation_swim">Berenang</string>
-    <string name="animation_crouch">Mendekam</string>
-    <string name="animation_flying">Terbang</string>
-    <string name="animation_hit">Memukul</string>
-    <string name="animation_wave">Melambai</string>
-    <string name="animation_running">Berlari</string>
-    <string name="animation_walking">Berjalan</string>
-    <string name="animation_idle">Berdiri diam</string>
     <string name="skin_solid_layer">Lapisan Kulit 3D</string>
     <string name="skin_settings">Pengaturan Kulit</string>
     <string name="game_crash_reason_cannot_find_launch_target_fmlclient">Game saat ini tidak dapat ditemukan karena Forge belum terinstal sepenuhnya.\nAnda dapat mencoba mencopot pemasangan Forge dan memasangnya kembali.</string>

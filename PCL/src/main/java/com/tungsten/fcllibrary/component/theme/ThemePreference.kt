@@ -21,7 +21,6 @@ data class ThemePreference(
     val color2: Int = 0xFF000000.toInt(),
     val color2Dark: Int = 0xFFFFFFFF.toInt(),
     val fullscreen: Boolean = false,
-    val closeSkinModel: Boolean = false,
     val animationSpeed: Int = 8,
     /** 派生色（ltColor/dkColor）透明度，0 完全透明 ~ 255 完全不透明，独立于主要主题色的 alpha */
     val colorAlpha: Int = 255
@@ -32,12 +31,14 @@ val Context.themeDataStore: DataStore<ThemePreference> by dataStore(
     serializer = ThemePreferenceSerializer
 )
 
+private val themeJson = Json { ignoreUnknownKeys = true }
+
 object ThemePreferenceSerializer : Serializer<ThemePreference> {
     override val defaultValue: ThemePreference = ThemePreference()
 
     override suspend fun readFrom(input: InputStream): ThemePreference {
         return try {
-            val pref = Json.decodeFromString<ThemePreference>(input.readBytes().decodeToString())
+            val pref = themeJson.decodeFromString<ThemePreference>(input.readBytes().decodeToString())
             if (pref.color == 0xFF7797CF.toInt()) {
                 pref.copy(color = 0xFF1976D2.toInt(), colorDark = 0xFF1565C0.toInt())
             } else {
