@@ -22,7 +22,9 @@
 > > ⚠️ **声明**：本项目与官方 Plain Craft Launcher 系列（[Meloong-Git/PCL](https://github.com/Meloong-Git/PCL)）**没有任何隶属、合作或官方授权关系**，「PCL」与「Pane Craft Launcher」命名纯属社区致敬兼玩梗；遇到任何问题请只在本仓库反馈，**切勿打扰原 PCL 官方作者与团队**。
 >
 > - 纯 64 位现代化构建（`minSdk 28` / `arm64-v8a` & `x86_64`）
-> - 原生 Compose + Miuix 重做启动页、账户管理、PCL 分栏设置与百宝箱页面
+> - 原生 Jetpack Compose + Miuix 现代化重构：启动主页、下载中心、版本管理、设置中心、多人联机与百宝箱全流程覆盖
+> - 原汁原味 PCL2 经典视觉：经典主题蓝配色、微透冰蓝画布基底、正版与离线身份胶囊图标
+> - 深度重构内置触控引擎：12dp 手势死区防抖、250ms 点击宽容度、双击快速攻击挥刀、长按挖掘抗抖动
 > - 兼容 `/sdcard/FCL/` 游戏目录及 `FCLRendererPlugin` / `FCLDriverPlugin` 插件生态
 
 ---
@@ -34,13 +36,18 @@
 - 模组加载器支持：Forge/NeoForge/LiteLoader/OptiFine/Fabric/Quilt/Cleanroom...
 
 ⚙️ **功能亮点**  
-- 内置多版本 Java 运行时（Java 8/17/21/25）同时支持导入Java
-- 虚拟鼠标与自定义按键映射
-- 支持 FCL/ZalithLauncher2 控制布局互转，导入 ZL2 布局自动转换
-- 光影支持（需VirGL/Zink/MG渲染器）
-- 动态资源管理（模组/整合包/材质/光影/存档）
-- 个性化主题定制（背景/颜色方案）
-- 支持[渲染器插件化](https://github.com/ShirosakiMio/FCLRendererPlugin)
+- **纯 Compose + Miuix 架构**：告别传统 XML 布局，启动、下载、版本管理、设置、联机全量纯 Compose 原生组件呈现
+- **全新升级的内置触控手感**：
+  - 12dp 手势死区（Touch Slop），滑动未越界前绝不抖动视角，长按挖掘不再因手指轻微抖动而意外中断
+  - 250ms 宽容度点按判定与物品栏防吞触机制，背包/容器整理顺滑跟手
+  - 创新双击屏幕快速挥刀攻击手势，建造模式下遇到怪物无需切模式或手忙脚乱找攻击键
+- **对齐 PCL2 经典视觉体验**：经典主题蓝、微透冰蓝白底色、正版盾牌与离线链接图标
+- **内置多版本 Java 运行时**：Java 8/17/21/25 全覆盖，同时支持导入外部 Java
+- **虚拟鼠标与自定义按键映射**：支持 FCL/ZalithLauncher2 控制布局互转，原生兼容 TouchController 模组生态
+- **一站式资源下载与安装向导**：官方原版/快照、模组加载器，以及 CurseForge / Modrinth / MCBBS / 局域网服务器整合包一键安装
+- **光影与自定义渲染器**：支持 VirGL/Zink/MG 及[渲染器与驱动插件化](https://github.com/ShirosakiMio/FCLRendererPlugin)
+- **异地局域网联机**：内嵌 Terracotta / EasyTier 组网能力，无需公网 IP 即可跨网络畅爽联机
+- **动态资源管理**：模组、材质包、光影包、世界存档轻松管理与导出
 
 ---
 

@@ -22,7 +22,9 @@
 > > ⚠️ **Disclaimer**: This project is **NOT affiliated with, endorsed by, or connected to** the official Plain Craft Launcher project ([Meloong-Git/PCL](https://github.com/Meloong-Git/PCL)) in any way. The name and dual-pane UI are strictly a community joke / tribute. Please report bugs **only in this repository** and never bother the upstream PCL authors!
 >
 > - Pure 64-bit modern Android build (`minSdk 28` / `arm64-v8a` & `x86_64`)
-> - Native Compose + Miuix Launch Home, Account Management, 4-category Setup, and More Toolbox
+> - 100% Native Jetpack Compose + Miuix refactor: Launch Home, Download Center, Version Management, 4-category Setup, LAN Multiplayer, and Toolbox
+> - Authentic PCL2 visual experience: classic theme blue, translucent ice-blue background tint, Official Shield & Offline Link capsule badges
+> - Upgraded in-game touch engine: 12dp touch slop deadzone, 250ms generous tap tolerance, double-tap quick attack, jitter-free block mining
 > - Compatible with existing `/sdcard/FCL/` directories and `FCLRendererPlugin` / `FCLDriverPlugin` ecosystem
 
 ---
@@ -34,13 +36,18 @@
 - Mod loader support: Forge/NeoForge/LiteLoader/OptiFine/Fabric/Quilt/Cleanroom...
 
 ⚙️ **Key Highlights**  
-- Built-in multi-version Java runtimes (Java 8/17/21/25) with custom Java import support
-- Virtual mouse and customizable key mapping
-- FCL↔ZalithLauncher2 control layout conversion, importing a ZL2 layout converts it automatically
-- Shaders support (requires VirGL/Zink/MG renderers)
-- Dynamic resource management (mods/modpacks/textures/shaders/saves)
-- Personalized theme customization (background/color schemes)
-- Supports [renderer pluginization](https://github.com/ShirosakiMio/FCLRendererPlugin)
+- **Pure Compose + Miuix Architecture**: Farewell to legacy XML layouts; home, downloads, version management, setup, and multiplayer are rendered with pure native Compose components
+- **Next-Gen Built-in Touch Engine**:
+  - 12dp Touch Slop prevents camera jitter when tapping or holding; mining blocks no longer cancels unexpectedly from micro-tremors
+  - 250ms tap tolerance and inventory touch anti-miss mechanism for responsive, smooth inventory management
+  - Innovative double-tap to attack: instantly swing weapons in Build mode without needing to switch modes or search for on-screen attack buttons
+- **Faithful PCL2 Design Language**: Classic theme blue, ice-blue frosted canvas, official and offline mode indicator badges
+- **Built-in multi-version Java runtimes**: Java 8/17/21/25 with custom Java import support
+- **Virtual mouse and customizable key mapping**: FCL↔ZalithLauncher2 layout interconversion, native compatibility with TouchController mod
+- **All-in-One Resource Download & Install Wizard**: Official releases/snapshots, modloaders, and one-click installation for CurseForge / Modrinth / MCBBS / Server modpacks
+- **Shaders and Custom Renderers**: Supports VirGL/Zink/MG and [renderer/driver pluginization](https://github.com/ShirosakiMio/FCLRendererPlugin)
+- **Peer-to-Peer LAN Multiplayer**: Built-in Terracotta / EasyTier networking for seamless multiplayer without a public IP
+- **Dynamic Resource Management**: Intuitive management and export for mods, resource packs, shaders, and world saves
 
 ---
 
