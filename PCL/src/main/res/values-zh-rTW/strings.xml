@@ -1668,4 +1668,5 @@
     <string name="more_faq_4_a">進入單人世界後先在暫停選單開啟「對區域網路開放」，再切回頂部「聯機」分頁建立房間並把邀請碼分享給好友即可加入。</string>
     <string name="more_about_credits_title">開源授權與致謝</string>
     <string name="more_about_credits_body">基於 Fold Craft Launcher (FCL)、HMCLCore、Pojav / Amethyst JVM 橋接、Terracotta 陶瓦聯機核心與 Compose Miuix 建構，介面靈感來自 Plain Craft Launcher 2 (PCL2)。</string>
+    <string name="press_again_to_exit">再次返回以退出</string>
 </resources>

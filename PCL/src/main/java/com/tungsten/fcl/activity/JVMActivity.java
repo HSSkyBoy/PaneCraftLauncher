@@ -460,7 +460,7 @@ public class JVMActivity extends FCLActivity implements TextureView.SurfaceTextu
                 finish();
             } else {
                 lastBackPressedTime = now;
-                Toast.makeText(this, "再次返回以退出", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.press_again_to_exit), Toast.LENGTH_SHORT).show();
             }
         }
     }

@@ -1678,4 +1678,5 @@
     <string name="more_faq_4_a">进入单人存档后先「对局域网开放」，再切回顶部「联机」页创建房间生成邀请码，好友输入邀请码即可直接连接。</string>
     <string name="more_about_credits_title">开源协议与致谢</string>
     <string name="more_about_credits_body">基于 Fold Craft Launcher (FCL)、HMCLCore、Pojav / Amethyst JVM 桥接、Terracotta 陶瓦联机核心与 Compose Miuix 构建，界面参考 Plain Craft Launcher 2 (PCL2) 设计。</string>
+    <string name="press_again_to_exit">再次返回以退出</string>
 </resources>
