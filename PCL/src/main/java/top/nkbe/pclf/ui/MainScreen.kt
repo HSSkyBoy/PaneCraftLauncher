@@ -218,6 +218,13 @@ fun LauncherMainScreen(
                             onAccountChanged = onAccountUpdated
                         )
 
+                        AppSubpage.VERSION -> VersionListScreen(
+                            onOpenDownload = {
+                                onBackFromSubpage()
+                                onSelectTab(MainTab.DOWNLOAD)
+                            }
+                        )
+
                         is AppSubpage -> LegacyFclUiHost(
                             ui = remember(target, legacyUiProvider) { legacyUiProvider(target.uiIndex) }
                         )

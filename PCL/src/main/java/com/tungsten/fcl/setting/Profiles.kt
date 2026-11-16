@@ -26,6 +26,8 @@ object Profiles {
     /** Profile 列表（Repository 单例，修改统一走 addProfile/removeProfile 以触发保存与选中项校验） */
     @JvmStatic
     val profiles = mutableListOf<Profile>()
+    private val _profilesFlow = MutableStateFlow<List<Profile>>(emptyList())
+    val profilesFlow: StateFlow<List<Profile>> = _profilesFlow.asStateFlow()
     private val _selectedProfile = MutableStateFlow<Profile?>(null)
     /** 当前选中的 Profile（Repository 单例状态，Java 侧访问 getSelectedProfileFlow()） */
     @get:JvmName("getSelectedProfileFlow")
@@ -71,6 +73,7 @@ object Profiles {
         if (current != null && !profiles.contains(current)) {
             setSelectedProfileInternal(profiles[0])
         }
+        _profilesFlow.value = profiles.toList()
     }
 
     private fun checkProfiles() {
@@ -123,6 +126,7 @@ object Profiles {
         checkProfiles()
 
         initialized = true
+        _profilesFlow.value = profiles.toList()
         val profile =
             profiles.find { it.name == ConfigHolder.config().selectedProfile } ?: profiles[0]
         profile.repository.refreshVersions()

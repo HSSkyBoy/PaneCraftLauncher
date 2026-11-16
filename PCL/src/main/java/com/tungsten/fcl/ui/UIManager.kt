@@ -11,7 +11,6 @@ import com.tungsten.fcl.ui.controller.ControllerUI
 import com.tungsten.fcl.ui.download.DownloadUI
 import com.tungsten.fcl.ui.manage.ManageUI
 import com.tungsten.fcl.ui.multiplayer.MultiplayerUI
-import com.tungsten.fcl.ui.version.VersionUI
 import com.tungsten.fcllibrary.component.ui.FCLBaseUI
 import com.tungsten.fcllibrary.component.ui.FCLCommonUI
 
@@ -38,7 +37,7 @@ class UIManager(val context: Context, val pager: ViewPager2? = null) {
         { DownloadUI(context, R.layout.ui_download) },
         { ControllerUI(context, R.layout.ui_controller) },
         { MultiplayerUI(context, R.layout.ui_multiplayer) },
-        { VersionUI(context, R.layout.ui_version) }
+        { object : FCLCommonUI(context, 0) {} }
     )
 
     var currentUI: FCLBaseUI? = null
@@ -77,7 +76,6 @@ class UIManager(val context: Context, val pager: ViewPager2? = null) {
     val downloadUI: DownloadUI get() = getUI(2) as DownloadUI
     val controllerUI: ControllerUI get() = getUI(3) as ControllerUI
     val multiplayerUI: MultiplayerUI get() = getUI(4) as MultiplayerUI
-    val versionUI: VersionUI get() = getUI(5) as VersionUI
 
     fun switchToSettingPage() {
         onComposeSwitchUI?.invoke(-2)
