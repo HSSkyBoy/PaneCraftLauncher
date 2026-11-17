@@ -132,6 +132,9 @@ class MainActivity : FCLActivity() {
     private var modpackWizardFile by mutableStateOf<File?>(null)
     private var modpackWizardSeq by mutableIntStateOf(0)
     private var downloadBackInterceptor: (() -> Boolean)? = null
+    private var controllerTabIndex by mutableIntStateOf(0)
+    private var controllerTabRequestSeq by mutableIntStateOf(0)
+    private var controllerBackInterceptor: (() -> Boolean)? = null
     private var showDownloadPanel by mutableStateOf(false)
     private var launchState by mutableStateOf(LaunchUiState())
     private var seedColorInt by mutableIntStateOf(0xFF1E78D6.toInt())
@@ -221,6 +224,9 @@ class MainActivity : FCLActivity() {
                     downloadSectionRequestSeq = downloadSectionRequestSeq,
                     modpackWizardFile = modpackWizardFile,
                     modpackWizardSeq = modpackWizardSeq,
+                    controllerTabIndex = controllerTabIndex,
+                    controllerTabRequestSeq = controllerTabRequestSeq,
+                    onRegisterControllerBackHandler = { handler -> controllerBackInterceptor = handler },
                     launchState = launchState,
                     backgroundDrawable = backgroundDrawable,
                     showDownloadPanel = showDownloadPanel,
@@ -396,10 +402,8 @@ class MainActivity : FCLActivity() {
     @JvmOverloads
     fun navigateToController(pageIndex: Int? = null) {
         activeSubpage = AppSubpage.CONTROLLER
-        uiManager.currentUI = uiManager.controllerUI
-        if (pageIndex != null) {
-            uiManager.controllerUI.showPage(pageIndex)
-        }
+        controllerTabIndex = pageIndex ?: 0
+        controllerTabRequestSeq++
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -470,6 +474,10 @@ class MainActivity : FCLActivity() {
                 if (uiManager.manageUI.canReturn()) {
                     uiManager.manageUI.dismissCurrentTempPage()
                 } else {
+                    activeSubpage = null
+                }
+            } else if (current == AppSubpage.CONTROLLER) {
+                if (controllerBackInterceptor?.invoke() != true) {
                     activeSubpage = null
                 }
             } else if (current.uiIndex >= 0) {

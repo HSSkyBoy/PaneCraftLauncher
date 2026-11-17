@@ -64,7 +64,7 @@ import top.yukonga.miuix.kmp.basic.Text
 
 enum class AppSubpage(@StringRes val titleRes: Int, val uiIndex: Int) {
     MANAGE(R.string.manage, -1),
-    CONTROLLER(R.string.pclf_more_controller, 3),
+    CONTROLLER(R.string.pclf_more_controller, -1),
     ACCOUNT(R.string.pclf_more_account, -1),
     VERSION(R.string.pclf_btn_version_select, -1)
 }
@@ -81,6 +81,9 @@ fun LauncherMainScreen(
     downloadSectionRequestSeq: Int = 0,
     modpackWizardFile: File? = null,
     modpackWizardSeq: Int = 0,
+    controllerTabIndex: Int = 0,
+    controllerTabRequestSeq: Int = 0,
+    onRegisterControllerBackHandler: ((() -> Boolean)?) -> Unit = {},
     launchState: LaunchUiState,
     backgroundDrawable: BitmapDrawable?,
     showDownloadPanel: Boolean,
@@ -223,6 +226,12 @@ fun LauncherMainScreen(
                                 onBackFromSubpage()
                                 onSelectTab(MainTab.DOWNLOAD)
                             }
+                        )
+
+                        AppSubpage.CONTROLLER -> ControllerScreen(
+                            initialTabIndex = controllerTabIndex,
+                            tabRequestSeq = controllerTabRequestSeq,
+                            onRegisterBackHandler = onRegisterControllerBackHandler
                         )
 
                         is AppSubpage -> LegacyFclUiHost(
