@@ -63,7 +63,6 @@ import com.tungsten.fcl.setting.Controllers
 import com.tungsten.fcl.setting.Profile
 import com.tungsten.fcl.setting.Profiles
 import com.tungsten.fcl.ui.UIManager
-import com.tungsten.fcl.ui.download.modpack.LocalModpackPage
 import com.tungsten.fcl.ui.version.VersionListViewModel
 import com.tungsten.fcl.ui.version.Versions
 import com.tungsten.fcl.upgrade.UpdateChecker
@@ -130,6 +129,8 @@ class MainActivity : FCLActivity() {
     private var manageBackInterceptor: (() -> Boolean)? = null
     private var downloadSectionRequest by mutableStateOf(DownloadSection.GAME)
     private var downloadSectionRequestSeq by mutableIntStateOf(0)
+    private var modpackWizardFile by mutableStateOf<File?>(null)
+    private var modpackWizardSeq by mutableIntStateOf(0)
     private var downloadBackInterceptor: (() -> Boolean)? = null
     private var showDownloadPanel by mutableStateOf(false)
     private var launchState by mutableStateOf(LaunchUiState())
@@ -218,12 +219,13 @@ class MainActivity : FCLActivity() {
                     manageSectionRequestSeq = manageSectionRequestSeq,
                     downloadSectionRequest = downloadSectionRequest,
                     downloadSectionRequestSeq = downloadSectionRequestSeq,
+                    modpackWizardFile = modpackWizardFile,
+                    modpackWizardSeq = modpackWizardSeq,
                     launchState = launchState,
                     backgroundDrawable = backgroundDrawable,
                     showDownloadPanel = showDownloadPanel,
                     appVersionName = appVersion,
                     manageUI = uiManager.manageUI,
-                    downloadUI = uiManager.downloadUI,
                     legacyUiProvider = { pos -> uiManager.getUI(pos) },
                     onSelectTab = { tab ->
                         activeSubpage = null
@@ -359,17 +361,15 @@ class MainActivity : FCLActivity() {
     fun navigateToDownload(pageId: Int? = null) {
         activeSubpage = null
         selectedTab = MainTab.DOWNLOAD
-        val downloadUI = uiManager.downloadUI
-        uiManager.currentUI = downloadUI
-        if (pageId != null) {
-            downloadSectionRequest = DownloadSection.fromPageId(pageId)
-            downloadSectionRequestSeq++
-            downloadUI.showDownloadPage(pageId)
-        } else {
-            downloadSectionRequest = DownloadSection.GAME
-            downloadSectionRequestSeq++
-        }
-        downloadUI.setTabBarVisible(false)
+        downloadSectionRequest = if (pageId != null) DownloadSection.fromPageId(pageId) else DownloadSection.GAME
+        downloadSectionRequestSeq++
+    }
+
+    fun openLocalModpackWizard(file: File) {
+        activeSubpage = null
+        selectedTab = MainTab.DOWNLOAD
+        modpackWizardFile = file
+        modpackWizardSeq++
     }
 
     @JvmOverloads
@@ -481,24 +481,10 @@ class MainActivity : FCLActivity() {
         }
 
         if (selectedTab != MainTab.LAUNCH) {
-            if (selectedTab == MainTab.DOWNLOAD) {
-                if (downloadBackInterceptor?.invoke() == true) {
-                    return
-                }
-                if (uiManager.downloadUI.canReturn()) {
-                    uiManager.downloadUI.dismissCurrentTempPage()
-                    return
-                }
+            if (selectedTab == MainTab.DOWNLOAD && downloadBackInterceptor?.invoke() == true) {
+                return
             }
-            val legacyIdx = when (selectedTab) {
-                MainTab.DOWNLOAD -> 2
-                else -> -1
-            }
-            if (legacyIdx >= 0) {
-                uiManager.getUI(legacyIdx).onBackPressed()
-            } else {
-                selectedTab = MainTab.LAUNCH
-            }
+            selectedTab = MainTab.LAUNCH
             return
         }
 
@@ -510,12 +496,7 @@ class MainActivity : FCLActivity() {
         exitProcess(0)
     }
 
-    private fun syncUiManagerFromTab(tab: MainTab) {
-        when (tab) {
-            MainTab.DOWNLOAD -> uiManager.currentUI = uiManager.downloadUI
-            else -> {}
-        }
-    }
+    private fun syncUiManagerFromTab(tab: MainTab) {}
 
     private fun syncComposeRouteFromUiPosition(position: Int) {
         when (position) {
@@ -948,15 +929,7 @@ class MainActivity : FCLActivity() {
             getString(R.string.modpack_external_detected, file.name),
             Toast.LENGTH_SHORT
         ).show()
-        navigateToDownload()
-        val page = LocalModpackPage(
-            this,
-            FCLPage.PAGE_ID_TEMP,
-            Profiles.getSelectedProfile(),
-            null,
-            file
-        )
-        uiManager.downloadUI.showTempPage(page)
+        openLocalModpackWizard(file)
     }
 
     private fun promptNotificationPermissionIfNeeded() {

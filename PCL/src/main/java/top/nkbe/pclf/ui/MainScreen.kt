@@ -48,8 +48,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.mio.download.DownloadTaskInfo
 import com.tungsten.fcl.R
-import com.tungsten.fcl.ui.download.DownloadUI
 import com.tungsten.fcl.ui.manage.ManageUI
+import java.io.File
 import com.tungsten.fclcore.auth.Account
 import com.tungsten.fcllibrary.component.ui.FCLCommonUI
 import top.nkbe.pclf.theme.LauncherTheme
@@ -79,12 +79,13 @@ fun LauncherMainScreen(
     manageSectionRequestSeq: Int,
     downloadSectionRequest: DownloadSection = DownloadSection.GAME,
     downloadSectionRequestSeq: Int = 0,
+    modpackWizardFile: File? = null,
+    modpackWizardSeq: Int = 0,
     launchState: LaunchUiState,
     backgroundDrawable: BitmapDrawable?,
     showDownloadPanel: Boolean,
     appVersionName: String,
     manageUI: ManageUI,
-    downloadUI: DownloadUI,
     legacyUiProvider: (Int) -> FCLCommonUI,
     onSelectTab: (MainTab) -> Unit,
     onOpenSubpage: (AppSubpage) -> Unit,
@@ -173,9 +174,10 @@ fun LauncherMainScreen(
                         )
 
                         MainTab.DOWNLOAD -> DownloadScreen(
-                            downloadUI = downloadUI,
                             initialSection = downloadSectionRequest,
                             sectionRequestSeq = downloadSectionRequestSeq,
+                            modpackWizardFile = modpackWizardFile,
+                            modpackWizardSeq = modpackWizardSeq,
                             onRegisterBackHandler = onRegisterDownloadBackHandler
                         )
 

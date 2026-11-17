@@ -16,8 +16,6 @@ import com.tungsten.fcl.setting.Profile;
 import com.tungsten.fcl.setting.Profiles;
 import com.tungsten.fcl.ui.TaskDialog;
 import com.tungsten.fcl.ui.UIManager;
-import com.tungsten.fcl.ui.download.modpack.LocalModpackPage;
-import com.tungsten.fcl.ui.download.modpack.ModpackSelectionPage;
 import com.tungsten.fcl.util.TaskCancellationAction;
 import com.tungsten.fclcore.auth.Account;
 import com.tungsten.fclcore.download.game.GameAssetDownloadTask;
@@ -46,11 +44,7 @@ import java.util.logging.Level;
 public class Versions {
 
     public static void importModpack(Context context) {
-        Profile profile = Profiles.getSelectedProfile();
-        if (profile.getRepository().isLoaded()) {
-            ModpackSelectionPage page = new ModpackSelectionPage(context, FCLPage.PAGE_ID_TEMP, profile, null);
-            UIManager.getInstance().getDownloadUI().showTempPage(page);
-        }
+        MainActivity.getInstance().navigateToDownload(15011);
     }
 
     public static void downloadModpackImpl(Context context, Profile profile, RemoteMod.Version file) {
@@ -97,10 +91,7 @@ public class Versions {
 
     /** 打开已下载整合包的安装页 */
     private static void installDownloadedModpack(Context context, Profile profile, File modpack) {
-        LocalModpackPage page = new LocalModpackPage(context, FCLPage.PAGE_ID_TEMP, profile, null, modpack);
-        // 切换到下载 UI，让安装页显示在前台
-        UIManager.getInstance().switchUI(UIManager.getInstance().getDownloadUI());
-        UIManager.getInstance().getDownloadUI().showTempPage(page);
+        MainActivity.getInstance().openLocalModpackWizard(modpack);
     }
 
     public static void deleteVersion(Context context, Profile profile, String version) {
@@ -204,8 +195,14 @@ public class Versions {
     }
 
     public static void updateVersion(Context context, Profile profile, String version) {
-        ModpackSelectionPage page = new ModpackSelectionPage(context, FCLPage.PAGE_ID_TEMP, profile, version);
-        UIManager.getInstance().getManageUI().showTempPage(page);
+        MainActivity.getInstance().fileLauncher.launchSingleSelection(null, null, false, files -> {
+            if (files != null && !files.isEmpty()) {
+                File modpack = files.get(0).toFile(context, new File(context.getCacheDir(), "modpack_import"));
+                if (modpack != null) {
+                    MainActivity.getInstance().openLocalModpackWizard(modpack);
+                }
+            }
+        });
     }
 
     public static void updateGameAssets(Context context, Profile profile, String version) {

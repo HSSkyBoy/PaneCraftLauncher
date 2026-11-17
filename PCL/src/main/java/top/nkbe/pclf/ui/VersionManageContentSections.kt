@@ -77,7 +77,6 @@ import com.tungsten.fcl.setting.DownloadProviders
 import com.tungsten.fcl.setting.Profile
 import com.tungsten.fcl.ui.InstallerItem
 import com.tungsten.fcl.ui.TaskDialog
-import com.tungsten.fcl.ui.download.DownloadUI
 import com.tungsten.fcl.ui.manage.ManageUI
 import com.tungsten.fcl.ui.manage.ModCheckUpdatesTask
 import com.tungsten.fcl.util.TaskCancellationAction
@@ -806,7 +805,7 @@ fun ManageModsSection(
                     )
                     LauncherButton(
                         text = stringResource(R.string.download),
-                        onClick = { activity.navigateToDownload(DownloadUI.PAGE_ID_DOWNLOAD_MOD) },
+                        onClick = { activity.navigateToDownload(DownloadSection.MOD.pageId) },
                         height = 30.dp
                     )
                     LauncherButton(
@@ -1616,7 +1615,7 @@ fun ManageResourcePacksSection(
         itemSearchText = { "${it.name} ${it.description.orEmpty()}" },
         isLoading = isLoading,
         onRefresh = { reloadNonce++ },
-        onDownload = { activity.navigateToDownload(DownloadUI.PAGE_ID_DOWNLOAD_RESOURCE_PACK) },
+        onDownload = { activity.navigateToDownload(DownloadSection.RESOURCE_PACK.pageId) },
         onAddZip = {
             importPackZips(
                 activity = activity,
@@ -1743,7 +1742,7 @@ fun ManageShaderPacksSection(
         itemSearchText = { "${it.name} ${it.file.name}" },
         isLoading = isLoading,
         onRefresh = { reloadNonce++ },
-        onDownload = { activity.navigateToDownload(DownloadUI.PAGE_ID_DOWNLOAD_SHADER_PACK) },
+        onDownload = { activity.navigateToDownload(DownloadSection.SHADER_PACK.pageId) },
         onAddZip = {
             importPackZips(
                 activity = activity,

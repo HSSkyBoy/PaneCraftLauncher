@@ -1,21 +1,16 @@
 package top.nkbe.pclf.ui
 
-import android.view.View
-import android.view.ViewGroup
-import android.widget.FrameLayout
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -26,7 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -35,24 +29,23 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import com.tungsten.fcl.R
-import com.tungsten.fcl.ui.download.DownloadUI
 import com.tungsten.fclcore.mod.RemoteMod
 import top.nkbe.pclf.theme.LauncherTheme
 import top.nkbe.pclf.ui.components.SidebarNavItem
+import java.io.File
 
 enum class DownloadSection(
     val pageId: Int,
     @StringRes val titleRes: Int
 ) {
-    GAME(DownloadUI.PAGE_ID_DOWNLOAD_GAME, R.string.version_game),
-    MODPACK(DownloadUI.PAGE_ID_DOWNLOAD_MODPACK, R.string.modpack),
-    MOD(DownloadUI.PAGE_ID_DOWNLOAD_MOD, R.string.mods),
-    RESOURCE_PACK(DownloadUI.PAGE_ID_DOWNLOAD_RESOURCE_PACK, R.string.resourcepack),
-    WORLD(DownloadUI.PAGE_ID_DOWNLOAD_WORLD, R.string.world),
-    SHADER_PACK(DownloadUI.PAGE_ID_DOWNLOAD_SHADER_PACK, R.string.shaderpack),
-    FAVORITE(DownloadUI.PAGE_ID_DOWNLOAD_FAVORITE, R.string.favorites);
+    GAME(15010, R.string.version_game),
+    MODPACK(15011, R.string.modpack),
+    MOD(15012, R.string.mods),
+    RESOURCE_PACK(15013, R.string.resourcepack),
+    WORLD(15014, R.string.world),
+    SHADER_PACK(15015, R.string.shaderpack),
+    FAVORITE(15016, R.string.favorites);
 
     companion object {
         fun fromPageId(id: Int): DownloadSection =
@@ -62,16 +55,16 @@ enum class DownloadSection(
 
 @Composable
 fun DownloadScreen(
-    downloadUI: DownloadUI,
     initialSection: DownloadSection,
     sectionRequestSeq: Int,
+    modpackWizardFile: File?,
+    modpackWizardSeq: Int,
     onRegisterBackHandler: ((() -> Boolean)?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val colors = LauncherTheme.colors
 
     var section by remember { mutableStateOf(initialSection) }
-    var tempPageCount by remember { mutableIntStateOf(if (downloadUI.canReturn()) 1 else 0) }
     var selectedGameVersion by remember { mutableStateOf<String?>(null) }
     var pickingLibraryId by remember { mutableStateOf<String?>(null) }
     var activeModpackWizardSource by remember { mutableStateOf<ModpackSource?>(null) }
@@ -85,13 +78,13 @@ fun DownloadScreen(
         activeAddonDetail = null
     }
 
-    DisposableEffect(downloadUI) {
-        downloadUI.setTabBarVisible(false)
-        downloadUI.setTempPageListener(DownloadUI.TempPageListener { count ->
-            tempPageCount = count
-        })
-        onDispose {
-            downloadUI.setTempPageListener(null)
+    LaunchedEffect(modpackWizardSeq) {
+        if (modpackWizardSeq > 0 && modpackWizardFile != null) {
+            section = DownloadSection.MODPACK
+            selectedGameVersion = null
+            pickingLibraryId = null
+            activeAddonDetail = null
+            activeModpackWizardSource = ModpackSource.LocalFile(modpackWizardFile)
         }
     }
 
@@ -102,9 +95,6 @@ fun DownloadScreen(
                 true
             } else if (activeAddonDetail != null) {
                 activeAddonDetail = null
-                true
-            } else if (downloadUI.canReturn()) {
-                downloadUI.dismissCurrentTempPage()
                 true
             } else if (section == DownloadSection.GAME && pickingLibraryId != null) {
                 pickingLibraryId = null
@@ -137,7 +127,6 @@ fun DownloadScreen(
                     label = stringResource(s.titleRes),
                     selected = section == s,
                     onClick = {
-                        downloadUI.dismissAllTempPages()
                         selectedGameVersion = null
                         pickingLibraryId = null
                         activeModpackWizardSource = null
@@ -172,36 +161,6 @@ fun DownloadScreen(
                     activeModpackWizardSource = null
                     selectedGameVersion = null
                     pickingLibraryId = null
-                },
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Right))
-            )
-        } else if (tempPageCount > 0) {
-            AndroidView(
-                factory = { ctx ->
-                    FrameLayout(ctx).apply {
-                        layoutParams = ViewGroup.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.MATCH_PARENT
-                        )
-                    }
-                },
-                update = { container ->
-                    val view: View = downloadUI.contentView
-                    if (view.parent !== container) {
-                        (view.parent as? ViewGroup)?.removeView(view)
-                        container.removeAllViews()
-                        container.addView(
-                            view,
-                            ViewGroup.LayoutParams(
-                                ViewGroup.LayoutParams.MATCH_PARENT,
-                                ViewGroup.LayoutParams.MATCH_PARENT
-                            )
-                        )
-                    }
-                    downloadUI.setTabBarVisible(false)
                 },
                 modifier = Modifier
                     .weight(1f)

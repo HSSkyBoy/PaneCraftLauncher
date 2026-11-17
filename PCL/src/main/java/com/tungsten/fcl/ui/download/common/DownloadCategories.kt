@@ -1,7 +1,5 @@
 package com.tungsten.fcl.ui.download.common
 
-import com.tungsten.fcl.ui.download.DownloadUI
-
 /**
  * 下载分类统一条目：同一分类在 CurseForge / Modrinth 的 id，null 表示该源无此分类。
  * 显示名走既有分类本地化（curse_category_* / modrinth_category_*），未命中时用 [fallback]。
@@ -32,10 +30,10 @@ data class DownloadCategory(val cfId: Int?, val mrId: String?, val fallback: Str
         /** 按下载模式取统一分类表（首项恒为「全部」） */
         @JvmStatic
         fun forPageId(pageId: Int): List<DownloadCategory> = when (pageId) {
-            DownloadUI.PAGE_ID_DOWNLOAD_MOD -> MOD
-            DownloadUI.PAGE_ID_DOWNLOAD_MODPACK -> MODPACK
-            DownloadUI.PAGE_ID_DOWNLOAD_RESOURCE_PACK -> RESOURCE_PACK
-            DownloadUI.PAGE_ID_DOWNLOAD_SHADER_PACK -> SHADER
+            15012 -> MOD
+            15011 -> MODPACK
+            15013 -> RESOURCE_PACK
+            15015 -> SHADER
             else -> emptyList()
         }
 

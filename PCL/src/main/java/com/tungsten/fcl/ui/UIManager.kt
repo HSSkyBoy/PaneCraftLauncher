@@ -8,7 +8,6 @@ import androidx.viewpager2.widget.ViewPager2
 import com.mio.util.disableMouseWheelScroll
 import com.tungsten.fcl.R
 import com.tungsten.fcl.ui.controller.ControllerUI
-import com.tungsten.fcl.ui.download.DownloadUI
 import com.tungsten.fcl.ui.manage.ManageUI
 import com.tungsten.fcllibrary.component.ui.FCLBaseUI
 import com.tungsten.fcllibrary.component.ui.FCLCommonUI
@@ -33,7 +32,7 @@ class UIManager(val context: Context, val pager: ViewPager2? = null) {
     private val factories: List<() -> FCLCommonUI> = listOf(
         { object : FCLCommonUI(context, 0) {} },
         { ManageUI(context, R.layout.ui_manage) },
-        { DownloadUI(context, R.layout.ui_download) },
+        { object : FCLCommonUI(context, 0) {} },
         { ControllerUI(context, R.layout.ui_controller) },
         { object : FCLCommonUI(context, 0) {} },
         { object : FCLCommonUI(context, 0) {} }
@@ -72,7 +71,6 @@ class UIManager(val context: Context, val pager: ViewPager2? = null) {
     }
 
     val manageUI: ManageUI get() = getUI(1) as ManageUI
-    val downloadUI: DownloadUI get() = getUI(2) as DownloadUI
     val controllerUI: ControllerUI get() = getUI(3) as ControllerUI
 
     fun switchToSettingPage() {
