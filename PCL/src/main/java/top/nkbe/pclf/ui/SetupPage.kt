@@ -476,6 +476,7 @@ private fun SetupLaunchSection() {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun SetupPersonalizationSection(
     onPickBackground: (isDark: Boolean) -> Unit
@@ -489,21 +490,87 @@ private fun SetupPersonalizationSection(
         stringResource(R.string.settings_launcher_theme_mode_light),
         stringResource(R.string.settings_launcher_theme_mode_dark)
     )
+    var currentThemeColor by remember {
+        mutableIntStateOf(ThemeEngine.getInstance().getTheme().color)
+    }
+    var obsidianUnlocked by remember {
+        mutableStateOf(
+            prefs.getBoolean("pcl_obsidian_unlocked", false) ||
+                currentThemeColor == 0xFF212121.toInt()
+        )
+    }
+    var obsidianTapCount by remember { mutableIntStateOf(0) }
     var fullscreen by remember { mutableStateOf(ThemeEngine.getInstance().getTheme().fullscreen) }
     var animSpeed by remember { mutableIntStateOf(ThemeEngine.getInstance().getTheme().animationSpeed) }
     var customLauncherName by remember {
         mutableStateOf(prefs.getString("custom_launcher_name", context.getString(R.string.app_name)) ?: "")
     }
 
-    // Reserve theme palette section for future authentic PCL theme customization
-    SectionCard(title = stringResource(R.string.pclf_setup_theme_colors)) {
-        Text(
-            text = stringResource(R.string.setup_theme_future_note),
-            color = colors.textSecondary,
-            fontSize = 12.sp,
-            lineHeight = 18.sp
+    val presets = remember {
+        listOf(
+            PclThemePreset(R.string.theme_pcl_cat_blue, 0xFF1976D2.toInt(), 0xFF1565C0.toInt()),
+            PclThemePreset(R.string.theme_pcl_aurora_cyan, 0xFF0097A7.toInt(), 0xFF00838F.toInt()),
+            PclThemePreset(R.string.theme_pcl_forgive_green, 0xFF2E7D32.toInt(), 0xFF388E3C.toInt()),
+            PclThemePreset(R.string.theme_pcl_lucky_gold, 0xFFF9A825.toInt(), 0xFFF57F17.toInt()),
+            PclThemePreset(R.string.theme_pcl_delay_red, 0xFFD32F2F.toInt(), 0xFFC62828.toInt()),
+            PclThemePreset(R.string.theme_pcl_otaku_pink, 0xFFEC407A.toInt(), 0xFFD81B60.toInt()),
+            PclThemePreset(R.string.theme_pcl_mystery_purple, 0xFF7B1FA2.toInt(), 0xFF6A1B9A.toInt())
         )
-        Spacer(Modifier.height(8.dp))
+    }
+    val obsidianPreset = remember {
+        PclThemePreset(R.string.theme_pcl_obsidian_black, 0xFF212121.toInt(), 0xFF2C2C2C.toInt())
+    }
+
+    fun applyPreset(preset: PclThemePreset) {
+        currentThemeColor = preset.lightColor
+        val engine = ThemeEngine.getInstance()
+        engine.applyAndSave(context, preset.lightColor)
+        engine.applyAndSaveDark(context, preset.darkColor)
+    }
+
+    SectionCard(title = stringResource(R.string.pclf_setup_theme_colors)) {
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            presets.forEach { preset ->
+                ThemePresetChip(
+                    label = stringResource(preset.nameRes),
+                    dotColor = Color(preset.lightColor),
+                    selected = currentThemeColor == preset.lightColor,
+                    onClick = { applyPreset(preset) }
+                )
+            }
+            if (obsidianUnlocked) {
+                ThemePresetChip(
+                    label = stringResource(obsidianPreset.nameRes),
+                    dotColor = Color(obsidianPreset.lightColor),
+                    selected = currentThemeColor == obsidianPreset.lightColor,
+                    onClick = { applyPreset(obsidianPreset) }
+                )
+            } else {
+                ThemePresetChip(
+                    label = "???",
+                    dotColor = colors.textSecondary.copy(alpha = 0.35f),
+                    selected = false,
+                    onClick = {
+                        obsidianTapCount++
+                        if (obsidianTapCount >= 3) {
+                            obsidianUnlocked = true
+                            prefs.edit { putBoolean("pcl_obsidian_unlocked", true) }
+                            applyPreset(obsidianPreset)
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.theme_pcl_obsidian_unlocked),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                )
+            }
+        }
+        Spacer(Modifier.height(10.dp))
         Card(
             modifier = Modifier.fillMaxWidth(),
             cornerRadius = 8.dp,
@@ -1045,6 +1112,50 @@ private fun MemoryModeRadioPill(
             color = if (selected) colors.accent else colors.textPrimary,
             fontSize = 12.5.sp,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
+        )
+    }
+}
+
+private data class PclThemePreset(
+    val nameRes: Int,
+    val lightColor: Int,
+    val darkColor: Int
+)
+
+@Composable
+private fun ThemePresetChip(
+    label: String,
+    dotColor: Color,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    val colors = LauncherTheme.colors
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(if (selected) dotColor.copy(alpha = 0.14f) else colors.cardBg)
+            .border(
+                width = if (selected) 1.5.dp else 1.dp,
+                color = if (selected) dotColor else colors.cardBorder,
+                shape = RoundedCornerShape(16.dp)
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 11.dp, vertical = 6.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(14.dp)
+                .clip(CircleShape)
+                .background(dotColor)
+                .border(1.dp, Color.White.copy(alpha = 0.45f), CircleShape)
+        )
+        Spacer(Modifier.width(7.dp))
+        Text(
+            text = label,
+            color = if (selected) colors.textPrimary else colors.textSecondary,
+            fontSize = 12.5.sp,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
         )
     }
 }

@@ -1671,4 +1671,13 @@
     <string name="more_about_credits_title">開源授權與致謝</string>
     <string name="more_about_credits_body">基於 Fold Craft Launcher (FCL)、HMCLCore、Pojav / Amethyst JVM 橋接、Terracotta 陶瓦聯機核心與 Compose Miuix 建構，介面靈感來自 Plain Craft Launcher 2 (PCL2)。</string>
     <string name="press_again_to_exit">再次返回以退出</string>
+    <string name="theme_pcl_cat_blue">龍貓藍</string>
+    <string name="theme_pcl_aurora_cyan">極光青</string>
+    <string name="theme_pcl_forgive_green">原諒綠</string>
+    <string name="theme_pcl_lucky_gold">歐皇金</string>
+    <string name="theme_pcl_delay_red">跳票紅</string>
+    <string name="theme_pcl_otaku_pink">死宅粉</string>
+    <string name="theme_pcl_mystery_purple">神秘紫</string>
+    <string name="theme_pcl_obsidian_black">玄素黑</string>
+    <string name="theme_pcl_obsidian_unlocked">已解鎖隱藏主題：玄素黑！</string>
 </resources>

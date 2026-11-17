@@ -1833,4 +1833,13 @@
     <string name="more_about_credits_title">Credits &amp; Open Source</string>
     <string name="more_about_credits_body">Built on Fold Craft Launcher (FCL), HMCLCore, PojavLauncher / Amethyst JVM bridges, Terracotta P2P multiplayer, and Compose Miuix UI — UI inspired by Plain Craft Launcher 2 (PCL2).</string>
     <string name="press_again_to_exit">Press back again to exit</string>
+    <string name="theme_pcl_cat_blue">Totoro Blue</string>
+    <string name="theme_pcl_aurora_cyan">Aurora Cyan</string>
+    <string name="theme_pcl_forgive_green">Forgive Green</string>
+    <string name="theme_pcl_lucky_gold">Lucky Gold</string>
+    <string name="theme_pcl_delay_red">Delay Red</string>
+    <string name="theme_pcl_otaku_pink">Otaku Pink</string>
+    <string name="theme_pcl_mystery_purple">Mystery Purple</string>
+    <string name="theme_pcl_obsidian_black">Obsidian Black</string>
+    <string name="theme_pcl_obsidian_unlocked">Hidden theme unlocked: Obsidian Black!</string>
 </resources>

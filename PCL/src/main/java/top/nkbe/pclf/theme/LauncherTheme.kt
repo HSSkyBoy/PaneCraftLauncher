@@ -44,22 +44,43 @@ fun buildLauncherColors(seedColorInt: Int, isDark: Boolean): LauncherColors {
     val opaqueSeed = seedColorInt or 0xFF000000.toInt()
     val hsl = FloatArray(3)
     ColorUtils.colorToHSL(opaqueSeed, hsl)
+    val isAchromatic = hsl[1] < 0.08f
 
     val startHsl = hsl.copyOf().apply {
-        this[1] = (this[1] * 1.05f).coerceIn(0.65f, 0.95f)
-        this[2] = (this[2] * 0.98f).coerceIn(0.38f, 0.52f)
+        if (isAchromatic) {
+            this[1] = 0f
+            this[2] = this[2].coerceIn(0.12f, 0.28f)
+        } else {
+            this[1] = (this[1] * 1.05f).coerceIn(0.65f, 0.95f)
+            this[2] = (this[2] * 0.98f).coerceIn(0.38f, 0.52f)
+        }
     }
     val endHsl = hsl.copyOf().apply {
-        this[1] = (this[1] * 1.10f).coerceIn(0.65f, 0.98f)
-        this[2] = (this[2] * 1.05f).coerceIn(0.42f, 0.58f)
+        if (isAchromatic) {
+            this[1] = 0f
+            this[2] = (this[2] + 0.07f).coerceIn(0.18f, 0.36f)
+        } else {
+            this[1] = (this[1] * 1.10f).coerceIn(0.65f, 0.98f)
+            this[2] = (this[2] * 1.05f).coerceIn(0.42f, 0.58f)
+        }
     }
     val lightHsl = hsl.copyOf().apply {
-        this[1] = (this[1] * 1.05f).coerceIn(0.50f, 0.90f)
-        this[2] = (this[2] + 0.16f).coerceIn(0.48f, 0.82f)
+        if (isAchromatic) {
+            this[1] = 0f
+            this[2] = 0.72f
+        } else {
+            this[1] = (this[1] * 1.05f).coerceIn(0.50f, 0.90f)
+            this[2] = (this[2] + 0.16f).coerceIn(0.48f, 0.82f)
+        }
     }
     val canvasHsl = hsl.copyOf().apply {
-        this[1] = (this[1] * 0.35f).coerceIn(0.18f, 0.40f)
-        this[2] = if (isDark) 0.13f else 0.95f
+        if (isAchromatic) {
+            this[1] = 0f
+            this[2] = if (isDark) 0.10f else 0.95f
+        } else {
+            this[1] = (this[1] * 0.35f).coerceIn(0.18f, 0.40f)
+            this[2] = if (isDark) 0.13f else 0.95f
+        }
     }
 
     val accent = Color(opaqueSeed)
