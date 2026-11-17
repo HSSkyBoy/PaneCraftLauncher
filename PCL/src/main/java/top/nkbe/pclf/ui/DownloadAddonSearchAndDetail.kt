@@ -298,15 +298,19 @@ fun AddonSearchScreen(
 
             if (categories.isNotEmpty()) {
                 val categoryLabels = categories.map { cat ->
-                    val localized = getLocalizedText(context, cat.key)
-                    if (localized.startsWith("curse_category_") || localized.startsWith("modrinth_category_")) {
-                        cat.fallback
-                    } else localized
+                    if (cat.isAll) {
+                        context.getString(R.string.curse_category_0)
+                    } else {
+                        val localized = getLocalizedText(context, cat.key)
+                        if (localized.startsWith("curse_category_") || localized.startsWith("modrinth_category_")) {
+                            cat.fallback
+                        } else localized
+                    }
                 }
                 val currentCatIdx = categories.indexOf(selectedCategory).coerceAtLeast(0)
                 AddonFilterPopup(
                     prefix = stringResource(R.string.mods_category),
-                    currentText = categoryLabels.getOrElse(currentCatIdx) { selectedCategory.fallback },
+                    currentText = categoryLabels.getOrElse(currentCatIdx) { context.getString(R.string.curse_category_0) },
                     items = categoryLabels,
                     onSelect = { idx ->
                         selectedCategory = categories[idx]
@@ -689,7 +693,7 @@ fun AddonDetailOverlay(
             ) {
                 SectionCard(title = stringResource(R.string.modpack_description)) {
                     Text(
-                        text = mod.description,
+                        text = mod.description.orEmpty(),
                         color = colors.textPrimary,
                         fontSize = 13.sp,
                         lineHeight = 19.sp
