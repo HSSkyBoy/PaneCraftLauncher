@@ -66,7 +66,7 @@ enum class AppSubpage(@StringRes val titleRes: Int, val uiIndex: Int) {
     MANAGE(R.string.manage, -1),
     CONTROLLER(R.string.pclf_more_controller, 3),
     ACCOUNT(R.string.pclf_more_account, -1),
-    VERSION(R.string.pclf_btn_version_select, 5)
+    VERSION(R.string.pclf_btn_version_select, -1)
 }
 
 @Composable
