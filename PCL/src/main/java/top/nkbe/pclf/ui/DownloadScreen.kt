@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.tungsten.fcl.R
 import com.tungsten.fcl.ui.download.DownloadUI
+import com.tungsten.fclcore.mod.RemoteMod
 import top.nkbe.pclf.theme.LauncherTheme
 import top.nkbe.pclf.ui.components.SidebarNavItem
 
@@ -74,12 +75,14 @@ fun DownloadScreen(
     var selectedGameVersion by remember { mutableStateOf<String?>(null) }
     var pickingLibraryId by remember { mutableStateOf<String?>(null) }
     var activeModpackWizardSource by remember { mutableStateOf<ModpackSource?>(null) }
+    var activeAddonDetail by remember { mutableStateOf<Pair<RemoteMod, DownloadSection>?>(null) }
 
     LaunchedEffect(sectionRequestSeq) {
         section = initialSection
         selectedGameVersion = null
         pickingLibraryId = null
         activeModpackWizardSource = null
+        activeAddonDetail = null
     }
 
     DisposableEffect(downloadUI) {
@@ -96,6 +99,9 @@ fun DownloadScreen(
         onRegisterBackHandler {
             if (activeModpackWizardSource != null) {
                 activeModpackWizardSource = null
+                true
+            } else if (activeAddonDetail != null) {
+                activeAddonDetail = null
                 true
             } else if (downloadUI.canReturn()) {
                 downloadUI.dismissCurrentTempPage()
@@ -135,6 +141,7 @@ fun DownloadScreen(
                         selectedGameVersion = null
                         pickingLibraryId = null
                         activeModpackWizardSource = null
+                        activeAddonDetail = null
                         section = s
                     }
                 )
@@ -156,6 +163,7 @@ fun DownloadScreen(
         )
 
         val wizardSource = activeModpackWizardSource
+        val detail = activeAddonDetail
         if (wizardSource != null) {
             ModpackInstallWizardOverlay(
                 source = wizardSource,
@@ -170,13 +178,7 @@ fun DownloadScreen(
                     .fillMaxHeight()
                     .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Right))
             )
-        } else if (tempPageCount > 0 || section != DownloadSection.GAME) {
-            LaunchedEffect(section, tempPageCount) {
-                downloadUI.setTabBarVisible(false)
-                if (tempPageCount == 0) {
-                    downloadUI.showDownloadPage(section.pageId)
-                }
-            }
+        } else if (tempPageCount > 0) {
             AndroidView(
                 factory = { ctx ->
                     FrameLayout(ctx).apply {
@@ -206,6 +208,16 @@ fun DownloadScreen(
                     .fillMaxHeight()
                     .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Right))
             )
+        } else if (detail != null) {
+            AddonDetailOverlay(
+                mod = detail.first,
+                section = detail.second,
+                onBack = { activeAddonDetail = null },
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Right))
+            )
         } else {
             Box(
                 modifier = Modifier
@@ -213,28 +225,48 @@ fun DownloadScreen(
                     .fillMaxHeight()
                     .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Right))
             ) {
-                val gv = selectedGameVersion
-                if (gv != null) {
-                    GameInstallConfigOverlay(
-                        gameVersion = gv,
-                        pickingLibraryId = pickingLibraryId,
-                        onPickingLibraryIdChange = { pickingLibraryId = it },
-                        onBack = {
-                            selectedGameVersion = null
-                            pickingLibraryId = null
-                        },
-                        onInstallComplete = {
-                            selectedGameVersion = null
-                            pickingLibraryId = null
+                when (section) {
+                    DownloadSection.GAME -> {
+                        val gv = selectedGameVersion
+                        if (gv != null) {
+                            GameInstallConfigOverlay(
+                                gameVersion = gv,
+                                pickingLibraryId = pickingLibraryId,
+                                onPickingLibraryIdChange = { pickingLibraryId = it },
+                                onBack = {
+                                    selectedGameVersion = null
+                                    pickingLibraryId = null
+                                },
+                                onInstallComplete = {
+                                    selectedGameVersion = null
+                                    pickingLibraryId = null
+                                }
+                            )
+                        } else {
+                            GameVersionInstallTab(
+                                onSelectGameVersion = { ver ->
+                                    selectedGameVersion = ver
+                                    pickingLibraryId = null
+                                }
+                            )
                         }
-                    )
-                } else {
-                    GameVersionInstallTab(
-                        onSelectGameVersion = { ver ->
-                            selectedGameVersion = ver
-                            pickingLibraryId = null
-                        }
-                    )
+                    }
+
+                    DownloadSection.FAVORITE -> {
+                        DownloadFavoriteScreen(
+                            onOpenDetail = { mod, targetSection ->
+                                activeAddonDetail = mod to targetSection
+                            }
+                        )
+                    }
+
+                    else -> {
+                        AddonSearchScreen(
+                            section = section,
+                            onSelectMod = { mod -> activeAddonDetail = mod to section },
+                            onOpenModpackWizard = { source -> activeModpackWizardSource = source }
+                        )
+                    }
                 }
             }
         }
