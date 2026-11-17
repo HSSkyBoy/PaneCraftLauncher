@@ -179,9 +179,7 @@ fun LauncherMainScreen(
                             onRegisterBackHandler = onRegisterDownloadBackHandler
                         )
 
-                        MainTab.LINK -> LegacyFclUiHost(
-                            ui = remember(legacyUiProvider) { legacyUiProvider(4) }
-                        )
+                        MainTab.LINK -> MultiplayerScreen()
 
                         MainTab.SETUP -> SetupPage(
                             onPickBackground = onPickBackground,

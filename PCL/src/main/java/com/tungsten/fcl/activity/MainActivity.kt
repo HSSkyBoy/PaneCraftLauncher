@@ -492,7 +492,6 @@ class MainActivity : FCLActivity() {
             }
             val legacyIdx = when (selectedTab) {
                 MainTab.DOWNLOAD -> 2
-                MainTab.LINK -> 4
                 else -> -1
             }
             if (legacyIdx >= 0) {
@@ -514,7 +513,6 @@ class MainActivity : FCLActivity() {
     private fun syncUiManagerFromTab(tab: MainTab) {
         when (tab) {
             MainTab.DOWNLOAD -> uiManager.currentUI = uiManager.downloadUI
-            MainTab.LINK -> uiManager.currentUI = uiManager.multiplayerUI
             else -> {}
         }
     }
