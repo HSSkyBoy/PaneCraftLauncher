@@ -72,9 +72,11 @@ import com.mio.plugin.RendererPlugin
 import com.mio.ui.dialog.RendererEnvDialog
 import com.mio.ui.dialog.VulkanCheckDialog
 import com.tungsten.fcl.R
+import com.tungsten.fcl.setting.Accounts
 import com.tungsten.fcl.setting.ConfigHolder
 import com.tungsten.fcl.setting.DownloadSource
 import com.tungsten.fcl.setting.Profiles
+import com.tungsten.fclcore.auth.microsoft.MicrosoftAccount
 import com.tungsten.fclcore.mod.RemoteModCache
 import com.tungsten.fclcore.util.platform.MemoryUtils
 import com.tungsten.fcllibrary.component.theme.ThemeData
@@ -297,6 +299,17 @@ private fun SetupLaunchSection() {
                 onCheckedChange = {
                     isSystemDriver = it
                     setting.isVKDriverSystem = it
+                    if (it) {
+                        val prefs = context.getSharedPreferences("launcher", Context.MODE_PRIVATE)
+                        if (!prefs.getBoolean("pcl_aurora_unlocked", false)) {
+                            prefs.edit { putBoolean("pcl_aurora_unlocked", true) }
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.theme_pcl_aurora_unlocked),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
                 }
             )
             if (!isSystemDriver && driverNames.isNotEmpty()) {
@@ -500,22 +513,38 @@ private fun SetupPersonalizationSection(
         )
     }
     var obsidianTapCount by remember { mutableIntStateOf(0) }
+    val hasMicrosoftAccount = remember {
+        Accounts.getAccounts().any { it is MicrosoftAccount }
+    }
+    var auroraUnlocked by remember {
+        val unlocked = prefs.getBoolean("pcl_aurora_unlocked", false) ||
+            Profiles.getSelectedProfile().versionSetting.isVKDriverSystem ||
+            currentThemeColor == 0xFF0097A7.toInt()
+        if (unlocked && !prefs.getBoolean("pcl_aurora_unlocked", false)) {
+            prefs.edit { putBoolean("pcl_aurora_unlocked", true) }
+        }
+        mutableStateOf(unlocked)
+    }
     var fullscreen by remember { mutableStateOf(ThemeEngine.getInstance().getTheme().fullscreen) }
     var animSpeed by remember { mutableIntStateOf(ThemeEngine.getInstance().getTheme().animationSpeed) }
     var customLauncherName by remember {
         mutableStateOf(prefs.getString("custom_launcher_name", context.getString(R.string.app_name)) ?: "")
     }
 
-    val presets = remember {
+    val defaultPresets = remember {
         listOf(
             PclThemePreset(R.string.theme_pcl_cat_blue, 0xFF1976D2.toInt(), 0xFF1565C0.toInt()),
-            PclThemePreset(R.string.theme_pcl_aurora_cyan, 0xFF0097A7.toInt(), 0xFF00838F.toInt()),
             PclThemePreset(R.string.theme_pcl_forgive_green, 0xFF2E7D32.toInt(), 0xFF388E3C.toInt()),
             PclThemePreset(R.string.theme_pcl_lucky_gold, 0xFFF9A825.toInt(), 0xFFF57F17.toInt()),
-            PclThemePreset(R.string.theme_pcl_delay_red, 0xFFD32F2F.toInt(), 0xFFC62828.toInt()),
             PclThemePreset(R.string.theme_pcl_otaku_pink, 0xFFEC407A.toInt(), 0xFFD81B60.toInt()),
             PclThemePreset(R.string.theme_pcl_mystery_purple, 0xFF7B1FA2.toInt(), 0xFF6A1B9A.toInt())
         )
+    }
+    val auroraPreset = remember {
+        PclThemePreset(R.string.theme_pcl_aurora_cyan, 0xFF0097A7.toInt(), 0xFF00838F.toInt())
+    }
+    val delayRedPreset = remember {
+        PclThemePreset(R.string.theme_pcl_delay_red, 0xFFD32F2F.toInt(), 0xFFC62828.toInt())
     }
     val obsidianPreset = remember {
         PclThemePreset(R.string.theme_pcl_obsidian_black, 0xFF212121.toInt(), 0xFF2C2C2C.toInt())
@@ -534,12 +563,54 @@ private fun SetupPersonalizationSection(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            presets.forEach { preset ->
+            defaultPresets.forEach { preset ->
                 ThemePresetChip(
                     label = stringResource(preset.nameRes),
                     dotColor = Color(preset.lightColor),
                     selected = currentThemeColor == preset.lightColor,
                     onClick = { applyPreset(preset) }
+                )
+            }
+            if (auroraUnlocked) {
+                ThemePresetChip(
+                    label = stringResource(auroraPreset.nameRes),
+                    dotColor = Color(auroraPreset.lightColor),
+                    selected = currentThemeColor == auroraPreset.lightColor,
+                    onClick = { applyPreset(auroraPreset) }
+                )
+            } else {
+                ThemePresetChip(
+                    label = "???",
+                    dotColor = colors.textSecondary.copy(alpha = 0.35f),
+                    selected = false,
+                    onClick = {
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.theme_pcl_aurora_locked),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                )
+            }
+            if (hasMicrosoftAccount) {
+                ThemePresetChip(
+                    label = stringResource(delayRedPreset.nameRes),
+                    dotColor = Color(delayRedPreset.lightColor),
+                    selected = currentThemeColor == delayRedPreset.lightColor,
+                    onClick = { applyPreset(delayRedPreset) }
+                )
+            } else {
+                ThemePresetChip(
+                    label = "???",
+                    dotColor = colors.textSecondary.copy(alpha = 0.35f),
+                    selected = false,
+                    onClick = {
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.theme_pcl_delay_locked),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 )
             }
             if (obsidianUnlocked) {

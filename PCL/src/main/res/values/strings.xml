@@ -1842,4 +1842,7 @@
     <string name="theme_pcl_mystery_purple">Mystery Purple</string>
     <string name="theme_pcl_obsidian_black">Obsidian Black</string>
     <string name="theme_pcl_obsidian_unlocked">Hidden theme unlocked: Obsidian Black!</string>
+    <string name="theme_pcl_aurora_unlocked">Hidden theme unlocked: Aurora Cyan!</string>
+    <string name="theme_pcl_aurora_locked">Enable \"Use System Vulkan Driver\" to permanently unlock</string>
+    <string name="theme_pcl_delay_locked">Log in with an official Microsoft account to unlock</string>
 </resources>

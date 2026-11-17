@@ -1680,4 +1680,7 @@
     <string name="theme_pcl_mystery_purple">神秘紫</string>
     <string name="theme_pcl_obsidian_black">玄素黑</string>
     <string name="theme_pcl_obsidian_unlocked">已解鎖隱藏主題：玄素黑！</string>
+    <string name="theme_pcl_aurora_unlocked">已永久激活隱藏主題：極光青！</string>
+    <string name="theme_pcl_aurora_locked">開啟「使用系統 Vulkan」後即可永久激活</string>
+    <string name="theme_pcl_delay_locked">需先登入正版微軟帳戶才可使用</string>
 </resources>
