@@ -1,138 +1,152 @@
 package com.tungsten.fcl.activity
 
-import android.annotation.SuppressLint
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
 import android.os.Process
-import android.util.TypedValue
-import android.view.View
 import android.view.WindowManager
+import android.widget.Toast
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.mio.util.showErrorDialog
 import com.tungsten.fcl.R
-import com.tungsten.fcl.databinding.ActivityJvmCrashBinding
 import com.tungsten.fclcore.util.Logging
-import com.tungsten.fclcore.util.StringUtils
 import com.tungsten.fclcore.util.io.FileUtils
 import com.tungsten.fcllibrary.component.FCLActivity
 import com.tungsten.fcllibrary.component.theme.ThemeEngine
 import com.tungsten.fcllibrary.util.findFatalErrorLogPath
 import com.tungsten.fcllibrary.util.shareLogFile
 import com.tungsten.fcllibrary.util.uploadLog
+import top.nkbe.pclf.theme.LauncherTheme
+import top.nkbe.pclf.ui.components.LauncherButton
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.TextField
 import java.io.File
 import java.io.IOException
-import java.util.Arrays
+import java.util.Locale
 import java.util.logging.Level
-import java.util.stream.Collectors
-import kotlin.math.log
 import kotlin.system.exitProcess
 
-class JVMCrashActivity : FCLActivity(), View.OnClickListener {
+class JVMCrashActivity : FCLActivity() {
     private var exitCode = 0
     private lateinit var logPath: String
-    private lateinit var binding: ActivityJvmCrashBinding
     private var fatalErrorLogPath: String? = null
 
-    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityJvmCrashBinding.inflate(layoutInflater)
-        setContentView(binding.root)
         if (!getSharedPreferences("launcher", MODE_PRIVATE).getBoolean("allowScreenshots", false)) {
             window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         }
 
-        binding.restart.setOnClickListener(this)
-        binding.close.setOnClickListener(this)
-        binding.upload.setOnClickListener(this)
-        binding.share.setOnClickListener(this)
+        val extras = intent.extras
+        val isGame = extras?.getBoolean("isGame") ?: true
+        exitCode = extras?.getInt("exitCode") ?: -1
+        logPath = extras?.getString("logPath").orEmpty()
 
-        // 崩溃页背景跟随 FCL 亮暗设置：windowBackground 只在创建时按进程初始模式解析，
-        // :crash 进程冷启动后 applySavedNightMode 才生效，背景不会自动切换，需显式设置并随主题刷新
-        ThemeEngine.registerEvent(binding.root) {
-            binding.root.setBackgroundColor(resolveWindowBackgroundColor())
+        val titleText = if (isGame) {
+            getString(R.string.game_crash_title) + getString(R.string.game_crash_title_add)
+        } else {
+            getString(R.string.jar_executor_crash_title)
         }
 
-
-        val game = intent.extras!!.getBoolean("isGame")
-        exitCode = intent.extras!!.getInt("exitCode")
-        logPath = intent.extras!!.getString("logPath").toString()
-
-        binding.title.text =
-            if (game) getString(R.string.game_crash_title) + getString(R.string.game_crash_title_add) else getString(
-                R.string.jar_executor_crash_title
-            )
-
+        var logContent = ""
+        var fabricError: String? = null
         try {
-            init()
+            logContent = readLog()
+            fabricError = findFabricIncompatibleModsError(logContent)
+            fatalErrorLogPath = findFatalErrorLogPath(logContent)
         } catch (e: IOException) {
             Logging.LOG.log(Level.WARNING, "Failed to read log file", e)
-            binding.error.text = e.message
+            logContent = e.message.orEmpty()
         }
-    }
 
-    /** 解析当前生效主题的窗口背景色，与主界面背景保持一致 */
-    private fun resolveWindowBackgroundColor(): Int {
-        val outValue = TypedValue()
-        if (theme.resolveAttribute(android.R.attr.windowBackground, outValue, true) &&
-            outValue.type >= TypedValue.TYPE_FIRST_COLOR_INT &&
-            outValue.type <= TypedValue.TYPE_LAST_COLOR_INT
-        ) {
-            return outValue.data
-        }
-        // windowBackground 非纯色时退回按亮暗取黑白
-        return if (ThemeEngine.isNightMode(this)) Color.BLACK else Color.WHITE
-    }
+        val seedColor = runCatching { ThemeEngine.getInstance().getTheme().getColor() }
+            .getOrDefault(0xFFD32F2F.toInt())
+        val isDark = runCatching { ThemeEngine.isNightMode(this) }.getOrDefault(false)
 
-    @Throws(IOException::class)
-    private fun init() {
-        val log = readLog()
-        val error = findFabricIncompatibleModsError(log)
-        fatalErrorLogPath = findFatalErrorLogPath(log)
-        error?.let {
-            showErrorDialog(this@JVMCrashActivity, it)
-        }
-        val errorLines =
-            Arrays.stream(log.split("\n".toRegex()).dropLastWhile { it.isEmpty() }
-                .toTypedArray()).collect(
-                Collectors.toList()
-            )
-        errorLines.forEach { it: String? -> binding.error.append(it + "\n") }
-
-    }
-
-    override fun onClick(v: View?) {
-        if (v === binding.restart) {
-            val intent = Intent(this, SplashActivity::class.java)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
-            if (intent.component != null) {
-                intent.setAction(Intent.ACTION_MAIN)
-                intent.addCategory(Intent.CATEGORY_LAUNCHER)
+        setContent {
+            LauncherTheme(seedColorInt = seedColor, darkTheme = isDark) {
+                CrashReportScreen(
+                    title = titleText,
+                    exitCode = exitCode,
+                    fabricError = fabricError,
+                    logText = logContent,
+                    onCopy = {
+                        val cm = getSystemService(CLIPBOARD_SERVICE) as? ClipboardManager
+                        cm?.setPrimaryClip(ClipData.newPlainText("crash_log", logContent))
+                        Toast.makeText(this, getString(R.string.message_copy), Toast.LENGTH_SHORT).show()
+                    },
+                    onRestart = {
+                        val intent = Intent(this, SplashActivity::class.java).apply {
+                            addFlags(
+                                Intent.FLAG_ACTIVITY_NEW_TASK or
+                                    Intent.FLAG_ACTIVITY_CLEAR_TASK or
+                                    Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
+                            )
+                            action = Intent.ACTION_MAIN
+                            addCategory(Intent.CATEGORY_LAUNCHER)
+                        }
+                        finish()
+                        startActivity(intent)
+                        Process.killProcess(Process.myPid())
+                        exitProcess(10)
+                    },
+                    onUpload = {
+                        try {
+                            var fullLog = readLog()
+                            fatalErrorLogPath?.let {
+                                fullLog = "$fullLog\n${readLog(it)}"
+                            }
+                            uploadLog(this, fullLog)
+                        } catch (e: IOException) {
+                            showErrorDialog(this, R.string.upload_failed, e.message)
+                        }
+                    },
+                    onShare = {
+                        shareLogFile(this, File(logPath))
+                    },
+                    onClose = {
+                        finish()
+                        Process.killProcess(Process.myPid())
+                        exitProcess(10)
+                    }
+                )
             }
-            finish()
-            startActivity(intent)
-            Process.killProcess(Process.myPid())
-            exitProcess(10)
-        }
-        if (v === binding.close) {
-            finish()
-            Process.killProcess(Process.myPid())
-            exitProcess(10)
-        }
-        if (v === binding.upload) {
-            try {
-                var log = readLog()
-                fatalErrorLogPath?.let {
-                    log = "$log\n${readLog(it)}"
-                }
-                uploadLog(this, log)
-            } catch (e: IOException) {
-                showErrorDialog(this, R.string.upload_failed, e.message)
-            }
-        }
-        if (v === binding.share) {
-            shareLogFile(this, File(logPath))
         }
     }
 
@@ -149,7 +163,7 @@ class JVMCrashActivity : FCLActivity(), View.OnClickListener {
             """start net\.fabricmc\.loader\.impl\.gui\.FabricGuiEntry\.displayError(.*?)end net\.fabricmc\.loader\.impl\.gui\.FabricGuiEntry\.displayError""",
             RegexOption.DOT_MATCHES_ALL
         )
-        return pattern.find(text)?.groupValues?.get(1)
+        return pattern.find(text)?.groupValues?.get(1)?.trim()
     }
 
     companion object {
@@ -164,6 +178,185 @@ class JVMCrashActivity : FCLActivity(), View.OnClickListener {
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(intent)
+        }
+    }
+}
+
+@Composable
+private fun CrashReportScreen(
+    title: String,
+    exitCode: Int,
+    fabricError: String?,
+    logText: String,
+    onCopy: () -> Unit,
+    onRestart: () -> Unit,
+    onUpload: () -> Unit,
+    onShare: () -> Unit,
+    onClose: () -> Unit
+) {
+    val colors = LauncherTheme.colors
+    var searchQuery by remember { mutableStateOf("") }
+    var onlyErrors by remember { mutableStateOf(false) }
+
+    val lines = remember(logText) { logText.lines() }
+    val filteredLines = remember(lines, searchQuery, onlyErrors) {
+        lines.filter { line ->
+            val matchError = !onlyErrors ||
+                line.contains("ERROR", ignoreCase = true) ||
+                line.contains("FATAL", ignoreCase = true) ||
+                line.contains("Exception", ignoreCase = true) ||
+                line.contains("Caused by", ignoreCase = true)
+            val matchQuery = searchQuery.isBlank() ||
+                line.lowercase(Locale.getDefault()).contains(searchQuery.trim().lowercase(Locale.getDefault()))
+            matchError && matchQuery
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(colors.canvasTint)
+            .systemBarsPadding()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Brush.horizontalGradient(listOf(colors.titleBarStart, colors.titleBarEnd)))
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text(
+                text = title,
+                color = Color.White,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
+            )
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(Color.White.copy(alpha = 0.2f))
+                    .padding(horizontal = 8.dp, vertical = 3.dp)
+            ) {
+                Text(
+                    text = "Exit $exitCode",
+                    color = Color.White,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            if (!fabricError.isNullOrBlank()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0x22D32F2F))
+                        .border(1.dp, Color(0xFFD32F2F), RoundedCornerShape(8.dp))
+                        .padding(12.dp)
+                ) {
+                    Text(
+                        text = fabricError,
+                        color = colors.textPrimary,
+                        fontSize = 12.5.sp,
+                        lineHeight = 18.sp
+                    )
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(modifier = Modifier.weight(1f)) {
+                    TextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        label = stringResource(R.string.search),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                LauncherButton(
+                    text = if (onlyErrors) "All" else "Errors",
+                    onClick = { onlyErrors = !onlyErrors },
+                    accentStyle = onlyErrors
+                )
+                LauncherButton(
+                    text = stringResource(R.string.message_copy),
+                    onClick = onCopy,
+                    accentStyle = false
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(colors.cardBg)
+                    .border(1.dp, colors.cardBorder, RoundedCornerShape(8.dp))
+                    .padding(10.dp)
+            ) {
+                SelectionContainer {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(bottom = 6.dp),
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        items(filteredLines) { line ->
+                            val isErr = line.contains("ERROR", ignoreCase = true) ||
+                                line.contains("FATAL", ignoreCase = true) ||
+                                line.contains("Exception", ignoreCase = true)
+                            Text(
+                                text = line,
+                                color = if (isErr) Color(0xFFD32F2F) else colors.textPrimary,
+                                fontSize = 11.5.sp,
+                                fontFamily = FontFamily.Monospace,
+                                lineHeight = 16.sp
+                            )
+                        }
+                    }
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
+            ) {
+                LauncherButton(
+                    text = stringResource(R.string.crash_reporter_restart),
+                    onClick = onRestart,
+                    accentStyle = false
+                )
+                LauncherButton(
+                    text = stringResource(R.string.crash_reporter_upload),
+                    onClick = onUpload,
+                    accentStyle = false
+                )
+                LauncherButton(
+                    text = stringResource(R.string.crash_reporter_share),
+                    onClick = onShare,
+                    accentStyle = true
+                )
+                LauncherButton(
+                    text = stringResource(R.string.crash_reporter_close),
+                    onClick = onClose,
+                    accentStyle = false
+                )
+            }
         }
     }
 }
