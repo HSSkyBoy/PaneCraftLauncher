@@ -232,7 +232,6 @@ class MainActivity : FCLActivity() {
                     showDownloadPanel = showDownloadPanel,
                     appVersionName = appVersion,
                     manageUI = uiManager.manageUI,
-                    legacyUiProvider = { pos -> uiManager.getUI(pos) },
                     onSelectTab = { tab ->
                         activeSubpage = null
                         selectedTab = tab

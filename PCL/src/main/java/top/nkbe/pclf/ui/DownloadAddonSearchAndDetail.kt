@@ -27,6 +27,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -48,6 +50,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -70,6 +73,7 @@ import com.tungsten.fcl.ui.download.common.DownloadCategory
 import com.tungsten.fcl.ui.download.common.DownloadSearchViewModel
 import com.tungsten.fcl.ui.download.favorite.handleFavoriteClick
 import com.tungsten.fcl.ui.version.Versions
+import com.tungsten.fclcore.mod.ModDependenciesResolver
 import com.tungsten.fclcore.mod.ModLoaderType
 import com.tungsten.fclcore.mod.RemoteMod
 import com.tungsten.fclcore.mod.RemoteModRepository
@@ -234,6 +238,8 @@ fun AddonSearchScreen(
                     onValueChange = { searchQuery = it },
                     label = stringResource(R.string.search),
                     singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = { executeSearch(0) }),
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -777,7 +783,7 @@ fun AddonDetailOverlay(
                                     .border(1.dp, colors.cardBorder, RoundedCornerShape(8.dp))
                                     .clickable {
                                         scope.launch {
-                                            downloadAddonVersion(context, section, ver)
+                                            downloadAddonVersion(context, section, repository, ver)
                                         }
                                     }
                                     .padding(horizontal = 12.dp, vertical = 10.dp),
@@ -812,7 +818,7 @@ fun AddonDetailOverlay(
                                     text = stringResource(R.string.download),
                                     onClick = {
                                         scope.launch {
-                                            downloadAddonVersion(context, section, ver)
+                                            downloadAddonVersion(context, section, repository, ver)
                                         }
                                     },
                                     accentStyle = true,
@@ -967,9 +973,10 @@ private fun RemoteMod.toFavoriteEntity(section: DownloadSection): DownloadFavori
     )
 }
 
-private fun downloadAddonVersion(
+private suspend fun downloadAddonVersion(
     context: Context,
     section: DownloadSection,
+    repository: RemoteModRepository,
     version: RemoteMod.Version
 ) {
     val profile = Profiles.getSelectedProfile()
@@ -991,7 +998,47 @@ private fun downloadAddonVersion(
         profile.repository.baseDirectory.toPath()
     }
     val destDir = runDir.resolve(subdir)
-    val filename = version.file.filename
+
+    if (section == DownloadSection.MOD) {
+        Toast.makeText(context, "${context.getString(R.string.download)}: ${version.file.filename}", Toast.LENGTH_SHORT).show()
+        val result = withContext(Dispatchers.IO) {
+            ModDependenciesResolver.resolve(version, destDir, repository)
+        }
+        if (!result.rootInstalled) {
+            submitAddonFileDownload(context, version.file.filename, version, destDir)
+        } else {
+            Toast.makeText(context, context.getString(R.string.mods_already_installed), Toast.LENGTH_SHORT).show()
+        }
+        result.dependencies.forEach { dep ->
+            submitAddonFileDownload(context, dep.version.file.filename, dep.version, destDir)
+        }
+        if (result.installedSkipped > 0) {
+            Toast.makeText(
+                context,
+                context.getString(R.string.mods_installed_skipped_note, result.installedSkipped),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+        if (result.failedTitles.isNotEmpty()) {
+            Toast.makeText(
+                context,
+                "${context.getString(R.string.download_failed)}: ${result.failedTitles.joinToString(", ")}",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+        return
+    }
+
+    submitAddonFileDownload(context, version.file.filename, version, destDir)
+    Toast.makeText(context, "${context.getString(R.string.download)}: ${version.file.filename}", Toast.LENGTH_SHORT).show()
+}
+
+private fun submitAddonFileDownload(
+    context: Context,
+    filename: String,
+    version: RemoteMod.Version,
+    destDir: Path
+) {
     val dest = destDir.resolve(filename).toFile()
     val fileTask = FileDownloadTask(NetworkUtils.toURL(version.file.url), dest, version.file.integrityCheck)
     fileTask.name = filename
@@ -1005,5 +1052,4 @@ private fun downloadAddonVersion(
     }.executor()
     DownloadManager.submit(filename, task, executor)
     executor.start()
-    Toast.makeText(context, "${context.getString(R.string.download)}: $filename", Toast.LENGTH_SHORT).show()
 }

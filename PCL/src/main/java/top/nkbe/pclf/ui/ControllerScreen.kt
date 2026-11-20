@@ -129,6 +129,7 @@ fun ControllerScreen(
     }
     var editingDialogController by remember { mutableStateOf<Pair<Controller, Boolean>?>(null) }
     var copyingSourceController by remember { mutableStateOf<Controller?>(null) }
+    var pendingDeleteController by remember { mutableStateOf<Controller?>(null) }
     var selectedRepoItem by remember { mutableStateOf<Pair<ControllerIndex, Int>?>(null) }
 
     DisposableEffect(Unit) {
@@ -257,9 +258,7 @@ fun ControllerScreen(
                         selectedController = selectedController,
                         onSelect = { selectedController = it },
                         onDelete = { controller ->
-                            Controllers.removeControllers(controller)
-                            if (selectedController == controller) selectedController = null
-                            controllerRefreshTick++
+                            pendingDeleteController = controller
                         },
                         onEditKeys = { controller ->
                             val intent = Intent(context, ControllerActivity::class.java)
@@ -348,6 +347,42 @@ fun ControllerScreen(
                 copyingSourceController = null
             }
         )
+    }
+
+    pendingDeleteController?.let { target ->
+        WindowDialog(
+            show = true,
+            title = target.name,
+            onDismissRequest = { pendingDeleteController = null }
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = stringResource(R.string.control_delete),
+                    color = colors.textPrimary,
+                    fontSize = 13.5.sp
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.End)
+                ) {
+                    LauncherButton(
+                        text = stringResource(R.string.dialog_negative),
+                        onClick = { pendingDeleteController = null },
+                        accentStyle = false
+                    )
+                    LauncherButton(
+                        text = stringResource(R.string.dialog_positive),
+                        onClick = {
+                            Controllers.removeControllers(target)
+                            if (selectedController == target) selectedController = null
+                            controllerRefreshTick++
+                            pendingDeleteController = null
+                        },
+                        accentStyle = true
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -871,6 +906,33 @@ private fun ControllerRepoDetailOverlay(
                             color = colors.textSecondary,
                             fontSize = 12.5.sp
                         )
+                    }
+                }
+                val history = versionInfo?.history.orEmpty()
+                if (history.isNotEmpty()) {
+                    SectionCard(title = stringResource(R.string.control_download_history)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            history.forEach { oldVer ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = oldVer.versionName,
+                                        color = colors.textPrimary,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    LauncherButton(
+                                        text = stringResource(R.string.download),
+                                        onClick = { startDownload(oldVer.versionCode) },
+                                        accentStyle = false,
+                                        height = 28.dp
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }

@@ -1,9 +1,6 @@
 package top.nkbe.pclf.ui
 
 import android.graphics.drawable.BitmapDrawable
-import android.view.View
-import android.view.ViewGroup
-import android.widget.FrameLayout
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -45,13 +42,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import com.mio.download.DownloadTaskInfo
 import com.tungsten.fcl.R
 import com.tungsten.fcl.ui.manage.ManageUI
 import java.io.File
 import com.tungsten.fclcore.auth.Account
-import com.tungsten.fcllibrary.component.ui.FCLCommonUI
 import top.nkbe.pclf.theme.LauncherTheme
 import top.nkbe.pclf.ui.components.LauncherButton
 import top.nkbe.pclf.ui.components.MainTab
@@ -89,7 +84,6 @@ fun LauncherMainScreen(
     showDownloadPanel: Boolean,
     appVersionName: String,
     manageUI: ManageUI,
-    legacyUiProvider: (Int) -> FCLCommonUI,
     onSelectTab: (MainTab) -> Unit,
     onOpenSubpage: (AppSubpage) -> Unit,
     onOpenAccountWithSection: (AccountSection) -> Unit,
@@ -233,10 +227,6 @@ fun LauncherMainScreen(
                             tabRequestSeq = controllerTabRequestSeq,
                             onRegisterBackHandler = onRegisterControllerBackHandler
                         )
-
-                        is AppSubpage -> LegacyFclUiHost(
-                            ui = remember(target, legacyUiProvider) { legacyUiProvider(target.uiIndex) }
-                        )
                     }
                 }
             }
@@ -341,34 +331,4 @@ fun LauncherMainScreen(
             }
         }
     }
-}
-
-@Composable
-private fun LegacyFclUiHost(
-    ui: FCLCommonUI,
-    modifier: Modifier = Modifier
-) {
-    AndroidView(
-        factory = { ctx ->
-            FrameLayout(ctx).apply {
-                layoutParams = ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
-                )
-            }
-        },
-        update = { container ->
-            val view: View = ui.contentView
-            if (view.parent !== container) {
-                (view.parent as? ViewGroup)?.removeView(view)
-                container.removeAllViews()
-                container.addView(
-                    view,
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
-                )
-            }
-        },
-        modifier = modifier.fillMaxSize()
-    )
 }

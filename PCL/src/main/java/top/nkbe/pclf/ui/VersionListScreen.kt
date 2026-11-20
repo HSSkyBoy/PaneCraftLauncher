@@ -380,6 +380,9 @@ fun VersionListScreen(
                                     profile.selectedVersion = entry.id
                                     activity.navigateToManage(0)
                                 },
+                                onRename = {
+                                    Versions.renameVersion(context, profile, entry.id)
+                                },
                                 onDelete = {
                                     Versions.deleteVersion(context, profile, entry.id)
                                 }
@@ -515,6 +518,7 @@ private fun VersionEntryCard(
     onTogglePin: () -> Unit,
     onMovePin: (Int) -> Unit,
     onOpenManage: () -> Unit,
+    onRename: () -> Unit,
     onDelete: () -> Unit
 ) {
     val colors = LauncherTheme.colors
@@ -632,13 +636,16 @@ private fun VersionEntryCard(
                 tint = if (pinned) colors.accent else colors.textSecondary,
                 onClick = onTogglePin
             )
-            if (hasCustomSetting) {
-                VersionActionIcon(
-                    iconRes = R.drawable.ic_baseline_settings_24,
-                    tint = colors.accent,
-                    onClick = onOpenManage
-                )
-            }
+            VersionActionIcon(
+                iconRes = R.drawable.ic_baseline_edit_24,
+                tint = colors.textSecondary,
+                onClick = onRename
+            )
+            VersionActionIcon(
+                iconRes = R.drawable.ic_baseline_settings_24,
+                tint = if (hasCustomSetting) colors.accent else colors.textSecondary,
+                onClick = onOpenManage
+            )
             VersionActionIcon(
                 iconRes = R.drawable.ic_baseline_delete_24,
                 tint = colors.textSecondary,
