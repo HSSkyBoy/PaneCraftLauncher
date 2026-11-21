@@ -1845,4 +1845,10 @@
     <string name="theme_pcl_aurora_unlocked">Hidden theme unlocked: Aurora Cyan!</string>
     <string name="theme_pcl_aurora_locked">Enable \"Use System Vulkan Driver\" to permanently unlock</string>
     <string name="theme_pcl_delay_locked">Log in with an official Microsoft account to unlock</string>
+    <string name="crash_diag_title">Possible Cause &amp; Fix</string>
+    <string name="crash_diag_oom">Out of memory (OOM): Try increasing game memory in Settings → Launch (e.g. 2048–4096 MB) or removing heavy mods.</string>
+    <string name="crash_diag_java">Java version mismatch: The selected Java runtime is incompatible. Switch to Java 17 or Java 21 in Settings.</string>
+    <string name="crash_diag_render">Graphics / Renderer error: Try switching renderer (HolyGL4ES / VirGL / Zink) or checking Vulkan driver settings.</string>
+    <string name="crash_diag_dep">Missing required dependency: Check the error details above and install the missing library mod.</string>
+    <string name="crash_diag_mixin">Mixin injection conflict: Usually caused by incompatible mods or shader/OptiFine conflicts.</string>
 </resources>

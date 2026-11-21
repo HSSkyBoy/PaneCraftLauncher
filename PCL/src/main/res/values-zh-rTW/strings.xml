@@ -1683,4 +1683,10 @@
     <string name="theme_pcl_aurora_unlocked">已永久激活隱藏主題：極光青！</string>
     <string name="theme_pcl_aurora_locked">開啟「使用系統 Vulkan」後即可永久激活</string>
     <string name="theme_pcl_delay_locked">需先登入正版微軟帳戶才可使用</string>
+    <string name="crash_diag_title">智慧診斷建議</string>
+    <string name="crash_diag_oom">記憶體不足 (OOM)：請在「設定 → 啟動設定」調高遊戲記憶體（建議 2048–4096 MB）或減少大型模組。</string>
+    <string name="crash_diag_java">Java 版本不相符：當前選擇的 Java 版本過舊或不相容，請在設定中切換至 Java 17 或 Java 21。</string>
+    <string name="crash_diag_render">圖形渲染異常：請嘗試更換渲染器（如 HolyGL4ES / VirGL / Zink）或檢查 Vulkan 驅動設定。</string>
+    <string name="crash_diag_dep">缺少必要前置模組：請查看上方提示或日誌末尾，補齊缺失的前置庫。</string>
+    <string name="crash_diag_mixin">Mixin 注入衝突：通常由不相容的模組或光影/最佳化模組衝突引起。</string>
 </resources>

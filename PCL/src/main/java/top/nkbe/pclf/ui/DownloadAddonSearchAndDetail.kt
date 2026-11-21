@@ -612,6 +612,13 @@ fun AddonDetailOverlay(
     var versions by remember(mod.modID) { mutableStateOf<List<RemoteMod.Version>>(emptyList()) }
     var screenshots by remember(mod.modID) { mutableStateOf<List<RemoteMod.Screenshot>>(emptyList()) }
     var loadingVersions by remember(mod.modID) { mutableStateOf(true) }
+    val currentMcVersion = remember {
+        val profile = Profiles.getSelectedProfile()
+        val sel = profile.selectedVersion
+        if (!sel.isNullOrBlank() && profile.repository.hasVersion(sel)) {
+            profile.repository.getGameVersion(sel).orElse(null)
+        } else null
+    }
     var versionFilter by remember(mod.modID) { mutableStateOf("") }
 
     LaunchedEffect(mod.modID) {
@@ -748,15 +755,40 @@ fun AddonDetailOverlay(
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = stringResource(R.string.download),
                         color = colors.textPrimary,
                         fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.weight(1f)
                     )
+                    if (!currentMcVersion.isNullOrBlank()) {
+                        val isFilteringCurrent = versionFilter.equals(currentMcVersion, ignoreCase = true)
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(if (isFilteringCurrent) colors.accent else colors.cardBg)
+                                .border(
+                                    1.dp,
+                                    if (isFilteringCurrent) colors.accent else colors.cardBorder,
+                                    RoundedCornerShape(6.dp)
+                                )
+                                .clickable {
+                                    versionFilter = if (isFilteringCurrent) "" else currentMcVersion
+                                }
+                                .padding(horizontal = 8.dp, vertical = 5.dp)
+                        ) {
+                            Text(
+                                text = currentMcVersion,
+                                color = if (isFilteringCurrent) Color.White else colors.accent,
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
                     AddonFilterPopup(
                         prefix = stringResource(R.string.version_game),
                         currentText = versionFilter.ifBlank { stringResource(R.string.curse_category_0) },
@@ -790,7 +822,7 @@ fun AddonDetailOverlay(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
-                                Column(modifier = Modifier.weight(1f)) {
+                                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                                     Text(
                                         text = ver.name,
                                         color = colors.textPrimary,
@@ -799,20 +831,41 @@ fun AddonDetailOverlay(
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
-                                    val sub = buildString {
-                                        append(ver.versionType.name)
-                                        if (ver.gameVersions.isNotEmpty()) {
-                                            append("  •  ")
-                                            append(ver.gameVersions.take(4).joinToString(", "))
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        val badgeColor = when (ver.versionType) {
+                                            RemoteMod.VersionType.Release -> Color(0xFF2E7D32)
+                                            RemoteMod.VersionType.Beta -> Color(0xFFEF6C00)
+                                            RemoteMod.VersionType.Alpha -> Color(0xFFC62828)
+                                        }
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(badgeColor.copy(alpha = 0.14f))
+                                                .padding(horizontal = 5.dp, vertical = 1.dp)
+                                        ) {
+                                            Text(
+                                                text = ver.versionType.name,
+                                                color = badgeColor,
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                        }
+                                        val loaderText = ver.loaders.take(3).joinToString("/") { it.name }
+                                        val gameText = ver.gameVersions.take(4).joinToString(", ")
+                                        val meta = listOf(loaderText, gameText).filter { it.isNotBlank() }.joinToString("  •  ")
+                                        if (meta.isNotBlank()) {
+                                            Text(
+                                                text = meta,
+                                                color = colors.textSecondary,
+                                                fontSize = 11.sp,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
                                         }
                                     }
-                                    Text(
-                                        text = sub,
-                                        color = colors.textSecondary,
-                                        fontSize = 11.5.sp,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
                                 }
                                 LauncherButton(
                                     text = stringResource(R.string.download),

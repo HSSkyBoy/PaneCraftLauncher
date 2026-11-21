@@ -1692,4 +1692,10 @@
     <string name="theme_pcl_aurora_unlocked">已永久激活隐藏主题：极光青！</string>
     <string name="theme_pcl_aurora_locked">开启「使用系统 Vulkan」后即可永久激活</string>
     <string name="theme_pcl_delay_locked">需先登录正版微软账户才可使用</string>
+    <string name="crash_diag_title">智能诊断建议</string>
+    <string name="crash_diag_oom">内存不足 (OOM)：请在「设置 → 启动设置」调高游戏内存（建议 2048–4096 MB）或减少大型模组。</string>
+    <string name="crash_diag_java">Java 版本不匹配：当前选择的 Java 版本过旧或不兼容，请在设置中切换至 Java 17 或 Java 21。</string>
+    <string name="crash_diag_render">图形渲染异常：请尝试更换渲染器（如 HolyGL4ES / VirGL / Zink）或检查 Vulkan 驱动设置。</string>
+    <string name="crash_diag_dep">缺少必要前置模组：请查看上方提示或日志末尾，补全缺失的前置库。</string>
+    <string name="crash_diag_mixin">Mixin 注入冲突：通常由不兼容的模组或光影/优化模组冲突引起。</string>
 </resources>

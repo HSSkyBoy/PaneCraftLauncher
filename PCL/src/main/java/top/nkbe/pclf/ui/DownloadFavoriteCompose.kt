@@ -51,16 +51,27 @@ import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.mio.data.FavoriteManager
 import com.mio.data.favorite.DownloadFavoriteEntity
+import com.mio.download.DownloadManager
 import com.mio.util.format
 import com.tungsten.fcl.R
-import com.tungsten.fcl.setting.DownloadProviders
+import com.tungsten.fcl.setting.Profiles
+import com.tungsten.fclcore.download.LibraryAnalyzer
+import com.tungsten.fclcore.mod.ModLoaderType
 import com.tungsten.fclcore.mod.RemoteMod
 import com.tungsten.fclcore.mod.RemoteModRepository
 import com.tungsten.fclcore.mod.curse.CurseForgeRemoteModRepository
 import com.tungsten.fclcore.mod.modrinth.ModrinthRemoteModRepository
+import com.tungsten.fclcore.task.FileDownloadTask
+import com.tungsten.fclcore.task.Schedulers
+import com.tungsten.fclcore.task.Task
+import com.tungsten.fclcore.util.io.NetworkUtils
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.nio.file.Path
+import java.util.stream.Collectors
 import top.nkbe.pclf.theme.LauncherTheme
 import top.nkbe.pclf.ui.components.LauncherButton
 import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
@@ -89,6 +100,8 @@ fun DownloadFavoriteScreen(
     var searchQuery by remember { mutableStateOf("") }
     var showGroupDialog by remember { mutableStateOf(false) }
     var loadingEntityId by remember { mutableStateOf<String?>(null) }
+    var batchResolving by remember { mutableStateOf(false) }
+    var batchMatchedResult by remember { mutableStateOf<BatchModResolveResult?>(null) }
 
     val filteredFavorites = remember(favorites, selectedGroupId, searchQuery) {
         var list = favorites
@@ -129,6 +142,65 @@ fun DownloadFavoriteScreen(
                 text = stringResource(R.string.favorite_group_manage),
                 onClick = { showGroupDialog = true },
                 accentStyle = false
+            )
+            LauncherButton(
+                text = if (batchResolving) "..." else stringResource(R.string.favorite_download_all),
+                enabled = !batchResolving,
+                accentStyle = true,
+                onClick = {
+                    if (batchResolving) {
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.favorite_operation_in_progress),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@LauncherButton
+                    }
+                    val profile = Profiles.getSelectedProfile()
+                    val selected = profile.selectedVersion
+                    if (selected.isNullOrBlank() || !profile.repository.hasVersion(selected)) {
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.favorite_batch_no_version),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@LauncherButton
+                    }
+                    val mods = filteredFavorites.filter { it.type == RemoteModRepository.Type.MOD.name }
+                    if (mods.isEmpty()) {
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.favorite_batch_no_mods),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@LauncherButton
+                    }
+                    batchResolving = true
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.favorite_batch_parsing),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    scope.launch {
+                        val result = resolveBatchModsForVersion(profile, selected, mods)
+                        batchResolving = false
+                        if (result == null) {
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.favorite_batch_failed),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else if (result.matched.isEmpty()) {
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.favorite_batch_none_matched),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else {
+                            batchMatchedResult = result
+                        }
+                    }
+                }
             )
         }
 
@@ -231,6 +303,94 @@ fun DownloadFavoriteScreen(
         FavoriteGroupManageComposeDialog(
             onDismiss = { showGroupDialog = false }
         )
+    }
+
+    batchMatchedResult?.let { batch ->
+        WindowDialog(
+            show = true,
+            title = stringResource(R.string.favorite_download_all),
+            onDismissRequest = { batchMatchedResult = null }
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                if (batch.skippedCount > 0) {
+                    Text(
+                        text = stringResource(R.string.favorite_batch_skipped_note, batch.skippedCount),
+                        color = colors.textSecondary,
+                        fontSize = 12.sp
+                    )
+                }
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(220.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    items(batch.matched, key = { it.first.id }) { (entity, ver) ->
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(colors.cardBg)
+                                .border(1.dp, colors.cardBorder, RoundedCornerShape(6.dp))
+                                .padding(horizontal = 10.dp, vertical = 7.dp)
+                        ) {
+                            Text(
+                                text = entity.title,
+                                color = colors.textPrimary,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = ver.file.filename,
+                                color = colors.textSecondary,
+                                fontSize = 11.5.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.End)
+                ) {
+                    LauncherButton(
+                        text = stringResource(R.string.dialog_negative),
+                        onClick = { batchMatchedResult = null },
+                        accentStyle = false
+                    )
+                    LauncherButton(
+                        text = "${stringResource(R.string.favorite_batch_download)} (${batch.matched.size})",
+                        accentStyle = true,
+                        onClick = {
+                            val modsDir: Path = batch.modsDir
+                            batch.matched.forEach { (_, ver) ->
+                                val filename = ver.file.filename
+                                val dest = modsDir.resolve(filename).toFile()
+                                val fileTask = FileDownloadTask(
+                                    NetworkUtils.toURL(ver.file.url),
+                                    dest,
+                                    ver.file.integrityCheck
+                                )
+                                fileTask.name = filename
+                                val task = Task.composeAsync<Void> { fileTask }
+                                val executor = task.whenComplete(Schedulers.androidUIThread()) { }.executor()
+                                DownloadManager.submit(filename, task, executor)
+                                executor.start()
+                            }
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.favorite_batch_queued, batch.matched.size),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            batchMatchedResult = null
+                        }
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -495,3 +655,53 @@ private suspend fun resolveFavoriteMod(entity: DownloadFavoriteEntity): Result<P
             mod to section
         }
     }
+
+private data class BatchModResolveResult(
+    val modsDir: Path,
+    val matched: List<Pair<DownloadFavoriteEntity, RemoteMod.Version>>,
+    val skippedCount: Int
+)
+
+private suspend fun resolveBatchModsForVersion(
+    profile: com.tungsten.fcl.setting.Profile,
+    versionId: String,
+    mods: List<DownloadFavoriteEntity>
+): BatchModResolveResult? = withContext(Dispatchers.IO) {
+    runCatching {
+        val mcVersion = profile.repository.getGameVersion(versionId).orElse(null) ?: return@runCatching null
+        val resolvedVersion = profile.repository.getResolvedPreservingPatchesVersion(versionId)
+        val analyzer = LibraryAnalyzer.analyze(resolvedVersion, mcVersion)
+        val installedLoaders = buildSet {
+            if (analyzer.has(LibraryAnalyzer.LibraryType.FORGE)) add(ModLoaderType.FORGE)
+            if (analyzer.has(LibraryAnalyzer.LibraryType.NEO_FORGE)) add(ModLoaderType.NEO_FORGED)
+            if (analyzer.has(LibraryAnalyzer.LibraryType.FABRIC)) add(ModLoaderType.FABRIC)
+            if (analyzer.has(LibraryAnalyzer.LibraryType.QUILT)) add(ModLoaderType.QUILT)
+        }
+        val modsDir = profile.repository.getRunDirectory(versionId).toPath().resolve("mods")
+
+        val pairs = mods.map { entity ->
+            async {
+                runCatching {
+                    val isModrinth = entity.source.equals("MODRINTH", ignoreCase = true)
+                    val repo = if (isModrinth) ModrinthRemoteModRepository.MODS else CurseForgeRemoteModRepository.MODS
+                    val mod = repo.getModById(entity.modId)
+                    val versions = mod.data.loadVersions(repo).collect(Collectors.toList())
+                    val picked = versions.firstOrNull { v ->
+                        val gameMatch = v.gameVersions.any { it.equals(mcVersion, ignoreCase = true) }
+                        val loaderMatch = installedLoaders.isEmpty() || v.loaders.isEmpty() ||
+                            v.loaders.any { it in installedLoaders }
+                        gameMatch && loaderMatch
+                    }
+                    entity to picked
+                }.getOrNull()
+            }
+        }.awaitAll()
+
+        val matched = pairs.mapNotNull { p ->
+            val ver = p?.second ?: return@mapNotNull null
+            p.first to ver
+        }
+        val skipped = mods.size - matched.size
+        BatchModResolveResult(modsDir, matched, skipped)
+    }.getOrNull()
+}

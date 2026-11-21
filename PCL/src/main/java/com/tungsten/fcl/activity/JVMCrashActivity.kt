@@ -199,6 +199,37 @@ private fun CrashReportScreen(
     var onlyErrors by remember { mutableStateOf(false) }
 
     val lines = remember(logText) { logText.lines() }
+    val diagnostics = remember(logText) {
+        buildList {
+            if (logText.contains("OutOfMemoryError", ignoreCase = true) ||
+                logText.contains("Java heap space", ignoreCase = true)
+            ) {
+                add(R.string.crash_diag_oom)
+            }
+            if (logText.contains("UnsupportedClassVersionError", ignoreCase = true) ||
+                logText.contains("class file version", ignoreCase = true)
+            ) {
+                add(R.string.crash_diag_java)
+            }
+            if (logText.contains("GLFW error", ignoreCase = true) ||
+                logText.contains("EGL_", ignoreCase = true) ||
+                logText.contains("GL_INVALID_OPERATION", ignoreCase = true) ||
+                logText.contains("VkResult", ignoreCase = true)
+            ) {
+                add(R.string.crash_diag_render)
+            }
+            if (logText.contains("MissingModsException", ignoreCase = true) ||
+                logText.contains("Missing or unsupported mandatory dependencies", ignoreCase = true)
+            ) {
+                add(R.string.crash_diag_dep)
+            }
+            if (logText.contains("MixinApplyError", ignoreCase = true) ||
+                logText.contains("MixinTransformerError", ignoreCase = true)
+            ) {
+                add(R.string.crash_diag_mixin)
+            }
+        }
+    }
     val filteredLines = remember(lines, searchQuery, onlyErrors) {
         lines.filter { line ->
             val matchError = !onlyErrors ||
@@ -272,6 +303,33 @@ private fun CrashReportScreen(
                         fontSize = 12.5.sp,
                         lineHeight = 18.sp
                     )
+                }
+            }
+
+            if (diagnostics.isNotEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(colors.accent.copy(alpha = 0.10f))
+                        .border(1.dp, colors.accent.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                        .padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.crash_diag_title),
+                        color = colors.accent,
+                        fontSize = 12.5.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    diagnostics.forEach { msgRes ->
+                        Text(
+                            text = "• ${stringResource(msgRes)}",
+                            color = colors.textPrimary,
+                            fontSize = 12.sp,
+                            lineHeight = 17.sp
+                        )
+                    }
                 }
             }
 
