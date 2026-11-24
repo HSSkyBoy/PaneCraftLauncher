@@ -832,6 +832,10 @@ class MainActivity : FCLActivity() {
                 doLaunchVersion(profile, versionId)
                 return@launch
             }
+            if (versionSetting.graphicsBackend == "opengl") {
+                doLaunchVersion(profile, versionId)
+                return@launch
+            }
             val useCustomDriver = !versionSetting.isVKDriverSystem
             val driver = if (useCustomDriver) {
                 DriverPlugin.driverList.find { it.driver == versionSetting.driver }
@@ -843,9 +847,20 @@ class MainActivity : FCLActivity() {
                 VulkanEnsureResult.NEED_CHECK ->
                     promptVulkanCheck(gameVersion, useCustomDriver, driver, profile, versionId)
                 VulkanEnsureResult.UNSUPPORTED ->
-                    runVulkanCheckAndDecide(gameVersion, useCustomDriver, driver, profile, versionId)
+                    warnVulkanUnsupported(profile, versionId)
             }
         }
+    }
+
+    private fun warnVulkanUnsupported(profile: Profile, versionId: String?) {
+        val builder = FCLAlertDialog.Builder(this)
+        builder.setAlertLevel(FCLAlertDialog.AlertLevel.ALERT)
+        builder.setMessage(getString(R.string.vulkan_check_launch_warning_cached))
+        builder.setPositiveButton(getString(R.string.vulkan_check_launch_continue)) {
+            doLaunchVersion(profile, versionId)
+        }
+        builder.setNegativeButton { }
+        builder.create().show()
     }
 
     private fun promptVulkanCheck(
@@ -896,12 +911,16 @@ class MainActivity : FCLActivity() {
             doLaunchVersion(profile, versionId)
             return
         }
-        val missing = support?.missingRequired
-            ?.joinToString("\n") { "· ${it.dependency.name}" }
-            .orEmpty()
+        val message = if (support == null) {
+            getString(R.string.vulkan_check_launch_warning_cached)
+        } else {
+            val missing = support.missingRequired
+                .joinToString("\n") { "· ${it.dependency.name}" }
+            getString(R.string.vulkan_check_launch_warning, missing)
+        }
         FCLAlertDialog.Builder(this)
             .setAlertLevel(FCLAlertDialog.AlertLevel.ALERT)
-            .setMessage(getString(R.string.vulkan_check_launch_warning, missing))
+            .setMessage(message)
             .setPositiveButton(getString(R.string.vulkan_check_launch_continue)) {
                 doLaunchVersion(profile, versionId)
             }
