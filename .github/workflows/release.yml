@@ -13,6 +13,8 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,15 +26,23 @@ jobs:
 
       - name: Extract changelog for current version
         run: |
-          awk -v tag="$GITHUB_REF_NAME" '
-            $0 ~ "^## \\[" tag "\\]" { found = 1; next }
+          TAG_CLEAN="${GITHUB_REF_NAME#v}"
+          TAG_CLEAN="${TAG_CLEAN%%-*}"
+          awk -v tag="$GITHUB_REF_NAME" -v tag2="$TAG_CLEAN" '
+            $0 ~ "^## \\[" tag "\\]" || $0 ~ "^## \\[" tag2 "\\]" { found = 1; next }
             found && $0 ~ "^## \\[" { exit }
             found { print }
           ' CHANGELOG.md > RELEASE_BODY.md
+          if [ ! -s RELEASE_BODY.md ]; then
+            awk '
+              /^## \[/ { if (found) exit; found = 1; next }
+              found { print }
+            ' CHANGELOG.md > RELEASE_BODY.md
+          fi
 
       - name: Release
         uses: softprops/action-gh-release@v3
         with:
-          token: ${{ secrets.TOKEN }}
+          token: ${{ secrets.TOKEN || secrets.GITHUB_TOKEN }}
           files: apks/**/*.apk
           body_path: RELEASE_BODY.md
