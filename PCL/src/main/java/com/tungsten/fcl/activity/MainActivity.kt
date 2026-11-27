@@ -479,8 +479,6 @@ class MainActivity : FCLActivity() {
                 if (controllerBackInterceptor?.invoke() != true) {
                     activeSubpage = null
                 }
-            } else if (current.uiIndex >= 0) {
-                uiManager.getUI(current.uiIndex).onBackPressed()
             } else {
                 activeSubpage = null
             }
@@ -540,9 +538,6 @@ class MainActivity : FCLActivity() {
             manageSectionRequest = ManageSection.OVERVIEW
             manageSectionRequestSeq++
             uiManager.manageUI.setTabBarVisible(false)
-        }
-        if (sub.uiIndex >= 0) {
-            uiManager.currentUI = uiManager.getUI(sub.uiIndex)
         }
         activeSubpage = sub
     }
@@ -792,7 +787,7 @@ class MainActivity : FCLActivity() {
         }
         lifecycleScope.launch {
             DownloadManager.progress.collect { progress ->
-                launchState = launchState.copy(downloadProgress = progress.toFloat())
+                launchState = launchState.copy(downloadProgress = progress)
             }
         }
     }

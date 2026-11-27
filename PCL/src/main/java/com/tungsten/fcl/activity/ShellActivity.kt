@@ -89,6 +89,8 @@ class ShellActivity : FCLActivity() {
                     commandInput = ""
                     if (cmd == "clear") {
                         outputLines.clear()
+                    } else if (cmd == "exit") {
+                        finish()
                     } else {
                         shellUtil.append("$cmd\n")
                     }

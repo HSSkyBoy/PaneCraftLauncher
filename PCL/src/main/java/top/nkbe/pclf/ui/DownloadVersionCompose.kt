@@ -203,7 +203,7 @@ private fun rememberPixelIconBitmap(@DrawableRes resId: Int): ImageBitmap? {
     val context = LocalContext.current
     return remember(resId) {
         runCatching {
-            pixelAwareIcon(context, resId)?.toBitmap()?.asImageBitmap()
+            pixelAwareIcon(context, resId).toBitmap().asImageBitmap()
         }.getOrNull()
     }
 }

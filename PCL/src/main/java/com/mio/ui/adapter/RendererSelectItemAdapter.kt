@@ -62,11 +62,13 @@ class RendererSelectItemAdapter(
         binding.source.text = context.getString(R.string.renderer_source) + " " +
             renderer.source.ifEmpty { context.getString(R.string.renderer_source_builtin) }
         binding.root.setOnClickListener { callback(renderer) }
-        val configurable = configCallback != null && RendererPlugin.hasBuiltinEnvConfig(renderer.id)
-        binding.config.isVisible = configurable
-        binding.config.setOnClickListener(null)
-        if (configurable) {
-            binding.config.setOnClickListener { configCallback?.invoke(renderer) }
+        val cb = configCallback
+        if (cb != null && RendererPlugin.hasBuiltinEnvConfig(renderer.id)) {
+            binding.config.isVisible = true
+            binding.config.setOnClickListener { cb(renderer) }
+        } else {
+            binding.config.isVisible = false
+            binding.config.setOnClickListener(null)
         }
     }
 

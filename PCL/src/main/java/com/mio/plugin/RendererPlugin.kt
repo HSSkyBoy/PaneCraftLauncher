@@ -327,11 +327,15 @@ object RendererPlugin : AbstractPlugin<Renderer>() {
      */
     @JvmStatic
     fun setFpeEmulatorModsPresent(mods: List<LocalModFile>?) {
-        val present = mods != null && mods.any { it.isActive && it.id in FPE_EMULATOR_MOD_IDS }
+        if (mods == null) {
+            fpeEmulatorModPresent = false
+            return
+        }
+        val emulatorMods = mods.filter { it.isActive && it.id in FPE_EMULATOR_MOD_IDS }
+        val present = emulatorMods.isNotEmpty()
         fpeEmulatorModPresent = present
         if (present) {
-            val ids = mods!!.filter { it.isActive && it.id in FPE_EMULATOR_MOD_IDS }
-                .joinToString(", ") { it.id }
+            val ids = emulatorMods.joinToString(", ") { it.id }
             Logging.LOG.info("FPE emulator mod detected ($ids), SFPEW compatibility layer disabled")
         }
     }

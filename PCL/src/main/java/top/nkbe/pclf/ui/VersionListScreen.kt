@@ -332,7 +332,12 @@ fun VersionListScreen(
 
                 else -> {
                     val profile = uiState.profile ?: selectedProfile ?: Profiles.getSelectedProfile()
-                    val pinnedList = VersionPinManager.getPinned(profile.name)
+                    val pinnedList = remember(uiState.pinned, profile.name) {
+                        VersionPinManager.getPinned(profile.name)
+                    }
+                    val pinIndexMap = remember(pinnedList) {
+                        pinnedList.withIndex().associate { it.value to it.index }
+                    }
                     LazyColumn(
                         state = listState,
                         modifier = Modifier.fillMaxSize(),
@@ -341,8 +346,8 @@ fun VersionListScreen(
                     ) {
                         items(filteredEntries, key = { it.id }) { entry ->
                             val isSelected = entry.id == selectedVersion
-                            val isPinned = entry.id in uiState.pinned
-                            val pinIndex = if (isPinned) pinnedList.indexOf(entry.id) else -1
+                            val pinIndex = pinIndexMap[entry.id] ?: -1
+                            val isPinned = pinIndex >= 0
                             val hasCustomSetting = remember(profile, entry.id, uiState.entries) {
                                 !profile.getVersionSetting(entry.id).isUsesGlobal
                             }

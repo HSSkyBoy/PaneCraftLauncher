@@ -183,7 +183,7 @@ fun LaunchPage(
                         state = state,
                         displayVersionName = displayVersionName,
                         tipIndex = tipIndex,
-                        onNextTip = { tipIndex = (tipIndex + 1) % 14 },
+                        onNextTip = { tipIndex++ },
                         onChangeRenderer = onLaunchLongClick,
                         onOpenDownloadPanel = onOpenDownloadPanel,
                         modifier = Modifier.widthIn(max = 460.dp)
@@ -231,7 +231,7 @@ fun LaunchPage(
                         state = state,
                         displayVersionName = displayVersionName,
                         tipIndex = tipIndex,
-                        onNextTip = { tipIndex = (tipIndex + 1) % 14 },
+                        onNextTip = { tipIndex++ },
                         onChangeRenderer = onLaunchLongClick,
                         onOpenDownloadPanel = onOpenDownloadPanel,
                         modifier = Modifier.fillMaxWidth()
@@ -254,22 +254,24 @@ private fun RightCardsColumn(
     modifier: Modifier = Modifier
 ) {
     val colors = LauncherTheme.colors
-    val tips = listOf(
-        stringResource(R.string.pclf_tip_1),
-        stringResource(R.string.pclf_tip_2),
-        stringResource(R.string.pclf_tip_3),
-        stringResource(R.string.pclf_tip_4),
-        stringResource(R.string.pclf_tip_5),
-        stringResource(R.string.pclf_tip_6),
-        stringResource(R.string.pclf_tip_7),
-        stringResource(R.string.pclf_tip_8),
-        stringResource(R.string.pclf_tip_9),
-        stringResource(R.string.pclf_tip_10),
-        stringResource(R.string.pclf_tip_11),
-        stringResource(R.string.pclf_tip_12),
-        stringResource(R.string.pclf_tip_13),
-        stringResource(R.string.pclf_tip_14)
-    )
+    val tipResIds = remember {
+        listOf(
+            R.string.pclf_tip_1,
+            R.string.pclf_tip_2,
+            R.string.pclf_tip_3,
+            R.string.pclf_tip_4,
+            R.string.pclf_tip_5,
+            R.string.pclf_tip_6,
+            R.string.pclf_tip_7,
+            R.string.pclf_tip_8,
+            R.string.pclf_tip_9,
+            R.string.pclf_tip_10,
+            R.string.pclf_tip_11,
+            R.string.pclf_tip_12,
+            R.string.pclf_tip_13,
+            R.string.pclf_tip_14
+        )
+    }
 
     Column(
         modifier = modifier,
@@ -417,12 +419,12 @@ private fun RightCardsColumn(
             }
         ) {
             AnimatedContent(
-                targetState = tips[tipIndex % tips.size],
+                targetState = tipResIds[tipIndex.mod(tipResIds.size)],
                 transitionSpec = { fadeIn() togetherWith fadeOut() },
                 label = "TipAnim"
-            ) { tip ->
+            ) { tipResId ->
                 Text(
-                    text = tip,
+                    text = stringResource(tipResId),
                     color = colors.textSecondary,
                     fontSize = 12.sp,
                     lineHeight = 18.sp

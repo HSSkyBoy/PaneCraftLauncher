@@ -341,7 +341,7 @@ private fun MoreDiagnosticsSection(
                 onClick = {
                     scope.launch {
                         val stamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH-mm-ss"))
-                        val logFile = File(File(FCLPath.SHARED_COMMON_DIR).parent, "fcl-exported-logs-$stamp.log")
+                        val logFile = File(File(FCLPath.SHARED_COMMON_DIR).parent, "pcl-exported-logs-$stamp.log")
                         val res = withContext(Dispatchers.IO) {
                             runCatching {
                                 logFile.parentFile?.mkdirs()

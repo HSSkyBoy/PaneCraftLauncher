@@ -3,6 +3,7 @@ package top.nkbe.pclf.ui.components
 import androidx.annotation.StringRes
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
@@ -458,6 +459,18 @@ fun SidebarNavItem(
     modifier: Modifier = Modifier
 ) {
     val colors = LauncherTheme.colors
+    val indicatorHeight by animateDpAsState(
+        targetValue = if (selected) 20.dp else 0.dp,
+        label = "sidebarIndicatorHeight"
+    )
+    val indicatorColor by animateColorAsState(
+        targetValue = if (selected) colors.accent else Color.Transparent,
+        label = "sidebarIndicatorColor"
+    )
+    val textColor by animateColorAsState(
+        targetValue = if (selected) colors.accent else colors.textPrimary,
+        label = "sidebarTextColor"
+    )
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
@@ -469,14 +482,14 @@ fun SidebarNavItem(
         Box(
             modifier = Modifier
                 .width(3.dp)
-                .height(if (selected) 20.dp else 0.dp)
+                .height(indicatorHeight)
                 .clip(RoundedCornerShape(topEnd = 2.dp, bottomEnd = 2.dp))
-                .background(if (selected) colors.accent else Color.Transparent)
+                .background(indicatorColor)
         )
         Spacer(Modifier.width(14.dp))
         Text(
             text = label,
-            color = if (selected) colors.accent else colors.textPrimary,
+            color = textColor,
             fontSize = 13.sp,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
             maxLines = 1,

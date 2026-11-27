@@ -165,10 +165,8 @@ class InputMagnifierView @JvmOverloads constructor(
         } catch (_: RuntimeException) {
             return
         }
-        if (captured != null) {
-            frame = captured
-            viewport.setFrame(captured)
-        }
+        frame = captured
+        viewport.setFrame(captured)
     }
 
     fun isMagnifierVisible(): Boolean =

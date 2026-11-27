@@ -57,11 +57,11 @@ import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import top.yukonga.miuix.kmp.basic.LinearProgressIndicator
 import top.yukonga.miuix.kmp.basic.Text
 
-enum class AppSubpage(@StringRes val titleRes: Int, val uiIndex: Int) {
-    MANAGE(R.string.manage, -1),
-    CONTROLLER(R.string.pclf_more_controller, -1),
-    ACCOUNT(R.string.pclf_more_account, -1),
-    VERSION(R.string.pclf_btn_version_select, -1)
+enum class AppSubpage(@StringRes val titleRes: Int) {
+    MANAGE(R.string.manage),
+    CONTROLLER(R.string.pclf_more_controller),
+    ACCOUNT(R.string.pclf_more_account),
+    VERSION(R.string.pclf_btn_version_select)
 }
 
 @Composable
